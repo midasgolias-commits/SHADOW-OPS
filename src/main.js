@@ -180,6 +180,15 @@ net.on('room', r => {   // avisos no chat da sala: quem entrou / saiu
 });
 net.on('chat', m => lobby.addChat(m.name || 'Amigo', m.text, m.from === net.id || !m.from));
 net.start().then(() => { net.pingAll(); onlinePanel.render(); });   // fica online já ao abrir o jogo (para receber convites)
+// versão do site (carimbada ao publicar): mostra no menu e avisa se o navegador está com uma cópia velha
+(() => {
+  const mine = document.querySelector('meta[name="build"]')?.content || 'dev', el = document.querySelector('.mm-ver');
+  if (el) el.textContent = mine === 'dev' ? 'versão local (PC do dono)' : 'versão ' + mine;
+  if (mine === 'dev') return;
+  fetch('version.json?x=' + Date.now(), { cache: 'no-store' }).then(r => r.json()).then(j => {
+    if (j.v && j.v !== mine && el) { el.textContent = 'Versão nova disponível (' + j.v + '): aperte Ctrl+Shift+R'; el.classList.add('old'); }
+  }).catch(() => {});
+})();
 window.__menuFx = new MenuFx($('menu'), () => game.settings.volume);   // faíscas, luzes e som ao passar o mouse
 window.__music = new Music(() => game.settings.volume);   // música ambiente: sala e partida
 const lobby = new Lobby($('lobby'), {
