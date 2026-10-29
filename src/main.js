@@ -10,6 +10,7 @@ import { net } from './net/Net.js';
 import { OnlinePanel } from './ui/OnlinePanel.js';
 import { setupInstall } from './ui/Install.js';
 import { Music } from './ui/Music.js';
+import { MenuFx } from './ui/MenuFx.js';
 
 const $ = id => document.getElementById(id);
 const show = (id, on) => $(id).classList.toggle('hidden', !on);
@@ -157,6 +158,7 @@ onlinePanel.isOpen = true; onlinePanel.render(); setInterval(() => { if (!game.r
 net.on('end', () => { if (game.running && game.online) { game.stop(); openRoomLobby(); onlinePanel.say('A partida online terminou.', 'warn'); } });
 net.on('room', () => lobby.refresh());
 net.start().then(() => { net.pingAll(); onlinePanel.render(); });   // fica online já ao abrir o jogo (para receber convites)
+window.__menuFx = new MenuFx($('menu'), () => game.settings.volume);   // faíscas, luzes e som ao passar o mouse
 window.__music = new Music(() => game.settings.volume);   // música ambiente: sala e partida
 const lobby = new Lobby($('lobby'), {
   assets: game.assets,   // personagem em 3D na sala

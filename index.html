@@ -16,6 +16,8 @@
 <link rel="stylesheet" href="src/styles/range.css">
 <link rel="stylesheet" href="src/styles/inventory.css">
 <link rel="stylesheet" href="src/styles/online.css">
+<link rel="stylesheet" href="src/styles/menu.css">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&family=Barlow:wght@500&display=swap">
 <script type="importmap">
 { "imports": {
   "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
@@ -26,16 +28,32 @@
 <body>
 <div id="view"></div>
 
-<section id="menu" class="screen">
-  <header><h1>SHADOW OPS</h1><p>Tiro tático em terceira pessoa no navegador.</p></header>
-  <div class="modes">
-    <article class="mode comp"><h2>Competitivo</h2><p>Ataque contra defesa 5v5, com C4, 13 rodadas e prorrogação.</p><button data-mode="competitive">Criar sala</button></article>
-    <article class="mode dm"><h2>Mata-mata</h2><p>Combate contínuo contra bots, com respawn e placar em tempo real.</p><button data-mode="deathmatch">Criar sala</button></article>
-    <article class="mode train"><h2>Treino</h2><p>Stand de tiro: bots-alvo com vida infinita (parado e andando), todas as armas e munição infinita. Menu no botão da baia (E).</p><button data-mode="training">Iniciar treino</button></article>
+<section id="menu" class="screen mm">
+  <canvas class="mm-fx" aria-hidden="true"></canvas>
+  <img class="mm-logo" src="assets/ui/menu/logo.png" alt="SHADOW OPS">
+  <div class="mm-title"><i></i><span>ESCOLHA SEU MODO DE JOGO</span><i></i></div>
+  <div class="mm-cards">
+    <article class="mm-card" data-k="comp"><i class="mm-cn"></i>
+      <div class="mm-head"><img class="mm-ic" src="assets/ui/menu/icon1.png" alt=""><h2>COMPETITIVO</h2></div>
+      <p>Ataque contra defesa 5v5, com C4, 13 rodadas e prorrogação.</p>
+      <div class="mm-pic" style="background-image:url(assets/ui/menu/card1.jpg)"></div>
+      <button data-mode="competitive"><span>CRIAR SALA</span><b>→</b></button></article>
+    <article class="mm-card" data-k="dm"><i class="mm-cn"></i>
+      <div class="mm-head"><img class="mm-ic" src="assets/ui/menu/icon2.png" alt=""><h2>MATA-MATA</h2></div>
+      <p>Combate contínuo contra bots, com respawn e placar em tempo real.</p>
+      <div class="mm-pic" style="background-image:url(assets/ui/menu/card2.jpg)"></div>
+      <button data-mode="deathmatch"><span>CRIAR SALA</span><b>→</b></button></article>
+    <article class="mm-card" data-k="train"><i class="mm-cn"></i>
+      <div class="mm-head"><img class="mm-ic" src="assets/ui/menu/icon3.png" alt=""><h2>TREINO</h2></div>
+      <p>Stand de tiro: bots-alvo com vida infinita (parado e andando), todas as armas e munição infinita. Menu no botão da baia (E).</p>
+      <div class="mm-pic" style="background-image:url(assets/ui/menu/card3.jpg)"></div>
+      <button data-mode="training"><span>INICIAR TREINO</span><b>→</b></button></article>
   </div>
-  <div class="menu-btns"><button id="openBag" class="ghost hidden">Mochila</button><button id="openSettings" class="ghost hidden">Configurações</button><button id="openLab" class="ghost hidden">Lab de Armas</button><button id="installBtn" class="ghost">Ícone na área de trabalho</button></div>
-  <p id="loadInfo" class="build">Carregando mapa, personagens e animações… 0%</p>
-  <p class="build">Mapa WAREHOUSE · você joga com a Izzy em 3ª pessoa contra bots. Regras do competitivo, placar do mata-mata e alvos do treino chegam nas próximas partes.</p>
+  <div class="mm-under">
+    <div class="menu-btns"><button id="openBag" class="ghost hidden">Mochila</button><button id="openSettings" class="ghost hidden">Configurações</button><button id="openLab" class="ghost hidden">Lab de Armas</button><button id="installBtn" class="ghost">Ícone na área de trabalho</button></div>
+    <p id="loadInfo" class="build">Carregando mapa, personagens e animações… 0%</p>
+  </div>
+  <div class="mm-foot"><i></i><span>PREPARE-SE. ENTRE EM AÇÃO.</span></div>
 </section>
 
 <section id="lobby" class="screen hidden"></section>
