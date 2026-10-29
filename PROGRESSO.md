@@ -254,3 +254,18 @@ WASD move · Shift corre · Ctrl/C agacha · Espaço pula · botão esquerdo ati
 - **28/10 21:20 — AUG: mão esquerda "pegando na frente da arma" no fim da recarga**: a animação de recarga termina com a mão na frente da arma
   e só depois o IK levava a mão para a empunhadura (~11 cm de vaivém). Agora, a partir de 72% da recarga (`RELOAD_GRIP_AT`), o IK já leva a mão
   para a pegada salva (vale para toda arma com mão esquerda presa por IK). Medido: de 91% em diante a mão está na pegada (0 cm) e termina exata (0 cm, 0°).
+
+## 28/10 (noite) — ONLINE com amigos (grátis) + publicação no GitHub Pages
+- **Rede** (`src/net/Net.js`): PeerJS 1.5.4 (CDN) + servidor público grátis do PeerJS só para os navegadores se encontrarem; a partida
+  vai direto entre os navegadores (WebRTC). ID por navegador `SO-XXXX-XXXX` (localStorage, por site); amigos salvos no navegador; ver quem
+  está online (hello/ack), convite, sala (o anfitrião recebe as conexões e repassa as mensagens). `?perfil=2` = outro jogador no mesmo navegador (teste).
+- **Tela Online** (`src/ui/OnlinePanel.js`, `src/styles/online.css`): seu nome + ID (copiar), amigos (adicionar por ID, online/offline,
+  Convidar/Entrar/remover), sala (jogadores, INICIAR, sair/fechar), aviso de convite em qualquer tela (`#onToast`). Card "Online" no menu.
+- **Partida online** (`src/net/OnlineMatch.js`): mata-mata entre jogadores (sem bots ainda), mapa WAREHOUSE. 20 estados/s por jogador
+  (posição, olhar, animação, arma); outros jogadores = RemotePlayer (modelo + animações + arma + nome em cima, movimento suavizado).
+  Acerto decidido por quem atira → manda "hit"; quem leva tira a vida, se morrer avisa "death" (feed + placar), renasce longe dos outros.
+  Online roda mesmo com Esc. Pausa: sem "Reiniciar"; "Voltar à sala"/"Sair" do anfitrião encerra a partida para todos.
+  Testado com 2 abas: adicionar amigo, convite, entrar, iniciar, posição sincronizada, tiro de sniper (115) matou, placar/feed dos dois, renascer, encerrar.
+- **Publicar** (`4 - PUBLICAR NO GITHUB.bat` → `tools/publicar.ps1`): monta `..\site-github` só com o que o jogo usa (124 MB, 241 arquivos;
+  fora: assets\armas, _fonte, source, Sounds, tools, _to_delete, extras, zip/rar, .bat) e envia pelo Git. Conferido servindo a cópia: carrega tudo, sem 404.
+  No GitHub Pages o Lab/Sons não salvam (não há o server.py) — ajustar no PC e publicar de novo.
