@@ -14,7 +14,7 @@ export class OnlinePanel {
   constructor(root, toastRoot, net, hooks) {
     this.root = root; this.toast = toastRoot; this.net = net; this.hooks = hooks; this.msg = ''; this.isOpen = false;
     root.innerHTML = `<div class="on-wrap">
-      <header class="on-top"><div><h2>ONLINE <small>beta · grátis, direto entre navegadores</small></h2><p>Jogue com amigos: passe o seu ID, adicione o deles, crie a sala e convide.</p></div>
+      <header class="on-top"><div><h2>ONLINE <small>beta · grátis, direto entre navegadores</small></h2><p>Jogue com amigos: crie a sala e, dentro dela, adicione e convide seus amigos pelo ID.</p></div>
         <button class="ghost" data-act="back">Voltar</button></header>
       <div class="on-grid">
         <section class="on-card on-me">
@@ -87,9 +87,11 @@ export class OnlinePanel {
         ${!room && hasRoom ? `<button class="mini" data-act="join" data-id="${f.id}">Entrar</button>` : ''}
         <button class="mini x" data-act="del" data-id="${f.id}" title="Remover">✕</button></li>`; }).join('')
       : '<li class="empty">Nenhum amigo ainda. Peça o ID deles e adicione acima.</li>';
+    R.querySelector('.on-friends').classList.toggle('hidden', !room);   // adicionar/convidar amigos: só dentro da sala
+    R.querySelector('.on-grid').classList.toggle('noroom', !room);
     const rc = R.querySelector('.on-room');
     if (!room) rc.innerHTML = `<h3>Sala</h3><p class="on-hint">Crie uma sala e convide seus amigos. Modo: <b>mata-mata entre jogadores</b> (mapa WAREHOUSE).</p>
-      <button class="on-go" data-act="create"${n.status !== 'on' ? ' disabled' : ''}>Criar sala</button><p class="on-hint">Ou entre na sala de um amigo pela lista (botão Entrar), ou pelo convite que ele te mandar.</p>`;
+      <button class="on-go" data-act="create"${n.status !== 'on' ? ' disabled' : ''}>Criar sala</button><p class="on-hint">Para entrar na sala de um amigo: passe o seu ID para ele e espere o convite aparecer na tela.</p>`;
     else rc.innerHTML = `<h3>Sala de ${esc(room.hostName)} <small>${room.inGame ? 'em partida' : 'esperando'}</small></h3>
       <ul class="on-players">${room.players.map(p => `<li><b>${esc(p.name)}</b><small>${esc(p.id)}${p.id === room.host ? ' · anfitrião' : ''}${p.id === n.id ? ' · você' : ''}</small>${host && p.id !== n.id ? `<button class="mini x" data-act="kick" data-id="${p.id}">✕</button>` : ''}</li>`).join('')}</ul>
       ${host ? `<button class="on-go" data-act="go"${room.players.length < 2 || room.inGame ? ' disabled' : ''}>INICIAR PARTIDA</button><p class="on-hint">${room.players.length < 2 ? 'Convide pelo menos 1 amigo (lista ao lado).' : 'Todos prontos.'}</p>` : '<p class="on-hint">Esperando o anfitrião iniciar…</p>'}

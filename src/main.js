@@ -9,6 +9,7 @@ import { Inventory } from './ui/Inventory.js';
 import { net } from './net/Net.js';
 import { OnlinePanel } from './ui/OnlinePanel.js';
 import { setupInstall } from './ui/Install.js';
+import { Music } from './ui/Music.js';
 
 const $ = id => document.getElementById(id);
 const show = (id, on) => $(id).classList.toggle('hidden', !on);
@@ -153,6 +154,7 @@ const onlinePanel = new OnlinePanel($('online'), $('onToast'), net, {
 net.on('end', () => { if (game.running && game.online) { game.stop(); ['pause', 'hud', 'dead'].forEach(id => show(id, false)); showOnline(); onlinePanel.say('O anfitrião encerrou a partida.', 'warn'); } });
 function showOnline() { ['menu', 'lobby'].forEach(id => show(id, false)); show('online', true); onlinePanel.open(); }
 document.querySelector('[data-online]').addEventListener('click', () => { game.audio.init(); showOnline(); });
+window.__music = new Music(() => game.settings.volume);   // música ambiente: sala e partida
 net.start();   // fica online já ao abrir o jogo (para receber convites)
 const lobby = new Lobby($('lobby'), {
   assets: game.assets,   // personagem em 3D na sala
