@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SHADOW OPS — Tático em 3ª pessoa</title>
+<link rel="stylesheet" href="src/styles/main.css">
+<link rel="stylesheet" href="src/styles/weapons.css">
+<link rel="stylesheet" href="src/styles/bots.css">
+<link rel="stylesheet" href="src/styles/hudfx.css">
+<link rel="stylesheet" href="src/styles/lobby2.css">
+<link rel="stylesheet" href="src/styles/range.css">
+<link rel="stylesheet" href="src/styles/inventory.css">
+<link rel="stylesheet" href="src/styles/online.css">
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="view"></div>
+
+<section id="menu" class="screen">
+  <header><h1>SHADOW OPS</h1><p>Tiro tático em terceira pessoa no navegador.</p></header>
+  <div class="modes">
+    <article class="mode comp"><h2>Competitivo</h2><p>Ataque contra defesa 5v5, com C4, 13 rodadas e prorrogação.</p><button data-mode="competitive">Criar sala</button></article>
+    <article class="mode dm"><h2>Mata-mata</h2><p>Combate contínuo contra bots, com respawn e placar em tempo real.</p><button data-mode="deathmatch">Criar sala</button></article>
+    <article class="mode online"><h2>Online</h2><p>Jogue com amigos pela internet, grátis: passe o seu ID, adicione o deles e convide para a sua sala.</p><button data-online>Jogar online</button></article>
+    <article class="mode train"><h2>Treino</h2><p>Stand de tiro: bots-alvo com vida infinita (parado e andando), todas as armas e munição infinita. Menu no botão da baia (E).</p><button data-mode="training">Iniciar treino</button></article>
+  </div>
+  <div class="menu-btns"><button id="openBag" class="ghost">Mochila</button><button id="openSettings" class="ghost">Configurações</button><button id="openLab" class="ghost">Lab de Armas</button></div>
+  <p id="loadInfo" class="build">Carregando mapa, personagens e animações… 0%</p>
+  <p class="build">Mapa WAREHOUSE · você joga com a Izzy em 3ª pessoa contra bots. Regras do competitivo, placar do mata-mata e alvos do treino chegam nas próximas partes.</p>
+</section>
+
+<section id="lobby" class="screen hidden"></section>
+<section id="online" class="screen hidden"></section>
+<div id="onToast"></div>
+<div id="inventory"></div>
+<!-- menu do treino (E): fora do #hud, que não recebe cliques -->
+<div id="rangeMenu" class="hidden">
+  <div class="rm-panel">
+    <header><h2>TREINO DE TIRO</h2><small>E ou Esc fecha e volta ao treino</small></header>
+    <section><h3>Bots <small>vida infinita · não atiram</small></h3><div id="rmBots"></div></section>
+    <section><h3>Armas <small>munição infinita · clique na arma: ela vai para a vaga dela (1, 2 ou 3) e você volta ao treino com ela na mão</small></h3><div id="rmWeapons"></div></section>
+    <button id="rmClose">Voltar ao treino</button>
+  </div>
+</div>
+
+
+<section id="settings" class="screen hidden">
+  <div class="panel wide">
+    <h2>Configurações</h2>
+    <div id="settingsBody"></div>
+    <button id="closeSettings">Voltar</button>
+  </div>
+</section>
+
+<section id="pause" class="screen hidden">
+  <div class="pause-wrap">
+    <div class="panel">
+      <h2>Pausado</h2>
+      <button id="resume">Continuar</button>
+      <button id="restart">Reiniciar partida</button>
+      <button id="toLobby" class="ghost">Voltar à sala</button>
+      <button id="toMenu" class="ghost">Sair para o menu</button>
+      <p class="hint-p">As mudanças nas configurações já valem: o jogo atrás mostra a câmera e a mira novas.</p>
+    </div>
+    <div class="panel wide">
+      <h2>Configurações</h2>
+      <div id="pauseSettingsBody"></div>
+    </div>
+  </div>
+</section>
+
+<div id="hud" class="hidden">
+  <div id="dmg"></div><div id="dmgdir"><i></i></div>
+  <div id="scope" class="hidden"><i></i><i></i></div>
+  <div id="cross"><i></i><i></i><i></i><i></i></div>
+  <div id="reddot" class="hidden"></div>
+  <div id="hitmark"><i></i><i></i><i></i><i></i></div>
+  <div id="hudReload" class="hidden"><i></i></div>
+  <canvas id="minimap" width="250" height="200"></canvas>
+  <div id="hudTop"><span id="hudMode"></span><b id="hudTime">0:00</b></div>
+  <div id="hudHp"><small>Vida</small><b id="hudHealth">100</b></div>
+  <div id="hudWeapon">
+    <ul id="wSlots"></ul>
+    <div class="w-main"><div class="w-id"><b id="wName"></b><small id="wKind"></small></div><div class="w-ammo"><b id="wMag"></b><span id="wRes"></span></div></div>
+  </div>
+  <ul id="feed"></ul>
+  <div id="wswitch" class="ws"></div>
+  <div id="killbanner" class="kb"></div>
+  <div id="hudScore"></div>
+  <div id="dead" class="hidden"><b>ABATIDO</b><span id="deadBy"></span><small id="deadT"></small></div>
+  <div id="hudInfo"></div>
+  <div id="hudFps"></div>
+  <div id="rangePrompt" class="hidden"><kbd>E</kbd> Menu do treino · bots e armas</div>
+  <div id="rangeHits"></div>
+  <div id="hudNote">WASD move · Shift corre · Ctrl ou C agacha · Espaço pula · 1 principal · 2 pistola · 3 faca · Q última · R recarrega · Botão direito mira (VX-47, Vector e sniper) · V 1ª/3ª pessoa · Esc pausa e configurações</div>
+</div>
+<div id="err" class="hidden"></div>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>

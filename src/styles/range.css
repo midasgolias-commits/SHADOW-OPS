@@ -1,0 +1,21 @@
+/* Treino no stand de tiro: aviso do botão (E), dano nos bots e menu do treino */
+#rangePrompt{position:absolute;left:50%;top:62%;transform:translateX(-50%);padding:9px 16px;background:rgba(13,17,20,.82);border:1px solid #ffb547;color:var(--txt);font-size:17px;letter-spacing:.03em;pointer-events:none}
+#rangePrompt kbd{display:inline-block;min-width:26px;margin-right:8px;padding:2px 7px;border-radius:4px;background:#ffb547;color:#111;font:700 16px var(--ui);text-align:center}
+#rangeHits{position:absolute;left:calc(50% + 34px);top:calc(50% - 60px);display:flex;flex-direction:column;gap:2px;pointer-events:none}
+#rangeHits .rh{font:700 20px var(--ui);color:#fff;text-shadow:0 1px 3px #000,0 0 6px #000;animation:rhUp .9s ease-out forwards}
+#rangeHits .rh.head{color:#ff5a4a}#rangeHits .rh small{font-size:12px;color:#d6dde0;margin-left:6px}
+@keyframes rhUp{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-34px)}}
+#rangeMenu{position:fixed;inset:0;z-index:30;pointer-events:auto;display:flex;align-items:center;justify-content:center;background:rgba(6,9,11,.62)}
+.rm-panel{width:min(760px,94vw);max-height:92vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-top:4px solid #ffb547;padding:20px 22px;display:flex;flex-direction:column;gap:16px}
+.rm-panel header{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.rm-panel h2{margin:0;font-size:26px;letter-spacing:.08em}.rm-panel header small{color:var(--mut)}
+.rm-panel h3{margin:0 0 8px;font-size:16px;letter-spacing:.06em;color:#ffb547}.rm-panel h3 small{color:var(--mut);font-weight:400;letter-spacing:0;margin-left:6px}
+#rmBots{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.rm-bot{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;padding:12px 14px}
+.rm-bot b{font-size:18px}.rm-bot span{color:var(--mut);font-size:13px}.rm-bot i{font-style:normal;font-size:13px;color:var(--mut)}
+.rm-bot.on{border-color:#ffb547;background:#2b2a20}.rm-bot.on i{color:#ffb547}
+#rmWeapons{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.rm-w{display:flex;flex-direction:column;align-items:flex-start;padding:10px 12px;font-size:16px;text-align:left}
+.rm-w small{color:var(--mut);font-size:12px}.rm-w.cur{border-color:#ffb547;background:#2b2a20}.rm-w.have small{color:#ffb547}
+#rmClose{align-self:flex-end;background:#ffb547;color:#111;border-color:#ffb547;font-weight:700}
+@media(max-width:640px){#rmWeapons{grid-template-columns:repeat(2,1fr)}#rmBots{grid-template-columns:1fr}}

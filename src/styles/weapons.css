@@ -1,0 +1,41 @@
+/* ---------- HUD de armas (Parte 3). Carregado depois de main.css. ---------- */
+
+/* mira dinâmica: --g abre os traços conforme a dispersão atual */
+#cross i:nth-child(1){top:calc(-14px - var(--g,0px))}
+#cross i:nth-child(2){top:calc(6px + var(--g,0px))}
+#cross i:nth-child(3){left:calc(-14px - var(--g,0px))}
+#cross i:nth-child(4){left:calc(6px + var(--g,0px))}
+
+/* velocímetro sai do canto da arma e vai para o topo direito, abaixo do FPS */
+#hudInfo{right:12px;bottom:auto;top:30px;font-size:13px;color:var(--mut)}
+
+#hudWeapon{position:absolute;right:28px;bottom:24px;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+#wSlots{list-style:none;margin:0;padding:0;display:flex;gap:4px}
+#wSlots li{display:flex;flex-direction:column;align-items:center;min-width:58px;padding:3px 6px;font-size:11px;letter-spacing:.06em;color:var(--mut);background:#0d1114a0;border-bottom:2px solid transparent}
+#wSlots li b{font-size:13px;color:var(--mut)}
+#wSlots li.cur{color:var(--txt);background:#1b1a10d0;border-bottom-color:var(--acc)}#wSlots li.cur b{color:var(--acc)}
+#wSlots li.off{opacity:.25}
+.w-main{display:flex;align-items:flex-end;gap:22px}
+.w-id{display:flex;flex-direction:column;align-items:flex-end}.w-id b{font-size:22px;letter-spacing:.08em}.w-id small{color:var(--mut)}
+.w-ammo{display:flex;align-items:baseline;gap:8px;font-variant-numeric:tabular-nums}
+.w-ammo b{font-size:56px;line-height:1;color:var(--acc)}.w-ammo b.low{color:#f0603a}
+.w-ammo span{font-size:22px;color:var(--mut)}
+
+#hudReload{position:absolute;left:50%;top:calc(50% + 40px);width:140px;height:4px;transform:translateX(-50%);background:#0d1114b0;border:1px solid #000}
+#hudReload i{display:block;height:100%;width:0;background:var(--acc)}
+
+/* marcador de acerto */
+#hitmark{position:absolute;left:50%;top:50%;width:0;height:0;opacity:0}
+#hitmark.on{opacity:1}
+#hitmark i{position:absolute;width:2px;height:9px;background:#fff;box-shadow:0 0 2px #000;left:-1px;top:-1px;transform-origin:50% 0}
+#hitmark i:nth-child(1){transform:rotate(45deg) translateY(7px)}#hitmark i:nth-child(2){transform:rotate(135deg) translateY(7px)}
+#hitmark i:nth-child(3){transform:rotate(225deg) translateY(7px)}#hitmark i:nth-child(4){transform:rotate(315deg) translateY(7px)}
+#hitmark.head i{background:#f0603a}#hitmark.kill i{background:#e03030;height:12px}
+
+/* luneta da sniper */
+#scope{position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,transparent 0,transparent 30vmin,#000 30.4vmin)}
+#scope i{position:absolute;background:#000}
+#scope i:nth-child(1){left:50%;top:calc(50% - 30vmin);width:1px;height:60vmin}
+#scope i:nth-child(2){top:50%;left:calc(50% - 30vmin);height:1px;width:60vmin}
+
+@media(max-width:900px){#hudNote{display:none}}

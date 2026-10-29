@@ -1,0 +1,32 @@
+/* Tela ONLINE (amigos por ID, sala) + aviso de convite */
+#online{padding:24px;background:linear-gradient(180deg,rgba(6,9,12,.55),rgba(6,9,12,.85)),url(../../assets/ui/bg_galpao.jpg) left center/cover no-repeat #07090b;justify-content:flex-start;overflow:auto}
+.on-wrap{width:min(1180px,100%);display:flex;flex-direction:column;gap:16px}
+.on-top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;border-bottom:1px solid #565c60;padding-bottom:10px}
+.on-top h2{margin:0;font-size:30px;letter-spacing:.08em}.on-top h2 small{font-size:13px;color:#53d36e;letter-spacing:0;margin-left:8px}
+.on-top p{margin:4px 0 0;color:var(--mut)}
+.on-grid{display:grid;grid-template-columns:300px 1fr 1fr;gap:14px;align-items:start}
+.on-card{display:flex;flex-direction:column;gap:10px;padding:14px;border:1px solid #0a0c0d;border-radius:6px;background:linear-gradient(180deg,rgba(70,76,80,.6),rgba(18,21,24,.88));box-shadow:inset 0 1px 0 #8a9094aa}
+.on-card h3{display:flex;align-items:center;gap:8px;margin:0;font-size:17px;letter-spacing:.08em;color:#ffb547}.on-card h3 small{color:var(--mut);font-size:12px;letter-spacing:0}
+.on-card h3 .mini{margin-left:auto}
+.on-card label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--mut)}
+.on-card input{font:inherit;font-size:15px;color:var(--txt);background:#0f1519;border:1px solid #444b50;padding:8px}
+.on-id{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;padding:10px;border:1px solid #2f6b3a;border-radius:4px;background:#0f1d14}
+.on-id small{grid-column:1/3;color:#9ad7a5;font-size:12px}.on-id b{font:700 24px/1.1 Consolas,"Courier New",monospace;letter-spacing:.06em;color:#fff}
+.on-id button{font-size:14px;padding:6px 12px}
+.on-status{margin:0;font-size:13px;color:var(--mut)}.on-status.on{color:#53d36e}.on-status.error,.on-status.dup{color:#ff6a5a}.on-status.connecting,.on-status.reconnecting{color:#ffb547}
+.on-add{display:grid;grid-template-columns:1fr auto;gap:6px}.on-add button{font-size:14px;padding:8px 12px}
+.on-list,.on-players{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;max-height:52vh;overflow:auto}
+.on-list li,.on-players li{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid #2b353b;border-radius:4px;background:#141b20}
+.on-list li i{width:10px;height:10px;border-radius:50%;background:#59646a;flex:none}.on-list li.on i{background:#53d36e;box-shadow:0 0 8px #53d36e}.on-list li.off i{background:#3a3f43}
+.on-list li span,.on-players li{flex:1}.on-list li span{display:flex;flex-direction:column}.on-list small,.on-players small{color:var(--mut);font-size:12px}
+.on-list li.empty{color:var(--mut);font-size:13px}
+.on-players li{flex-direction:column;align-items:flex-start;position:relative}.on-players li .x{position:absolute;right:8px;top:8px}
+.on-hint{margin:0;color:var(--mut);font-size:13px;line-height:1.4}
+.on-go{padding:14px;font:700 20px var(--ui);letter-spacing:.1em;color:#08130b;background:linear-gradient(180deg,#7fe892,#36b552);border:1px solid #1d6a2e;border-radius:4px}
+.on-go:disabled{opacity:.45;cursor:default}
+.mini{font-size:13px;padding:4px 10px}.mini.x{padding:4px 8px}
+.on-msg{margin:0;min-height:20px;font-size:14px;color:var(--mut)}.on-msg.ok{color:#53d36e}.on-msg.warn{color:#ffb547}
+#onToast{position:fixed;right:18px;top:18px;z-index:60}
+.on-toast{display:flex;flex-direction:column;gap:6px;width:300px;padding:12px 14px;border:1px solid #53d36e;border-radius:6px;background:rgba(14,20,16,.95);box-shadow:0 6px 20px #000c;font-size:14px}
+.on-toast b{font-size:16px;color:#7fe892}.on-toast span{color:var(--mut);font-size:12px}.on-toast div{display:flex;gap:6px}.on-toast button{flex:1;font-size:14px;padding:7px}
+@media(max-width:1000px){.on-grid{grid-template-columns:1fr}}

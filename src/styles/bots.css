@@ -1,0 +1,28 @@
+/* ---------- HUD dos bots (Parte 4). Carregado depois do weapons.css. ---------- */
+
+/* vinheta de dano e seta de direção */
+#dmg{position:absolute;inset:0;opacity:0;background:radial-gradient(ellipse at center,transparent 40%,#c02010d0 100%)}
+#dmg.on{animation:dmgFlash .7s ease-out}
+@keyframes dmgFlash{from{opacity:1}to{opacity:0}}
+#dmgdir{position:absolute;left:50%;top:50%;width:0;height:0;opacity:0;transform:rotate(var(--r,0rad))}
+#dmgdir i{position:absolute;left:-70px;top:-200px;width:140px;height:30px;border-radius:50% 50% 0 0/100% 100% 0 0;background:linear-gradient(#e03020e0,#e0302000)}
+#dmgdir.on{animation:dmgDir 1.3s ease-out}
+@keyframes dmgDir{0%{opacity:1}100%{opacity:0}}
+
+/* vida baixa */
+#hudHealth.low{color:#f0603a}
+
+/* abates */
+#feed{position:absolute;right:14px;top:58px;list-style:none;margin:0;padding:0;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+#feed li{background:#0d1114b8;padding:3px 10px;font-size:14px;border-left:3px solid transparent;animation:feedIn .2s ease-out}
+#feed li.mine{border-left-color:var(--acc);background:#1b1a10d0}
+#feed .k-att{color:#ee6a4c}#feed .k-def{color:#6aa8ee}#feed .k-ffa{color:var(--txt)}#feed .k-w{color:var(--mut)}
+@keyframes feedIn{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:none}}
+
+#hudScore{position:absolute;left:50%;top:56px;transform:translateX(-50%);font-size:14px;color:var(--mut)}
+
+/* tela de morte */
+#dead{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:#2a0505a8}
+#dead b{font-size:64px;letter-spacing:.14em;color:#f0603a}
+#dead span{font-size:22px}#dead small{font-size:16px;color:var(--mut)}
+@media(prefers-reduced-motion:reduce){#dmg.on,#dmgdir.on,#feed li{animation-duration:.01s}}

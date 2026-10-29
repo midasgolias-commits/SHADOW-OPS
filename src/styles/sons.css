@@ -1,0 +1,35 @@
+/* Ferramenta de sons do Lab (sons.html) — usa as cores do jogo (main.css) */
+body.sons{margin:0;min-height:100vh;background:#11171b;color:var(--txt);font-family:inherit;overflow:auto}
+.sons-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 18px;padding:14px 18px 6px}
+.sons-h h1{margin:0;font-size:24px;letter-spacing:.12em;color:var(--acc);background:none}
+.sons-h .hint{flex:1;min-width:260px;margin:0;color:var(--mut);font-size:14px}
+.sons-h nav a{color:var(--mut);text-decoration:none;margin-left:12px;font-size:14px}.sons-h nav a:hover{color:var(--txt)}
+.bar{position:sticky;top:0;z-index:3;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;padding:10px 18px;background:#161d22;border-bottom:1px solid var(--line);font-size:14px;color:var(--mut)}
+.bar select,.bar input:not([type]){font:inherit;background:#0f1519;color:var(--txt);border:1px solid var(--line);padding:5px 8px}
+.bar input[type=range]{accent-color:var(--acc);vertical-align:middle}
+.bar .chk{display:flex;gap:6px;align-items:center}
+.bar .keys{margin-left:auto;font-size:12px}
+#list{padding:8px 18px 70px;display:flex;flex-direction:column;gap:6px}
+.row{display:grid;grid-template-columns:44px minmax(180px,1.2fr) minmax(160px,1fr) minmax(220px,1.1fr) auto;gap:12px;align-items:center;padding:8px 10px;background:#182026;border:1px solid #232d33;border-left:4px solid transparent}
+.row.sel{border-color:var(--acc);border-left-color:var(--acc);background:#1d272d}
+.row.done{border-left-color:#3fbf6a}
+.row.skip{opacity:.55}
+.play{width:40px;height:40px;border-radius:50%;border:0;background:var(--acc);color:#0d1114;font-size:17px;font-weight:700;cursor:pointer}
+.play.on{background:#fff}
+.nm b{display:block;font-size:15px;color:var(--txt)}
+.nm small{display:block;color:var(--mut);font-size:12px;word-break:break-all}
+.nm i{font-style:normal;color:var(--acc);font-size:12px}
+.wave{width:100%;height:42px;display:block;background:#0f1519;cursor:pointer}
+.dest{display:flex;flex-direction:column;gap:5px}
+.dest select,.dest input{font:inherit;font-size:13px;background:#0f1519;color:var(--txt);border:1px solid var(--line);padding:4px 6px;width:100%;box-sizing:border-box}
+.dest .sug{font-size:12px;color:var(--mut)}
+.dest .sug button{font-size:12px;padding:1px 6px;margin-left:4px}
+.acts{display:flex;flex-direction:column;gap:5px;min-width:150px}
+.acts button,.dest button{font:inherit;font-size:13px;padding:5px 8px;background:#26313a;color:var(--txt);border:1px solid #34424c;cursor:pointer}
+.acts button:hover{border-color:var(--acc)}
+.acts button.apply{background:var(--acc);color:#0d1114;border-color:var(--acc);font-weight:700}
+.acts button:disabled{opacity:.4;cursor:default}
+.st{font-size:12px;color:var(--mut);min-height:14px}.st.ok{color:#3fbf6a}.st.err{color:#ff6b5b}
+#foot{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:space-between;gap:12px;padding:9px 18px;background:#161d22;border-top:1px solid var(--line);font-size:14px;color:var(--mut)}
+#msg.ok{color:#3fbf6a}#msg.err{color:#ff6b5b}
+@media(max-width:900px){.row{grid-template-columns:44px 1fr}.row .wave,.row .dest,.row .acts{grid-column:1/-1}.bar .keys{display:none}}

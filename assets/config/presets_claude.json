@@ -1,0 +1,92 @@
+{
+ "izzy": {
+  "sniper": {
+   "note": "Baseado na foto da AWM do CrossFire: sniper na diagonal no canto inferior direito, cano terminando perto do centro e luneta crescendo para o canto; mão esquerda por baixo, antebraço vindo de baixo. (v2: mão direita no cabo do seu ajuste; câmera perto dos olhos; mapa sempre nivelado.)",
+   "cam": {
+    "x": -9.6,
+    "y": -8,
+    "z": -12,
+    "rx": -15,
+    "ry": -15,
+    "rz": 12,
+    "fov": 59
+   },
+   "scenes": {
+    "fp_walk": {
+     "p": [
+      -0.02654,
+      -0.00172,
+      0.12392
+     ],
+     "r": [
+      8.2,
+      -5.19,
+      21.8
+     ],
+     "lh": {
+      "f": 0.22,
+      "d": 0.04,
+      "s": 0
+     }
+    }
+   }
+  },
+  "rifle": {
+   "note": "Baseado na foto da AUG dourada do CrossFire: mira holográfica um pouco à direita do centro, cano apontando para o centro, coronha saindo pelo canto inferior direito; mão esquerda na frente do guarda-mão. (v2: mão direita no cabo do seu ajuste; câmera perto dos olhos; mapa sempre nivelado.)",
+   "cam": {
+    "x": -3.05,
+    "y": -7.15,
+    "z": -12,
+    "rx": -14.95,
+    "ry": -14.95,
+    "rz": -7.3,
+    "fov": 59
+   },
+   "scenes": {
+    "fp_walk": {
+     "p": [
+      0.00515,
+      -0.06271,
+      0.08593
+     ],
+     "r": [
+      21.48,
+      -15.62,
+      20.99
+     ],
+     "lh": {
+      "f": 0.23,
+      "d": 0.025,
+      "s": 0
+     }
+    }
+   }
+  },
+  "smg": {
+   "note": "Baseado na foto da Kriss Vector do CrossFire: supressor um pouco à direita do centro, holográfico bem visível em cima, coronha no canto inferior direito; mão esquerda por baixo. (v2: mão direita no cabo do seu ajuste; câmera perto dos olhos; mapa sempre nivelado.)",
+   "cam": {
+    "x": -3.15,
+    "y": -8,
+    "z": -12,
+    "rx": -15,
+    "ry": -13.75,
+    "rz": -9,
+    "fov": 59
+   },
+   "scenes": {
+    "fp_walk": {
+     "p": [
+      0.01693,
+      -0.10566,
+      0.02684
+     ],
+     "r": [
+      11.74,
+      -4.91,
+      19.51
+     ]
+    }
+   }
+  }
+ }
+}

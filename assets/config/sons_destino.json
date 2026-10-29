@@ -1,0 +1,48 @@
+{
+ "version": 1,
+ "sons": {
+  "Sounds/Pack_Som_By_bison/sons/09_MV_Ann_Chain_Killer.mp3": {
+   "nota": "ao matar 4 ou mais em sequencia",
+   "quando": "2026-10-28T01:35:01.237Z",
+   "destino": "locutor_massacre",
+   "aplicado": true
+  },
+  "Sounds/Pack_Som_By_bison/sons/12_MV_Ann_Double_Kill.mp3": {
+   "nota": "ao matar 2 seguidos ou em sequencia..",
+   "quando": "2026-10-28T01:34:45.306Z",
+   "destino": "locutor_abate_duplo",
+   "aplicado": true
+  },
+  "Sounds/Pack_Som_By_bison/sons/27_MV_Ann_Triple_Kill.mp3": {
+   "nota": "ao matar 3 em sequencia",
+   "quando": "2026-10-28T01:33:22.454Z",
+   "destino": "locutor_abate_triplo",
+   "aplicado": true
+  },
+  "Sounds/Pack_Som_By_bison/sons/31_UI_HUD_Training_Levelup.mp3": {
+   "nota": "ao iniciar a partida no botao de start",
+   "quando": "2026-10-28T01:33:47.201Z",
+   "destino": "ao_iniciar_a_partida_no_botao_de_start",
+   "aplicado": true
+  },
+  "Sounds/Pack_Som_By_bison/sons/17_MV_Ann_MassKill.mp3": {
+   "nota": "ao matar na granada",
+   "quando": "2026-10-28T01:34:03.311Z",
+   "destino": "ao_matar_na_granada",
+   "aplicado": true
+  },
+  "Sounds/Pack_Som_By_bison/sons/14_MV_Ann_HeadShot.mp3": {
+   "nota": "ao dar Headshot, tiro na cabeça.. vale somente para tiro na cabeça",
+   "quando": "2026-10-28T01:34:34.186Z",
+   "destino": "locutor_headshot",
+   "aplicado": true
+  },
+  "Sounds/Pack_Som_By_bison/sons/08_MV_Ann_Chain_HeadShot.mp3": {
+   "nota": "ao dar 2 tiro na cabeça em sequencia",
+   "quando": "2026-10-28T01:36:01.932Z",
+   "destino": "ao_dar_2_tiro_na_cabe_a_em_sequencia",
+   "aplicado": true
+  }
+ },
+ "saved": "2026-10-28T01:36:01.932Z"
+}
