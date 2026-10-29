@@ -82,7 +82,7 @@ export class Game {
   }
 
   start(mode, config = null) {
-    this.stop(); this.mode = mode; this.config = config; this.audio.init(); this.audio.play('ui');
+    this.stop(); this.mode = mode; this.config = config; this.audio.init(); this.audio.play('ui'); this._t0 = performance.now(); this.finished = false;
     this.announcer.reset(); this.announcer.say('inicio', 250);
     this._refreshGrips();
     this._buildMap();
@@ -137,7 +137,17 @@ export class Game {
   /** Relê os ajustes salvos no Lab de Armas (assim o que você salvou no Lab vale na próxima partida / ao voltar da pausa, sem recarregar a página). */
   _refreshGrips() { loadGrips().then(() => { if (this.fpv) this.fpv.fs = null; if (this.held) this.held.snap = true; }).catch(() => {}); }
 
+  /** XP da partida (patentes): +100 por abate, +30 por minuto jogado (até 20 min), +150 se terminou a partida. O treino não dá XP. */
+  _matchXp() {
+    if (!this.running || this.mode === 'training' || !this._t0) return null;
+    const sc = this.bots?.scores.player || this.online?.myScore || { kills: 0, deaths: 0 };
+    const min = Math.min(20, (performance.now() - this._t0) / 60000);
+    if (min < .5 && !sc.kills) return null;   // entrou e saiu na hora: não conta
+    const xp = sc.kills * 100 + Math.floor(min) * 30 + (this.finished ? 150 : 0);
+    return { xp, kills: sc.kills, minutes: Math.floor(min), finished: !!this.finished };
+  }
   stop() {
+    const xp = this._matchXp(); this._t0 = 0; if (xp && xp.xp > 0) try { this.onXp?.(xp); } catch {}
     this.running = false; cancelAnimationFrame(this._raf);
     if (document.pointerLockElement) document.exitPointerLock();
     this.range?.dispose(); this.range = null;

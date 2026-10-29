@@ -101,7 +101,7 @@ export class Net {
   _roomInfo() { const r = this.room; return r ? { host: r.host, hostName: r.hostName, count: r.players.length, mode: r.mode, open: !r.inGame, inGame: !!r.inGame } : null; }
   createRoom(mode = 'deathmatch', me = {}) {
     this.leaveRoom(true);
-    this.room = { host: this.id, hostName: this.name, mode, inGame: false, players: [{ id: this.id, name: this.name, skin: me.skin || 'izzy' }] };
+    this.room = { host: this.id, hostName: this.name, mode, inGame: false, players: [{ id: this.id, name: this.name, ...pub(me) }] };
     this.emit('room', this.room); return this.room;
   }
   /** Entrar na sala de um amigo (pelo ID dele). */
@@ -111,7 +111,7 @@ export class Net {
       this.leaveRoom(true);
       const c = this.peer.connect(peerOf(hostId), { reliable: true, metadata: { game: true } });
       const tm = setTimeout(() => { try { c.close(); } catch {} res({ ok: false, why: 'O anfitrião não respondeu (está offline?).' }); }, 9000);
-      c.on('open', () => c.send({ t: 'join', id: this.id, name: this.name, skin: me.skin || 'izzy' }));
+      c.on('open', () => c.send({ t: 'join', id: this.id, name: this.name, ...pub(me) }));
       c.on('data', d => {
         if (d?.t === 'room') { clearTimeout(tm); if (!this.hostConn) { this.hostConn = c; res({ ok: true }); } this.room = d.room; this.emit('room', this.room); return; }
         if (d?.t === 'full') { clearTimeout(tm); res({ ok: false, why: d.why || 'Sala cheia.' }); try { c.close(); } catch {} return; }
@@ -141,6 +141,12 @@ export class Net {
 
   /* ---------- partida: mensagens do jogo ---------- */
   /** Manda uma mensagem da partida para todos (amigo -> anfitrião -> outros; anfitrião -> todos). */
+  /** atualiza o que os outros veem de mim na sala (skin, armas, patente, nome) */
+  updateMe(me = {}) {
+    if (!this.room) return;
+    if (this.isHost()) { const p = this.room.players.find(x => x.id === this.id); if (p) { Object.assign(p, pub(me)); p.name = this.name; this._broadcastRoom(); } }
+    else if (this.hostConn) try { this.hostConn.send({ t: 'upd', name: this.name, ...pub(me) }); } catch {}
+  }
   /** chat de texto da sala (vai para todos da sala online) */
   sendChat(name, text) { if (!this.room) return false; const m = { t: 'chat', name, text: String(text).slice(0, 120) }; this.sendGame(m); this.emit('chat', m); return true; }
   sendGame(msg) {
@@ -176,11 +182,12 @@ export class Net {
         if (this.room.inGame) { c.send({ t: 'full', why: 'A partida já começou. Espere acabar.' }); return; }
         if (this.room.players.length >= 8) { c.send({ t: 'full', why: 'Sala cheia (8).' }); return; }
         this.hostConns.get(from)?.close(); this.hostConns.set(from, c);
-        this.room.players = this.room.players.filter(p => p.id !== from).concat({ id: from, name: d.name || 'Amigo', skin: d.skin || 'izzy' });
+        this.room.players = this.room.players.filter(p => p.id !== from).concat({ id: from, name: d.name || 'Amigo', ...pub(d) });
         this.addFriend(from, d.name); this._broadcastRoom(); this.emit('joined', from);
         c.on('close', () => { if (this.hostConns.get(from) !== c) return; this.hostConns.delete(from); if (this.room) { this.room.players = this.room.players.filter(p => p.id !== from); this._broadcastRoom(); this.emit('left', from); } });
         return;
       }
+      if (d.t === 'upd') { const p = this.room?.players.find(x => x.id === from); if (p && this.isHost()) { Object.assign(p, pub(d)); if (d.name) p.name = String(d.name).slice(0, 16); this._broadcastRoom(); } return; }
       if (d.t === 'leave') { try { c.close(); } catch {} return; }
       this._gameMsg(d, c);
     });
@@ -188,4 +195,9 @@ export class Net {
   }
 }
 
+/** dados públicos do jogador na sala: skin, armas equipadas e patente (para os outros verem e inspecionarem) */
+function pub(m = {}) {
+  const w = v => typeof v === 'string' && /^[a-z0-9_]{1,20}$/.test(v) ? v : undefined;
+  return { skin: w(m.skin) || 'izzy', primary: w(m.primary), secondary: w(m.secondary), melee: w(m.melee), rank: Number.isInteger(m.rank) && m.rank >= 0 && m.rank < 91 ? m.rank : 0 };
+}
 export const net = new Net();

@@ -11,6 +11,8 @@ import { OnlinePanel } from './ui/OnlinePanel.js';
 import { setupInstall } from './ui/Install.js';
 import { Music } from './ui/Music.js';
 import { MenuFx } from './ui/MenuFx.js';
+import { setPlayerId, addXp, myRankCell } from './ui/Ranks.js';
+import { RanksPanel } from './ui/RanksPanel.js';
 
 const $ = id => document.getElementById(id);
 const show = (id, on) => $(id).classList.toggle('hidden', !on);
@@ -131,7 +133,7 @@ let bagFrom = null;
 const inventory = new Inventory($('inventory'), {
   assets: game.assets, beep: () => { game.audio.init(); game.audio.play('beep'); },
   onEquip: (L, name) => { if (bagFrom === 'lobby') lobby.logEquip(name); },
-  onClose: () => { if (bagFrom === 'lobby') lobby.afterBag(); else show('menu', true); bagFrom = null; }
+  onClose: () => { if (bagFrom === 'lobby') { lobby.afterBag(); pushMe(); } else show('menu', true); bagFrom = null; }
 });
 function openBag(from) { bagFrom = from; if (from === 'menu') show('menu', false); inventory.open(); }
 $('openBag').onclick = () => openBag('menu');
@@ -156,6 +158,18 @@ const onlinePanel = new OnlinePanel(addEl, $('onToast'), net, {
 }, { compact: true });
 onlinePanel.isOpen = true; onlinePanel.render(); setInterval(() => { if (!game.running) net.pingAll(); }, 12000);
 net.on('end', () => { if (game.running && game.online) { game.stop(); openRoomLobby(); onlinePanel.say('A partida online terminou.', 'warn'); } });
+// PATENTES: conta do criador (ID do dono) tem todas; XP entra ao sair de cada partida
+setPlayerId(net.id);
+const pushMe = () => { const L = getLoadout(); net.updateMe({ skin: L.skin, primary: L.primary, secondary: L.secondary, melee: L.melee, rank: myRankCell() }); };
+const ranksPanel = new RanksPanel($('ranks'), { beep: () => { game.audio.init(); game.audio.play('beep'); }, onPick: () => { lobby.refresh(); pushMe(); } });
+game.onXp = r => {
+  const ups = addXp(r.xp);
+  setTimeout(() => {   // aparece no chat da sala ao voltar
+    lobby.note(`+${r.xp} XP (${r.kills} abate${r.kills === 1 ? '' : 's'}, ${r.minutes} min).`, 'ok');
+    ups.forEach(u => lobby.note(`NOVA PATENTE: ${u.name}!`, 'ok'));
+    if (ups.length) { lobby.refresh(); pushMe(); }
+  }, 300);
+};
 let roomIds = [];
 net.on('room', r => {   // avisos no chat da sala: quem entrou / saiu
   const ids = r ? r.players.map(p => p.id) : [];
@@ -177,7 +191,8 @@ const lobby = new Lobby($('lobby'), {
   beep: () => { game.audio.init(); game.audio.play('beep'); },
   addPanel: () => addEl,
   getName: () => net.name !== 'Jogador' ? net.name : null,
-  onName: v => net.setName(v),
+  onName: v => { net.setName(v); clearTimeout(window.__nmT); window.__nmT = setTimeout(pushMe, 600); },
+  openRanks: () => ranksPanel.open(),
   online: () => net.room ? { host: net.isHost(), hostName: net.room.hostName, count: net.room.players.length, players: net.room.players, myId: net.id, hostId: net.room.host } : null,
   sendChat: (who, t) => net.room ? net.sendChat(who, t) : false
 });

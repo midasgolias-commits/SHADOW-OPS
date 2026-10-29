@@ -4,6 +4,10 @@ import { WEAPONS } from '../weapons/Weapons.js';
 import { SKINS, SLOTS, getLoadout, setLoadout } from './Loadout.js';
 import { CharacterPreview } from './CharacterPreview.js';
 import { weaponPhoto } from './Inventory.js';
+import { myRankCell, rankIcon, rankName, botRankCell } from './Ranks.js';
+
+const BOT_GUNS = ['rifle', 'smg', 'shotgun', 'sniper', 'aug', 'rifle', 'smg'];
+const botGun = name => { let h = 7; for (const ch of String(name)) h = (h * 33 + ch.charCodeAt(0)) >>> 0; return BOT_GUNS[h % BOT_GUNS.length]; };
 
 const AGENTS = [
   { id: 'viper', name: 'VIPER', role: 'Assalto', c: '#d9482b', desc: 'Pressiona os corredores e abre espaço para o time entrar.' },
@@ -42,7 +46,7 @@ export class Lobby {
   }
 
   open(mode, tab) {
-    this._stop();
+    this._stop(); this.insp = null;
     if (!this.s || this.s.mode !== mode) { this._init(mode); }
     if (tab) this.tab = tab;
     const nm = this.hooks.getName?.(); if (nm) this.s.name = nm;
@@ -50,7 +54,7 @@ export class Lobby {
   }
   close() { this._stop(); this.preview?.stop(); }
   /** redesenha (ex.: alguém entrou/saiu da sala online) */
-  refresh() { if (this.s && this.root.querySelector('.lb2')) this._render(); }
+  refresh() { if (this.insp?.friend && !(this.hooks.online?.()?.players || []).some(p => 'p' + p.id === this.insp.key)) { this.insp = null; this._showPreview(); } if (this.s && this.root.querySelector('.lb2')) this._render(); }
   /** Estrutura fixa (estilo sala do Point Blank): fundo do galpão na tela toda, personagem grande à esquerda,
    *  painel de informação na frente dele (encostado na barra de baixo), janela da sala à direita com chat, e barra inferior. */
   _shell() {
@@ -77,6 +81,7 @@ export class Lobby {
         <div class="lb3-me"></div>
         <div class="lb3-tools">
           <button data-act="bag" title="Mochila"><svg viewBox="0 0 24 24"><path d="M8 7V5a4 4 0 0 1 8 0v2h2.5A1.5 1.5 0 0 1 20 8.5V20a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8.5A1.5 1.5 0 0 1 5.5 7Zm2 0h4V5a2 2 0 0 0-4 0Zm-2 6h8v2H8Z"/></svg><span>Mochila</span></button>
+          <button data-act="ranks" title="Patentes"><svg viewBox="0 0 24 24"><path d="M12 2 4 5v6c0 5 3.4 9.3 8 11 4.6-1.7 8-6 8-11V5Zm0 4.2 1.5 3.1 3.4.5-2.5 2.4.6 3.4-3-1.6-3 1.6.6-3.4-2.5-2.4 3.4-.5Z"/></svg><span>Patentes</span></button>
           <button data-act="settings" title="Configurações"><svg viewBox="0 0 24 24"><path d="M13.7 2l.5 2.6 1.6.7 2.2-1.5 2.4 2.4-1.5 2.2.7 1.6 2.6.5v3.4l-2.6.5-.7 1.6 1.5 2.2-2.4 2.4-2.2-1.5-1.6.7-.5 2.6h-3.4l-.5-2.6-1.6-.7-2.2 1.5-2.4-2.4 1.5-2.2-.7-1.6L2 13.7v-3.4l2.6-.5.7-1.6-1.5-2.2 2.4-2.4 2.2 1.5 1.6-.7.5-2.6ZM12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/></svg><span>Configurações</span></button>
           <button data-act="exit" title="Sair da sala"><svg viewBox="0 0 24 24"><path d="M11 2h2v10h-2Zm-4.6 3.2 1.4 1.4A7 7 0 1 0 16.2 6.6l1.4-1.4A9 9 0 1 1 6.4 5.2Z"/></svg><span>Sair</span></button>
         </div>
@@ -97,18 +102,20 @@ export class Lobby {
     ol.innerHTML = list.map(m => m.who ? `<li class="${m.cls}"><b>[${esc(m.who)}]</b> ${esc(m.t)}</li>` : `<li class="sys ${m.cls}">${esc(m.t)}</li>`).join('');
     ol.scrollTop = ol.scrollHeight;
   }
+  /** personagem mostrado: o meu, ou o da pessoa que estou inspecionando (clique no nome na sala) */
+  _showPreview() { const L = getLoadout(), q = this.insp; this.preview?.set(q ? q.skin : L.skin, q ? q.primary : L.primary); }
   _startPreview() {
     const a = this.hooks.assets, L = getLoadout();
     if (!a?.ready) { clearTimeout(this._wt); this._wt = setTimeout(() => this.s && this._startPreview(), 400); return; }
     this.preview ??= new CharacterPreview(this.root.querySelector('.lb2-char'), a, { dist: 4.7, lookY: .86 });
-    this.preview.set(L.skin, L.primary); this.preview.start();
+    this._showPreview(); this.preview.start();
     this.root.querySelector('.lb2-wait')?.classList.add('hidden');
   }
   _stop() { clearInterval(this.timer); this.timer = null; this.cd = 0; }
   /** Mochila (inventário em tela cheia, estilo Point Blank). A sala para de desenhar o personagem enquanto ela está aberta. */
   openBag() { if (this.cd) { this._stop(); this._log('Início cancelado', 'warn'); } this.preview?.stop(); this.hooks.openInventory?.(); }
   /** Volta da mochila: o personagem da sala mostra o que foi equipado. */
-  afterBag() { const L = getLoadout(); this.preview?.set(L.skin, L.primary); this.preview?.start(); this._render(); }
+  afterBag() { this.insp = null; this._showPreview(); this.preview?.start(); this._render(); }
   logEquip(name) { this._log('Equipado: ' + name, 'ok'); }
 
   _init(mode) {
@@ -137,9 +144,16 @@ export class Lobby {
         for (const arr of Object.values(s.teams)) arr.forEach((p, i) => { if (p?.me) arr[i] = null; });
         slots[+d.i] = { me: true }; this._log(`${s.name || 'Jogador'} trocou de vaga`); this.hooks.beep?.(); break;
       case 'bot': slots[+d.i] = this._newBot(); this._log(`Bot ${slots[+d.i].name} adicionado`); this.hooks.beep?.(); break;
-      case 'kick': this._log(`Bot ${slots[+d.i].name} removido`, 'warn'); slots[+d.i] = null; this.hooks.beep?.(); break;
+      case 'kick': if (this.insp?.key === d.t + d.i) { this.insp = null; this._showPreview(); } this._log(`Bot ${slots[+d.i].name} removido`, 'warn'); slots[+d.i] = null; this.hooks.beep?.(); break;
       case 'settings': this._stop(); this._render(); this.hooks.onSettings?.(); return;
       case 'exit': this._stop(); this.preview?.stop(); this.hooks.onExit?.(); return;
+      case 'inspect': {   // clicar no nome: mostra o personagem e a arma da pessoa (no meu nome: volta para o meu)
+        let q = null;
+        if (d.pid) { const pl = (this.hooks.online?.()?.players || []).find(x => x.id === d.pid); if (pl && pl.id !== this.hooks.online().myId) q = { key: 'p' + pl.id, name: pl.name, skin: pl.skin || 'izzy', primary: pl.primary || 'rifle', secondary: pl.secondary, melee: pl.melee, rank: pl.rank ?? 0, agent: AGENTS[(this.hooks.online().players.indexOf(pl)) % AGENTS.length], friend: true }; }
+        else { const p = slots?.[+d.i]; if (p && !p.me) q = { key: d.t + d.i, name: p.name, skin: 'bot', primary: botGun(p.name), secondary: 'pistol', melee: 'knife', rank: botRankCell(p.name), agent: AGENTS[p.agent], bot: true }; }
+        this.insp = q; if (q) this.tab = 'info'; this._showPreview(); this.hooks.beep?.(); break; }
+      case 'ranks': this.hooks.beep?.(); this.hooks.openRanks?.(); return;
+      case 'uninspect': this.insp = null; this._showPreview(); this.hooks.beep?.(); break;
       case 'ctab': this.chatF = d.c; this.root.querySelectorAll('.lb3-ctabs button').forEach(b => b.classList.toggle('on', b.dataset.c === d.c)); this._renderChat(); return;
       case 'invite': this.tab = 'add'; this.hooks.beep?.(); break;
       case 'team': {   // competitivo: passa para o outro time (primeira vaga livre)
@@ -198,18 +212,29 @@ export class Lobby {
     const at = `data-t="${key}" data-i="${i}"`;
     if (!p) return `<li class="empty"><span class="nm"><b>Vaga livre</b></span><button class="mini" data-act="join" ${at}>Entrar</button><button class="mini" data-act="bot" ${at}>+ Bot</button></li>`;
     const a = AGENTS[p.me ? this.s.agent : p.agent], name = p.me ? (this.s.name.trim() || 'Jogador') : p.name;
-    return `<li class="${p.me ? 'me' : ''}"><span class="ic">${badge(a)}</span><span class="nm"><b>${esc(name)}</b><small>${a.name}, ${a.role}</small></span>`
+    const rk = p.me ? myRankCell() : botRankCell(p.name), look = this.insp ? this.insp.key === key + i : p.me;
+    return `<li class="${p.me ? 'me' : ''}${look ? ' look' : ''}" data-act="inspect" ${at} title="Clique para ver o personagem">${rankIcon(rk, 28)}<span class="nm"><b>${esc(name)}</b><small>${a.name}, ${a.role}</small></span>`
       + (p.me ? '<span class="tag">VOCÊ</span>' : `<span class="tag">BOT</span><button class="mini x" data-act="kick" ${at} aria-label="Remover bot">✕</button>`) + '<span class="ok">PRONTO</span></li>';
   }
 
   /** Painel da esquerda: classe, nome e o que está equipado (fotos). A aba Mochila abre o inventário em tela cheia (Inventory.js). */
   _left() {
     const s = this.s, ag = AGENTS[s.agent], L = getLoadout();
-    const skin = SKINS.find(x => x.id === L.skin);
-    this.root.querySelector('.lb2-skin').textContent = skin.name;
+    const q = this.insp, skin = SKINS.find(x => x.id === (q ? q.skin : L.skin)) || SKINS[0];
+    this.root.querySelector('.lb2-who small').textContent = q ? 'INSPECIONANDO' : 'SKIN';
+    this.root.querySelector('.lb2-skin').textContent = q ? q.name : skin.name;
     this.root.querySelectorAll('.lb2-tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === this.tab));
     const P = this.root.querySelector('.lb2-panel');
     if (this.tab === 'add') { const el = this.hooks.addPanel?.(); if (el && el.parentNode !== P) { P.innerHTML = ''; P.appendChild(el); } }
+    else if (this.tab === 'info' && q) {   // ficha da pessoa inspecionada (como a "Informação Detalhada" do PB)
+      const gun = id => WEAPONS[id] ? `<div><img src="${weaponPhoto(id)}" alt=""><b>${WEAPONS[id].name}</b><small>${WEAPONS[id].kind || ''}</small></div>` : '';
+      P.innerHTML = `<div class="lb2-info lb3-insp" style="--c:${q.agent.c}">
+        <div class="lb2-agent">${rankIcon(q.rank, 46)}<div><small>${rankName(q.rank)}</small><h3>${esc(q.name)}</h3></div>
+          <span class="lb3-tagx">${q.bot ? 'BOT' : 'AMIGO'}</span></div>
+        <p>Classe: <b>${q.agent.name}</b> (${q.agent.role}) · Skin: <b>${skin.name}</b></p>
+        <div class="lb2-bagbtn"><h4>Equipado</h4><div class="eqrow">${[q.primary, q.secondary, q.melee].map(gun).join('')}</div>
+          <button data-act="uninspect">VOLTAR PARA O MEU PERSONAGEM</button></div></div>`;
+    }
     else if (this.tab === 'info') {
       P.innerHTML = `<div class="lb2-info" style="--c:${ag.c}">
         <div class="lb2-agent"><span class="ic">${badge(ag)}</span><div><small>${ag.role}</small><h3>${ag.name}</h3></div>
@@ -235,7 +260,8 @@ export class Lobby {
       teams = `<div class="team team-ffa"><div class="team-h"><span>JOGADORES ONLINE · MATA-MATA</span><span>${ps.length}/${n}</span></div><ul class="two-col">${Array.from({ length: n }, (_, i) => {
         const p = ps[i]; if (!p) return '<li class="empty"><span class="nm"><b>Vaga livre</b><small>convide pela aba Adicionar</small></span></li>';
         const me = p.id === on.myId, a = AGENTS[me ? s.agent : i % AGENTS.length];
-        return `<li class="${me ? 'me' : ''}"><span class="ic">${badge(a)}</span><span class="nm"><b>${esc(p.name)}</b><small>${p.id === on.hostId ? 'Dono da sala' : 'Amigo'}</small></span><span class="tag">${me ? 'VOCÊ' : 'AMIGO'}</span><span class="ok">PRONTO</span></li>`; }).join('')}</ul></div>`;
+        const look = this.insp ? this.insp.key === 'p' + p.id : me;
+        return `<li class="${me ? 'me' : ''}${look ? ' look' : ''}" data-act="inspect" data-pid="${esc(p.id)}" title="Clique para ver o personagem">${rankIcon(me ? myRankCell() : (p.rank ?? 0), 28)}<span class="nm"><b>${esc(p.name)}</b><small>${p.id === on.hostId ? 'Dono da sala' : 'Amigo'}</small></span><span class="tag">${me ? 'VOCÊ' : 'AMIGO'}</span><span class="ok">PRONTO</span></li>`; }).join('')}</ul></div>`;
     } else teams = comp ? team('att', 'ATAQUE', 'att') + team('def', 'DEFESA', 'def') : team('ffa', 'TODOS CONTRA TODOS', 'ffa');
     const tw = R.querySelector('.lb3-teams'); tw.className = 'lb3-teams lb-teams' + (comp && !on ? ' two' : ''); tw.innerHTML = teams;
     R.querySelector('.lb3-mid').innerHTML = `
@@ -248,7 +274,7 @@ export class Lobby {
         <button class="go${cd ? ' cancel' : ''}" data-act="go"${blocked && !cd ? ' disabled' : ''}>${cd ? `Cancelar (${cd})` : 'JOGAR'}</button>
         <button class="pb" data-act="exit">Sair</button>`;
     const ag = AGENTS[s.agent];
-    R.querySelector('.lb3-me').innerHTML = `<span class="ic">${badge(ag)}</span><b>${esc(s.name.trim() || 'Jogador')}</b><small>${ag.name} · ${ag.role}</small>`;
+    R.querySelector('.lb3-me').innerHTML = `${rankIcon(myRankCell(), 34)}<b>${esc(s.name.trim() || 'Jogador')}</b><small>${ag.name} · ${ag.role}</small>`;
     new Minimap(R.querySelector('.lb-map canvas'), this.map).draw(null);
     this._renderChat();
   }

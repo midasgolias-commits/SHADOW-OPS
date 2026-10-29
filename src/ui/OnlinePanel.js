@@ -1,5 +1,7 @@
 import { showId } from '../net/Net.js';
 import { getLoadout } from './Loadout.js';
+import { myRankCell } from './Ranks.js';
+const meInfo = () => { const L = getLoadout(); return { skin: L.skin, primary: L.primary, secondary: L.secondary, melee: L.melee, rank: myRankCell() }; };
 
 /**
  * Tela ONLINE (menu principal → Online): seu ID (para os amigos te adicionarem), lista de amigos (adicionar por ID,
@@ -60,7 +62,7 @@ export class OnlinePanel {
 
   async _join(hostId) {
     await this.net.start(); this.say('Entrando na sala…');
-    const r = await this.net.joinRoom(hostId, { skin: getLoadout().skin });
+    const r = await this.net.joinRoom(hostId, meInfo());
     this.say(r.ok ? 'Você entrou na sala. Espere o anfitrião iniciar.' : r.why, r.ok ? 'ok' : 'warn');
     if (r.ok && (this.compact || !this.isOpen)) this.hooks.onShow?.();
   }
@@ -79,10 +81,10 @@ export class OnlinePanel {
         if (id === n.id) { this.say('Esse é o seu próprio ID.', 'warn'); return; }
         n.addFriend(id); inp.value = ''; this.say('Amigo adicionado: ' + id, 'ok'); this.hooks.beep?.(); return; }
       case 'del': n.removeFriend(d.id); return;
-      case 'invite': if (!n.room && this.compact) n.createRoom('deathmatch', { skin: getLoadout().skin });   // na sala: o 1º convite já abre a sala online
+      case 'invite': if (!n.room && this.compact) n.createRoom('deathmatch', meInfo());   // na sala: o 1º convite já abre a sala online
         if (n.invite(d.id)) this.say('Convite enviado.', 'ok'); return;
       case 'join': this._join(d.id); return;
-      case 'create': n.start().then(() => { n.createRoom('deathmatch', { skin: getLoadout().skin }); this.say('Sala criada. Convide os amigos.', 'ok'); }); return;
+      case 'create': n.start().then(() => { n.createRoom('deathmatch', meInfo()); this.say('Sala criada. Convide os amigos.', 'ok'); }); return;
       case 'leave': n.leaveRoom(); return;
       case 'kick': n.kick(d.id); return;
       case 'go': { if (!n.isHost()) return; if (n.room.players.length < 2) { this.say('Espere pelo menos 1 amigo entrar.', 'warn'); return; } n.startMatch({ mode: 'deathmatch' }); return; }

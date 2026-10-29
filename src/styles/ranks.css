@@ -1,0 +1,31 @@
+/* ===== Patentes ===== */
+.rk{display:inline-block;flex:none;vertical-align:middle;background:url(../../assets/ui/ranks/ranks.jpg) 0 0/1300% 700% no-repeat;border-radius:3px;box-shadow:0 0 0 1px rgba(0,0,0,.6)}
+#ranks{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;background:rgba(3,6,10,.72);backdrop-filter:blur(3px)}
+#ranks.hidden{display:none}
+.rk-win{width:min(1180px,96vw);height:min(860px,94vh);display:flex;flex-direction:column;border:1px solid #04070c;border-radius:8px;overflow:hidden;
+  background:linear-gradient(180deg,rgba(14,24,40,.97),rgba(7,12,21,.98));box-shadow:inset 0 0 0 1px #34507a,0 20px 60px #000}
+.rk-top{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:linear-gradient(180deg,#355180,#1b2d4b 60%,#142238);box-shadow:inset 0 1px 0 #6d8fc0}
+.rk-top h2{margin:0;font-size:20px;letter-spacing:.14em}
+.rk-x{padding:4px 12px}
+.rk-me{display:grid;grid-template-columns:minmax(260px,340px) 1fr;gap:18px;padding:14px 18px;border-bottom:1px solid #24374f}
+.rk-cur{display:flex;align-items:center;gap:14px}.rk-cur small{display:block;color:#9fb3cf;font-size:12px}.rk-cur b{display:block;font-size:20px;margin:2px 0}
+.rk-own{display:inline-block;margin-top:4px;padding:2px 8px;font-size:11px;font-weight:700;letter-spacing:.06em;color:#1a0f02;border-radius:3px;background:linear-gradient(180deg,#ffd36b,#f08a24)}
+.rk-prog{display:flex;flex-direction:column;gap:6px;justify-content:center}
+.rk-line{display:flex;justify-content:space-between;gap:10px;font-size:13px;color:#b9c8dc}.rk-line b{color:#fff}
+.rk-bar{height:14px;border-radius:7px;background:#060a12;border:1px solid #2b4060;overflow:hidden}
+.rk-bar i{display:block;height:100%;background:linear-gradient(180deg,#ffd36b,#f08a24);box-shadow:0 0 10px #ff9a2a88}
+.rk-how{margin:2px 0 0;font-size:12px;color:#8ea2bd}.rk-how b{color:#ffcf6a}
+.rk-msg{margin:0;padding:8px 18px;font-size:13px;color:#ffcf6a;border-bottom:1px solid #1d2b3e}
+.rk-list{flex:1;min-height:0;overflow-y:auto;padding:4px 18px 18px}
+.rk-list h3{margin:14px 0 8px;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:#9fb3cf}
+.rk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px}
+.rk-cell{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px 6px;border:1px solid #1d2b3e;border-radius:5px;background:rgba(5,9,16,.7);color:#dfe6ef}
+.rk-cell small{font-size:11px;line-height:1.15;text-align:center}
+.rk-cell em{font-style:normal;font-size:10px;color:#ffb35a}
+.rk-cell:hover{border-color:#5d86c0;background:rgba(30,50,80,.6)}
+.rk-cell.on{border-color:#ffb02e;box-shadow:0 0 0 1px #ffb02e inset,0 0 14px #ff9a2a66;background:rgba(70,50,10,.45)}
+.rk-cell.lock .rk{filter:grayscale(1) brightness(.45)}
+.rk-cell.lock::after{content:'🔒';position:absolute;top:28px;left:50%;transform:translateX(-50%);font-size:18px;filter:drop-shadow(0 1px 2px #000)}
+.rk-cell.lock small{color:#7f8b99}
+.lb3-teams .team li .rk{margin-right:2px}
+.lb3-me .rk{margin-right:2px}
