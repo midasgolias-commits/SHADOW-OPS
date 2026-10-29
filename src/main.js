@@ -138,31 +138,37 @@ setupInstall($('installBtn'), t => { const el = $('loadInfo'); el.textContent = 
 
 /* ---------- ONLINE (amigos pela internet, grátis: src/net/Net.js) ---------- */
 window.__net = net;
-const onlinePanel = new OnlinePanel($('online'), $('onToast'), net, {
+// ONLINE: fica dentro da sala, na aba "Adicionar" (ID, amigos, convites). O anfitrião aperta JOGAR para jogar com os amigos.
+const addEl = document.createElement('div');
+const openRoomLobby = () => { ['menu', 'online', 'pause', 'hud', 'dead', 'settings'].forEach(id => show(id, false)); lobby.open('deathmatch', 'add'); show('lobby', true); };
+const onlinePanel = new OnlinePanel(addEl, $('onToast'), net, {
   beep: () => { game.audio.init(); game.audio.play('beep'); },
-  onBack: () => { onlinePanel.close(); show('online', false); show('menu', true); },
-  onShow: () => showOnline(),
-  onStart: cfg => {   // o anfitrião iniciou: todos entram na partida
+  onShow: () => { if (!game.running) openRoomLobby(); },   // aceitou um convite: vai para a sala, aba Adicionar
+  onStart: cfg => {   // o anfitrião apertou JOGAR: todos entram na partida
     if (!game.assets.ready) { onlinePanel.say('Ainda carregando os modelos… tente de novo em instantes.', 'warn'); return; }
-    onlinePanel.close(); show('online', false);
+    lobby.close(); show('lobby', false);
     const slot = Math.max(0, (cfg.roster || []).findIndex(p => p.id === net.id));
     startMode('deathmatch', { mode: 'deathmatch', title: 'ONLINE · MATA-MATA', me: { name: net.name, team: 'ffa' }, loadout: getLoadout(), players: [],
       online: { net, roster: cfg.roster || [], slot } });
   },
-  onLost: why => { if (game.running && game.online) { game.stop(); ['pause', 'hud', 'dead'].forEach(id => show(id, false)); showOnline(); onlinePanel.say(why, 'warn'); } }
-});
-net.on('end', () => { if (game.running && game.online) { game.stop(); ['pause', 'hud', 'dead'].forEach(id => show(id, false)); showOnline(); onlinePanel.say('O anfitrião encerrou a partida.', 'warn'); } });
-function showOnline() { ['menu', 'lobby'].forEach(id => show(id, false)); show('online', true); onlinePanel.open(); }
-document.querySelector('[data-online]').addEventListener('click', () => { game.audio.init(); showOnline(); });
+  onLost: why => { if (game.running && game.online) { game.stop(); openRoomLobby(); } onlinePanel.say(why, 'warn'); }
+}, { compact: true });
+onlinePanel.isOpen = true; onlinePanel.render(); setInterval(() => { if (!game.running) net.pingAll(); }, 12000);
+net.on('end', () => { if (game.running && game.online) { game.stop(); openRoomLobby(); onlinePanel.say('A partida online terminou.', 'warn'); } });
+net.on('room', () => lobby.refresh());
+net.start().then(() => { net.pingAll(); onlinePanel.render(); });   // fica online já ao abrir o jogo (para receber convites)
 window.__music = new Music(() => game.settings.volume);   // música ambiente: sala e partida
-net.start();   // fica online já ao abrir o jogo (para receber convites)
 const lobby = new Lobby($('lobby'), {
   assets: game.assets,   // personagem em 3D na sala
   openInventory: () => openBag('lobby'),
-  onStart: cfg => startMode(cfg.mode, cfg),
-  onExit: () => { show('lobby', false); show('menu', true); },
+  onStart: cfg => { if (net.isHost() && net.room.players.length >= 2) { net.setName(cfg.me?.name || net.name); net.startMatch({ mode: 'deathmatch' }); } else startMode(cfg.mode, cfg); },
+  onExit: () => { if (net.room) net.leaveRoom(); show('lobby', false); show('menu', true); },
   onSettings: () => openSettings('lobby'),
-  beep: () => { game.audio.init(); game.audio.play('beep'); }
+  beep: () => { game.audio.init(); game.audio.play('beep'); },
+  addPanel: () => addEl,
+  getName: () => net.name !== 'Jogador' ? net.name : null,
+  onName: v => net.setName(v),
+  online: () => net.room ? { host: net.isHost(), hostName: net.room.hostName, count: net.room.players.length } : null
 });
 
 async function startMode(mode, cfg) {
@@ -187,7 +193,7 @@ document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click'
 $('resume').onclick = () => game.resume();
 $('restart').onclick = () => startMode(game.mode, game.config);
 $('toLobby').onclick = () => {
-  if (game.online) { if (net.isHost()) net.endMatch(); game.stop(); show('pause', false); show('hud', false); show('dead', false); showOnline(); return; }   // online: volta para a tela Online (a sala continua)
+  if (game.online) { if (net.isHost()) net.endMatch(); game.stop(); openRoomLobby(); return; }   // online: volta para a tela Online (a sala continua)
   game.stop(); show('pause', false); show('hud', false);
   if (game.mode === 'training') show('menu', true); else { lobby.open(game.mode); show('lobby', true); }
 };

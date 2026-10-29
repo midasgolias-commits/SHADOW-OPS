@@ -32,3 +32,4 @@
 .on-toast{display:flex;flex-direction:column;gap:6px;width:300px;padding:12px 14px;border:1px solid #53d36e;border-radius:6px;background:rgba(14,20,16,.95);box-shadow:0 6px 20px #000c;font-size:14px}
 .on-toast b{font-size:16px;color:#7fe892}.on-toast span{color:var(--mut);font-size:12px}.on-toast div{display:flex;gap:6px}.on-toast button{flex:1;font-size:14px;padding:7px}
 @media(max-width:1000px){.on-grid{grid-template-columns:1fr}}
+.on-compact{width:100%;gap:10px}.on-compact .on-status{margin:0}.on-compact .on-msg{min-height:18px;margin:0}

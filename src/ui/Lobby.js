@@ -33,7 +33,7 @@ export class Lobby {
     this.root = root; this.hooks = hooks; this.s = null; this.cd = 0; this.timer = null; this.logs = []; this.tab = 'info'; this.preview = null;
     this.map = buildMapData();
     root.addEventListener('click', e => { const b = e.target.closest('[data-act]'); if (b && !b.disabled) this._act(b.dataset); });
-    root.addEventListener('input', e => { if (e.target.id === 'lbName') this.s.name = e.target.value; });
+    root.addEventListener('input', e => { if (e.target.id === 'lbName') { this.s.name = e.target.value; this.hooks.onName?.(e.target.value); } });
     root.addEventListener('change', e => {
       const k = e.target.dataset.k; if (!k) return;
       const o = MODES[this.s.mode].cfg.find(c => c.k === k).opts.find(o => String(o[0]) === e.target.value);
@@ -41,12 +41,16 @@ export class Lobby {
     });
   }
 
-  open(mode) {
+  open(mode, tab) {
     this._stop();
     if (!this.s || this.s.mode !== mode) { this._init(mode); }
+    if (tab) this.tab = tab;
+    const nm = this.hooks.getName?.(); if (nm) this.s.name = nm;
     this._shell(); this._render(); this._startPreview();
   }
   close() { this._stop(); this.preview?.stop(); }
+  /** redesenha (ex.: alguém entrou/saiu da sala online) */
+  refresh() { if (this.s && this.root.querySelector('.lb2')) this._render(); }
   /** Estrutura fixa: palco do personagem (canvas 3D não é recriado) + painel da esquerda + sala à direita. */
   _shell() {
     if (this.root.querySelector('.lb2')) return;
@@ -55,7 +59,7 @@ export class Lobby {
         <div class="lb2-stage"><canvas class="lb2-char" aria-label="Seu personagem"></canvas>
           <div class="lb2-who"><small>SKIN</small><b class="lb2-skin"></b></div>
           <ul class="lb2-eq"></ul><p class="lb2-tip">arraste para girar</p><p class="lb2-wait">Carregando personagem…</p></div>
-        <nav class="lb2-tabs"><button data-act="tab" data-tab="info">Informação</button><button data-act="tab" data-tab="bag">Mochila</button></nav>
+        <nav class="lb2-tabs"><button data-act="tab" data-tab="info">Informação</button><button data-act="tab" data-tab="bag">Mochila</button><button data-act="tab" data-tab="add">Adicionar</button></nav>
         <div class="lb2-panel"></div>
       </aside>
       <section class="lb2-right"></section>
@@ -141,7 +145,11 @@ export class Lobby {
       const a = cnt(t.att), d = cnt(t.def);
       if (!a || !d) out.push({ t: 'Cada time precisa de ao menos 1 jogador.', cls: 'warn', block: true });
       else if (a !== d) out.push({ t: `Times desiguais: ${a} contra ${d}.`, cls: 'warn' });
-    } else if (cnt(t.ffa) < 2) out.push({ t: 'Adicione ao menos 1 bot para jogar.', cls: 'warn', block: true });
+    }
+    const on = this.hooks.online?.();   // sala online (amigos) aberta junto com esta sala
+    if (on && !on.host) { out.push({ t: `Na sala online de ${on.hostName}: esperando o anfitrião apertar JOGAR.`, cls: 'warn', block: true }); return out; }
+    if (on && on.count >= 2) { out.push({ t: `Partida online: ${on.count} jogadores (mata-mata, sem bots).`, cls: 'ok' }); return out; }
+    if (s.mode !== 'competitive' && cnt(t.ffa) < 2) out.push({ t: 'Adicione ao menos 1 bot para jogar.', cls: 'warn', block: true });
     if (!out.length) out.push({ t: 'Sala pronta para iniciar.', cls: 'ok' });
     return out;
   }
@@ -162,7 +170,8 @@ export class Lobby {
     this.root.querySelector('.lb2-eq').innerHTML = SLOTS.map(sl => `<li><span>${sl.key}</span><img src="${weaponPhoto(L[sl.k])}" alt=""><b>${WEAPONS[L[sl.k]].name}</b></li>`).join('');
     this.root.querySelectorAll('.lb2-tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === this.tab));
     const P = this.root.querySelector('.lb2-panel');
-    if (this.tab === 'info') {
+    if (this.tab === 'add') { const el = this.hooks.addPanel?.(); if (el && el.parentNode !== P) { P.innerHTML = ''; P.appendChild(el); } }
+    else if (this.tab === 'info') {
       P.innerHTML = `<div class="lb2-info" style="--c:${ag.c}">
         <div class="lb2-agent"><span class="ic">${badge(ag)}</span><div><small>${ag.role}</small><h3>${ag.name}</h3></div>
           <div class="agent-sw"><button data-act="prev" aria-label="Classe anterior">‹</button><button data-act="next" aria-label="Próxima classe">›</button></div></div>
@@ -188,7 +197,7 @@ export class Lobby {
         <div class="lb-cfg">${M.cfg.map(c => `<label>${c.label}<select data-k="${c.k}">${c.opts.map(o => `<option value="${o[0]}"${o[0] === s.cfg[c.k] ? ' selected' : ''}>${o[1]}</option>`).join('')}</select></label>`).join('')}</div>
         <div class="lb-log"><h4>Registro</h4><ol>${[...iss, ...this.logs.slice().reverse()].map(l => `<li class="${l.cls}">${esc(l.t)}</li>`).join('')}</ol></div>
       </div>
-      <div class="lb2-go"><small>${cd ? `Começando em ${cd}...` : blocked ? 'Corrija os avisos para iniciar.' : 'Tudo pronto.'}</small>
+      <div class="lb2-go"><small>${cd ? `Começando em ${cd}...` : blocked ? (this.hooks.online?.()?.host === false ? 'Esperando o anfitrião apertar JOGAR…' : 'Corrija os avisos para iniciar.') : 'Tudo pronto.'}</small>
         <button class="go${cd ? ' cancel' : ''}" data-act="go"${blocked && !cd ? ' disabled' : ''}>${cd ? `Cancelar (${cd})` : 'JOGAR'}</button>
         <button class="ghost lb2-exit" data-act="exit">SAIR</button></div>`;
     new Minimap(this.root.querySelector('.lb-map canvas'), this.map).draw(null);
