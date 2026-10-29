@@ -191,6 +191,8 @@ $('toLobby').onclick = () => {
 };
 $('toMenu').onclick = () => { if (game.online && net.isHost()) net.endMatch(); game.stop(); lobby.close(); show('pause', false); show('hud', false); show('menu', true); };
 $('openSettings').onclick = () => openSettings('menu');
+// Lab: só aparece no PC do dono (jogo aberto pelo servidor local); no site publicado ele nem é enviado.
+if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) $('openLab').classList.remove('hidden');
 $('openLab').onclick = () => { location.href = 'lab.html?v=' + Date.now(); };   // ajustar a arma na mão (cena por cena)
 $('closeSettings').onclick = () => { show('settings', false); show(settingsFrom, true); };
 
