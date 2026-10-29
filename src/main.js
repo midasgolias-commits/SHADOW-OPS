@@ -8,6 +8,7 @@ import { getLoadout } from './ui/Loadout.js';
 import { Inventory } from './ui/Inventory.js';
 import { net } from './net/Net.js';
 import { OnlinePanel } from './ui/OnlinePanel.js';
+import { setupInstall } from './ui/Install.js';
 
 const $ = id => document.getElementById(id);
 const show = (id, on) => $(id).classList.toggle('hidden', !on);
@@ -132,6 +133,7 @@ const inventory = new Inventory($('inventory'), {
 });
 function openBag(from) { bagFrom = from; if (from === 'menu') show('menu', false); inventory.open(); }
 $('openBag').onclick = () => openBag('menu');
+setupInstall($('installBtn'), t => { const el = $('loadInfo'); el.textContent = t; });
 
 /* ---------- ONLINE (amigos pela internet, grátis: src/net/Net.js) ---------- */
 window.__net = net;
