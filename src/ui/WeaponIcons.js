@@ -10,6 +10,7 @@ const P = {
   shotgun: 'M10 30h24l4-5h64l4-3h82v6h-82v4h18v6h-30l-6 4h-12l-8 16h-14l6-16h-12l-12 8H10z M108 38h40',
   pistol: 'M54 18h96v10h-6v4h-34l-4 4h-12l-8 26H64l8-26H54z M150 18v-4h6v4 M92 32a6 6 0 0 0 12 0',
   knife: 'M30 34h40l6-6h10v14H76l-6-4H30a4 4 0 0 1 0-4z M86 28c30-2 64 0 96 4-28 6-62 8-96 8z',
+  grenade: 'M92 12h16v8h-16z M84 20h32v6H84z M100 26a26 24 0 1 1-.1 0z M116 22c14 0 26 8 30 22l-6 2c-4-10-12-16-24-16z M86 42h28 M86 54h28',
   karambit: 'M40 30a10 10 0 1 1 0 .1z M50 34h34l6-4h8v12H90l-6-4H50z M98 30c30-14 62-10 84 8-26-8-54-8-82 2z'
 };
 /** Símbolo de tiro na cabeça (alvo com marca), também em contorno. */

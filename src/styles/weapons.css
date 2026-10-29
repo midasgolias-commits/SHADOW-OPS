@@ -39,3 +39,11 @@
 #scope i:nth-child(2){top:50%;left:calc(50% - 30vmin);height:1px;width:60vmin}
 
 @media(max-width:900px){#hudNote{display:none}}
+/* granada (tecla 4 / G) */
+.nade-hud{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin:4px 0;font-size:13px;letter-spacing:.06em;color:#c9d3da;text-shadow:0 1px 2px #000}
+.nade-hud:empty{display:none}
+.nade-hud b{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border:1px solid #6b7780;border-radius:3px;font-size:11px}
+.nade-hud i{font-style:normal;color:#ffd36b;font-weight:700}
+.nade-hud.on{color:#ffd36b}.nade-hud.on b{border-color:#ffb02e;color:#ffb02e}
+.nade-hud.empty{opacity:.45}
+.nade-hud small{display:block;flex:0 0 100%;text-align:right;font-size:11px;color:#ffe1a0;letter-spacing:0}

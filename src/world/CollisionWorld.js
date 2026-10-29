@@ -128,6 +128,43 @@ export class CollisionWorld {
     return best;
   }
 
+  /**
+   * Varredura de ESFERA (raio r) do centro o na direção d (normalizada) até max: testa o centro contra as caixas
+   * "engordadas" por r (soma de Minkowski), então o contato é exato em qualquer ângulo (granada).
+   * Retorna { dist, point (centro no contato), normal, tag, inside } ou null. inside = já começou encostada/dentro:
+   * nesse caso normal = lado mais raso para sair e dist = quanto precisa sair.
+   */
+  sweepSphere(o, d, max, r) {
+    const ex = Math.abs(d.x) * max + r + .05, ez = Math.abs(d.z) * max + r + .05;
+    const list = this._near(Math.min(o.x, o.x + d.x * max) - r - .05, Math.min(o.z, o.z + d.z * max) - r - .05,
+      Math.max(o.x, o.x + d.x * max) + r + .05, Math.max(o.z, o.z + d.z * max) + r + .05, this._qs || (this._qs = []));
+    let best = null;
+    for (const b of list) {
+      const mn = { x: b.min.x - r, y: b.min.y - r, z: b.min.z - r }, mx = { x: b.max.x + r, y: b.max.y + r, z: b.max.z + r };
+      if (o.x > mn.x && o.x < mx.x && o.y > mn.y && o.y < mx.y && o.z > mn.z && o.z < mx.z) {   // começou dentro: sai pelo lado mais raso
+        let pen = Infinity, ax = 'y', sg = 1;
+        for (const a of AX) { const lo = o[a] - mn[a], hi = mx[a] - o[a]; if (lo < pen) { pen = lo; ax = a; sg = -1; } if (hi < pen) { pen = hi; ax = a; sg = 1; } }
+        const normal = { x: 0, y: 0, z: 0 }; normal[ax] = sg;
+        if (!best || !best.inside || pen > best.dist) best = { dist: pen, point: { ...o }, normal, tag: b.tag, inside: true };
+        continue;
+      }
+      if (best?.inside) continue;
+      let t0 = 0, t1 = best ? Math.min(max, best.dist) : max, nAx = null, nSign = 0, miss = false;
+      for (const a of AX) {
+        if (Math.abs(d[a]) < 1e-9) { if (o[a] <= mn[a] || o[a] >= mx[a]) { miss = true; break; } continue; }
+        let ta = (mn[a] - o[a]) / d[a], tb = (mx[a] - o[a]) / d[a], s = -1;
+        if (ta > tb) { [ta, tb] = [tb, ta]; s = 1; }
+        if (ta > t0) { t0 = ta; nAx = a; nSign = s; }
+        if (tb < t1) t1 = tb;
+        if (t0 > t1) { miss = true; break; }
+      }
+      if (miss || !nAx) continue;
+      const normal = { x: 0, y: 0, z: 0 }; normal[nAx] = nSign;
+      best = { dist: t0, point: { x: o.x + d.x * t0, y: o.y + d.y * t0, z: o.z + d.z * t0 }, normal, tag: b.tag, inside: false };
+    }
+    return best;
+  }
+
   /** Linha de visão livre entre dois pontos {x,y,z}. */
   hasLOS(a, b) {
     const dx = b.x - a.x, dy = b.y - a.y, dz = b.z - a.z, L = Math.hypot(dx, dy, dz);

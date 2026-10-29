@@ -20,6 +20,7 @@ import { vfov } from './Fov.js';
 import { loadGrips } from '../weapons/Grips.js';
 import { SETTINGS_DEFAULTS } from '../ui/Settings.js';
 import { getLoadout, loadoutWeapons } from '../ui/Loadout.js';
+import { GrenadeSystem } from '../weapons/Grenades.js';
 
 const DEATH_DELAY = 3.2; // segundos até o jogador reaparecer (o competitivo passa a usar rodadas na Parte 5)
 
@@ -100,7 +101,7 @@ export class Game {
     // Parte 3: todas as armas liberadas em todos os modos (a economia do competitivo restringe isso na Parte 5)
     this.weapons = new WeaponSystem({
       camera: this.camera, scene: this.scene, world: this.world, player: this.player, audio: this.audio,
-      settings: this.settings, hooks: this.hooks, active: () => this.running && !this.paused && !this.player.dead && !!document.pointerLockElement,
+      settings: this.settings, hooks: this.hooks, active: () => this.running && !this.paused && !this.player.dead && !!document.pointerLockElement && !this.nades?.equipped,   // granada na mão: a arma não atira
       loadout: loadoutWeapons(this.loadout = config?.loadout || getLoadout()),   // só as 3 armas da mochila (1 principal, 2 secundária, 3 faca)
       infiniteAmmo: mode === 'training'   // treino: munição infinita
     });
@@ -116,10 +117,37 @@ export class Game {
     }
     this.range = mode === 'training' ? new RangeTraining(this) : null;   // treino: bots-alvo, botão do menu (E), todas as armas
     this.online = config?.online ? new OnlineMatch(this, config.online) : null;   // online: os amigos (Net.js / OnlineMatch.js)
+    this._makeGrenades(mode);
     this.hooks.onStart?.(this.mapData);
     this.time = 0; this.running = true; this.paused = false; this.clock.getDelta();
     this._lock();
     this._raf = requestAnimationFrame(() => this._frame());
+  }
+  /** Granada (tecla 4 / G): física, prévia do arco e dano em área ligados aos alvos que existem nesta partida. */
+  _makeGrenades(mode) {
+    this.nades = null;
+    if (!this.assets.grenade) { console.error('Granada indisponível: o modelo não carregou.'); return; }
+    const N = this.nades = new GrenadeSystem(this, this.assets.grenade, { infinite: mode === 'training' });
+    const me = this.player;
+    if (mode !== 'training') N.addAreaTarget(() => [{ key: 'me', name: 'você', pos: me.pos, alive: !me.dead, hurt: n => this._selfBlast(n) }]);
+    if (this.bots) N.addAreaTarget(() => this.bots.bots.filter(b => b.alive && this.bots.isEnemy(this.bots.me, b)).map(b => ({ key: b, name: b.name, pos: b.pos, alive: true,
+      hurt: n => b.takeDamage(n, { from: this.bots.me, zone: 'body', weapon: 'grenade', dist: 0 }) })));
+    if (this.range) N.addAreaTarget(() => this.range.dummies.filter(b => b.on).map(b => ({ key: b, name: b.name, pos: b.pos, alive: true,
+      hurt: n => { b.hit(n, 'body'); this.hooks.onRangeHit?.({ bot: b.name, damage: n, zone: 'body', total: b.total, hits: b.hits }); } })));
+    if (this.online) N.addAreaTarget(() => [...this.online.remotes.values()].filter(r => r.alive && r.seen).map(r => ({ key: r, name: r.name, pos: r.pos, alive: true,
+      hurt: n => this.online.net.sendGame({ t: 'ev', e: 'hit', to: r.id, dmg: n, zone: 'body', w: 'grenade' }) })));
+  }
+  /** Dano da minha própria granada (sem ponto de abate para mim). */
+  _selfBlast(n) {
+    const p = this.player; if (p.dead || p.health <= 0) return;
+    p.health = Math.max(0, p.health - n);
+    this.hooks.onDamage?.({ damage: n, angle: 0, from: 'sua granada', health: p.health });
+    if (p.health > 0) return;
+    const name = this.config?.me?.name || 'Você';
+    if (this.bots) this.bots.scores.player.deaths++;
+    if (this.online) { const o = this.online, sc = o.scores[o.me]; if (sc) sc.deaths++; o.net.sendGame({ t: 'ev', e: 'death', victim: o.me, vName: o.net.name, killer: o.me, kName: o.net.name, w: 'grenade', head: false }); }
+    this.hooks.onKill?.({ killer: name, victim: name, weapon: 'grenade', head: false, killerIsMe: false, victimIsMe: true });
+    this._playerDied({ from: { name }, weapon: 'grenade', zone: 'body' });
   }
   _lock() {
     try { const r = this.renderer.domElement.requestPointerLock(); r?.catch?.(() => this.pause()); } catch { this.pause(); }
@@ -151,6 +179,7 @@ export class Game {
     this.running = false; cancelAnimationFrame(this._raf);
     if (document.pointerLockElement) document.exitPointerLock();
     this.range?.dispose(); this.range = null;
+    this.nades?.dispose(); this.nades = null;
     this.online?.dispose(); this.online = null;
     this.bots?.dispose(); this.bots = null;
     this.weapons?.dispose(); this.weapons = null;
@@ -165,13 +194,14 @@ export class Game {
   }
 
   _playerDied(src) {
+    this.nades?.reset();
     this.player.dead = true; this.deadT = DEATH_DELAY;
     this.hooks.onPlayerDeath?.({ by: src.from?.name, weapon: src.weapon, head: src.zone === 'head', delay: DEATH_DELAY });
   }
   _respawnPlayer() {
     const sp = this.bots ? this.bots.spawnPointFor(this.bots.me) : this.online ? this.online.spawnPoint() : this.mapData.spawns.dm[0];
     this.player.respawn(new THREE.Vector3(sp.x, 0, sp.z), sp.yaw ?? 0);
-    this.weapons.refill(); this.hooks.onRespawn?.();
+    this.weapons.refill(); this.nades?.reset(); this.nades?.refill(); this.hooks.onRespawn?.();
   }
 
   _buildMap() {
@@ -267,17 +297,18 @@ export class Game {
     this.anim.update(dt, { speed: p.speed, fwd: p.localVel.fwd, side: p.localVel.side, crouch: p.crouch, air: !p.grounded,
       melee: w.melee, pistol: w.id === 'pistol', dead: p.dead, deadCrouch: p.crouch, vault: p.vault, pitch: p.dead ? 0 : (aimPose ? fix.pitch : p.pitch * .5) });
     // arma na mão (some na troca de arma, no meio da animação de troca)
-    this.held.set(w.state === 'switch' && w.pending ? null : w.id);
+    const nadeEq = !!this.nades?.equipped;
+    this.held.set(nadeEq || (w.state === 'switch' && w.pending) ? null : w.id);   // granada na mão: a arma some
     // mira pela arma: segue o p.aim (que entra e SAI suave); antes zerava num quadro ao soltar o botão e a arma pulava da mira para a mão
     const adsK = WEAPONS[w.id]?.ads && !p.dead ? Math.min(1, p.aim * 1.25) : 0;
     setScopeCut(w.id, adsK > .9);   // luneta aberta por dentro só com a mira pela arma assentada
     this.held.scene = this.anim.scene;   // ajuste da arma na mão salvo no Lab para a cena atual
     const fp1 = p.firstPerson;   // 1ª pessoa: o corpo some do mapa; a arma do mapa só aparece na mira pela arma (botão direito)
     this.held.update(!p.fp && !p.dead && !fp1, adsK > 0 ? this._ads(w.id, adsK) : null, dt);   // 1ª pessoa: a mira pela arma acontece nos braços (FirstPersonView)
-    this.held.leftHandIK(!p.dead && !p.fp && !fp1 && adsK < .5 && w.state !== 'reload' && w.state !== 'switch' && !w.melee, dt);
+    this.held.leftHandIK(!p.dead && !p.fp && !fp1 && adsK < .5 && w.state !== 'reload' && w.state !== 'switch' && !w.melee && !nadeEq, dt);
     a.visible = !p.fp && !fp1 && adsK < .5;   // mirando pela arma: só a arma aparece, colada na frente da câmera
     this.showVM = fp1 && !p.fp && !!this.fpv;
-    if (this.fpv && fp1) this.fpv.update(dt, { wid: w.id, switchK: w.switchK, switchIn: w.switchIn, speed: p.grounded ? p.speed : Math.min(p.speed, 2), air: !p.grounded,
+    if (this.fpv && fp1) this.fpv.update(dt, { wid: w.id, switchK: nadeEq ? 1 : w.switchK, switchIn: nadeEq ? false : w.switchIn, speed: p.grounded ? p.speed : Math.min(p.speed, 2), air: !p.grounded,
       reloading: w.state === 'reload', reloadP: w.reloadP, aiming: !!w.aiming, reloadTime: WEAPONS[w.id]?.reload, reloadTotal: w.reloadTotal, adsK });
     // na mira pela arma a cabeça (e o cabelo) some, senão tampa a visão da câmera colada na arma
     if (this._head) this._head.scale.setScalar(p.aim > .3 && w.aiming ? .001 : 1);
@@ -301,6 +332,7 @@ export class Game {
     if (!this.paused) {
       let left = dt; while (left > 1e-6) { const d = Math.min(STEP, left); this.player.update(d); left -= d; }
       this.weapons.update(dt);
+      this.nades?.update(dt);
       this._updateAvatar(dt);
       this.bots?.update(dt);
       this.range?.update(dt);
@@ -308,6 +340,7 @@ export class Game {
       this.time += dt;
     }
     if (this.player) this.player.firstPerson = !!this.settings.firstPerson && !this.player.dead;
+    this.nades?.applyShake(this.camera);
     ensureWeaponEnv(this.renderer);
     this.renderer.render(this.scene, this.camera);
     if (this.showVM && this.player?.firstPerson) this.fpv.render(this.renderer, this.camera.aspect, this.camera.fov);   // braços e arma por cima
@@ -315,7 +348,7 @@ export class Game {
     if (this._fpsT >= .5) { this.fps = Math.round(this._fpsN / this._fpsT); this._fpsT = 0; this._fpsN = 0; }
     const p = this.player;
     this.hooks.onFrame?.({ fps: this.fps, time: this.time, health: Math.round(p.health), speed: p.speed, crouch: p.crouch, grounded: p.grounded,
-      x: p.pos.x, z: p.pos.z, yaw: p.yaw, weapon: this.weapons.hud(), deadIn: p.dead ? Math.max(0, this.deadT) : 0,
+      x: p.pos.x, z: p.pos.z, yaw: p.yaw, weapon: this.weapons.hud(), nade: this.nades?.hud(), deadIn: p.dead ? Math.max(0, this.deadT) : 0,
       score: this.bots?.scores.player || this.online?.myScore });
   }
 }

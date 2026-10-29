@@ -37,7 +37,9 @@ export class Assets {
     const dae = new ColladaLoader(wm), wfbx = new FBXLoader(wm), tl = new THREE.TextureLoader();
     const wP = Object.entries(WEAPON_MODELS).map(([id, cfg]) => job((cfg.file.endsWith('.dae') ? dae.loadAsync(cfg.file).then(r => r.scene) : cfg.file.endsWith('.glb') ? gltf.loadAsync(cfg.file).then(r => r.scene) : cfg.file.endsWith('.obj') ? new OBJLoader(wm).loadAsync(cfg.file) : wfbx.loadAsync(cfg.file))
       .then(o => [id, normalizeWeapon(o, cfg, tl)]).catch(e => { console.warn('Arma sem modelo:', id, e); return [id, null]; })));
+    const nadeP = job(this._loadGrenade(wm, tl).catch(e => { console.error('Granada: modelo não carregou (assets/weapons/grenade/grenade.fbx):', e); return null; }));
     const [map, izzy, bot, ...rest] = await Promise.all([mapP, izzyP, botP, ...animP, ...wP]);
+    this.grenade = await nadeP;
     const anims = rest.slice(0, animP.length);
     for (const [id, m] of rest.slice(animP.length)) if (m) { m.userData.asset = true; this.weapons[id] = m; }
     await gripsP;
@@ -46,6 +48,25 @@ export class Assets {
     for (const [id, clip] of anims) { clip.name = id; this.clips[id] = this._prepClip(id, clip); }
     this._fillFingers();
     this.ready = true; return this;
+  }
+
+  /**
+   * Granada M67 (assets/weapons/grenade/grenade.fbx + texturas m67_d.jpg / m67_n.png).
+   * O arquivo vem em outra escala e deitado: aqui fica de pé, com o centro do corpo no meio (pivô) e 9,5 cm de altura (tamanho real).
+   * Visual separado da física: o colisor é uma esfera (Grenades.js / NADE.radius).
+   */
+  async _loadGrenade(wm, tl) {
+    const raw = await new FBXLoader(wm).loadAsync(A + 'weapons/grenade/grenade.fbx');
+    const map = tl.load(A + 'weapons/grenade/m67_d.jpg'), nrm = tl.load(A + 'weapons/grenade/m67_n.png');
+    map.colorSpace = THREE.SRGBColorSpace; map.anisotropy = 4;
+    const mat = new THREE.MeshStandardMaterial({ map, normalMap: nrm, roughness: .55, metalness: .35, name: 'M67' });
+    raw.traverse(o => { if (o.isMesh) { if (!o.geometry.attributes.normal) o.geometry.computeVertexNormals(); o.material = mat; o.castShadow = true; } });
+    raw.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(raw), size = box.getSize(new THREE.Vector3()), mid = box.getCenter(new THREE.Vector3());
+    const k = .095 / Math.max(size.x, size.y, size.z);
+    raw.position.sub(mid); const g = new THREE.Group(); g.add(raw); g.scale.setScalar(k);
+    const root = new THREE.Group(); root.add(g); root.name = 'grenade'; root.userData.asset = true;
+    return root;
   }
 
   /**

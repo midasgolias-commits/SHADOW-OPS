@@ -107,6 +107,12 @@ game.hooks.onFrame = s => {
   if (s.score) $('hudScore').textContent = s.score.kills + ' abates · ' + s.score.deaths + ' mortes';
   $('hudInfo').textContent = s.speed.toFixed(1) + ' m/s' + (s.crouch ? ' · agachado' : '') + (s.grounded ? '' : ' · no ar');
   if (s.weapon) drawWeapon(s.weapon);
+  const nh = $('nadeHud'), n = s.nade;   // granada: quantidade e dica (tecla 4 / G)
+  if (!n) nh.innerHTML = ''; else {
+    const key = (n.equipped ? 'on' : '') + n.left + (n.cooking ? 'c' : '');
+    if (nh.dataset.k !== key) { nh.dataset.k = key; nh.className = 'nade-hud' + (n.equipped ? ' on' : '') + (n.left <= 0 ? ' empty' : '');
+      nh.innerHTML = `<b>4</b> GRANADA <i>${n.left === Infinity ? '∞' : '×' + n.left}</i>` + (n.equipped ? `<small>${n.cooking ? 'solte para lançar · botão direito cancela' : 'segure o botão esquerdo para mirar o arco'}</small>` : ''); }
+  }
 };
 
 function drawWeapon(w) {

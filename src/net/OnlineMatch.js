@@ -109,6 +109,7 @@ export class OnlineMatch {
       case 'reload': if (r) { r.anim.reload(m.x || WEAPONS[m.w]?.reload || 2, !!r.s?.c); this._sound(r.pos, 'reload', .5); } break;
       case 'melee': if (r) { r.anim.hit(); this._sound(r.pos, 'knife', .7); } break;
       case 'hit': if (m.to === this.me) this._hurt(m); break;
+      case 'nade': g.nades?.spawnRemote(m); break;   // granada de um amigo: só visual aqui (o dano vem de quem jogou)
       case 'death': {
         const v = this.scores[m.victim] ??= { name: m.vName, kills: 0, deaths: 0 }; v.deaths++;
         const k = this.scores[m.killer] ??= { name: m.kName, kills: 0, deaths: 0 }; if (m.killer !== m.victim) k.kills++;
