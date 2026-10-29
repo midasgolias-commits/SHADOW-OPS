@@ -7,7 +7,7 @@ import { HeldWeapon } from '../weapons/WeaponModels.js';
  * Arrastar com o mouse gira o personagem. Só desenha enquanto está visível (start/stop).
  */
 export class CharacterPreview {
-  constructor(canvas, assets) {
+  constructor(canvas, assets, view = {}) {   // view: { dist, lookY } enquadramento da câmera (sala: personagem grande)
     this.canvas = canvas; this.assets = assets; this.skin = null; this.weapon = null; this.yaw = -.5; this.drag = null; this.run = false;
     const r = this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
     r.outputColorSpace = THREE.SRGBColorSpace; r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.1;
@@ -23,7 +23,7 @@ export class CharacterPreview {
     const floor = new THREE.Mesh(new THREE.CircleGeometry(1.1, 48), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false }));
     floor.rotation.x = -Math.PI / 2; floor.position.y = .002; s.add(floor);
     const sh = new THREE.Mesh(new THREE.CircleGeometry(1.1, 48), new THREE.ShadowMaterial({ opacity: .35 })); sh.rotation.x = -Math.PI / 2; sh.receiveShadow = true; s.add(sh);
-    this.camera = new THREE.PerspectiveCamera(26, 1, .1, 50); this.camera.position.set(0, 1.0, 5.6); this.camera.lookAt(0, .93, 0);   // corpo inteiro com folga em cima
+    this.camera = new THREE.PerspectiveCamera(26, 1, .1, 50); this.camera.position.set(0, (view.lookY ?? .93) + .07, view.dist ?? 5.6); this.camera.lookAt(0, view.lookY ?? .93, 0);   // corpo inteiro com folga em cima
     this.clock = new THREE.Clock();
     canvas.addEventListener('pointerdown', e => { this.drag = e.clientX; canvas.setPointerCapture(e.pointerId); });
     canvas.addEventListener('pointermove', e => { if (this.drag === null) return; this.yaw += (e.clientX - this.drag) * .012; this.drag = e.clientX; });

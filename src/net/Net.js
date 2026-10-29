@@ -141,6 +141,8 @@ export class Net {
 
   /* ---------- partida: mensagens do jogo ---------- */
   /** Manda uma mensagem da partida para todos (amigo -> anfitrião -> outros; anfitrião -> todos). */
+  /** chat de texto da sala (vai para todos da sala online) */
+  sendChat(name, text) { if (!this.room) return false; const m = { t: 'chat', name, text: String(text).slice(0, 120) }; this.sendGame(m); this.emit('chat', m); return true; }
   sendGame(msg) {
     msg.from = this.id;
     if (this.hostConn) { try { this.hostConn.send(msg); } catch {} return; }
@@ -151,6 +153,10 @@ export class Net {
     if (d.t === 'start') { this.emit('start', d.cfg); return; }
     if (d.t === 'end') { this.emit('end'); return; }
     if (d.t === 'closed') { const was = this.room; this.room = null; this.hostConn = null; try { c.close(); } catch {} this.emit('room', null); if (was) this.emit('lost', d.why || 'O anfitrião fechou a sala.'); return; }
+    if (d.t === 'chat') {   // chat da sala: o anfitrião repassa para todos
+      if (this.isHost()) for (const [id, cc] of this.hostConns) if (id !== d.from) try { cc.send(d); } catch {}
+      this.emit('chat', d); return;
+    }
     if (d.t === 'st' || d.t === 'ev') {
       // anfitrião repassa para os outros amigos da sala
       if (this.isHost()) for (const [id, cc] of this.hostConns) if (id !== d.from) try { cc.send(d); } catch {}

@@ -156,7 +156,15 @@ const onlinePanel = new OnlinePanel(addEl, $('onToast'), net, {
 }, { compact: true });
 onlinePanel.isOpen = true; onlinePanel.render(); setInterval(() => { if (!game.running) net.pingAll(); }, 12000);
 net.on('end', () => { if (game.running && game.online) { game.stop(); openRoomLobby(); onlinePanel.say('A partida online terminou.', 'warn'); } });
-net.on('room', () => lobby.refresh());
+let roomIds = [];
+net.on('room', r => {   // avisos no chat da sala: quem entrou / saiu
+  const ids = r ? r.players.map(p => p.id) : [];
+  if (r) { r.players.filter(p => !roomIds.includes(p.id) && p.id !== net.id).forEach(p => lobby.note(`${p.name} entrou na sala.`, 'ok')); }
+  roomIds.filter(id => !ids.includes(id) && id !== net.id).forEach(() => lobby.note('Um jogador saiu da sala.'));
+  if (!r && roomIds.length) lobby.note('Sala online fechada.');
+  roomIds = ids; lobby.refresh();
+});
+net.on('chat', m => lobby.addChat(m.name || 'Amigo', m.text, m.from === net.id || !m.from));
 net.start().then(() => { net.pingAll(); onlinePanel.render(); });   // fica online já ao abrir o jogo (para receber convites)
 window.__menuFx = new MenuFx($('menu'), () => game.settings.volume);   // faíscas, luzes e som ao passar o mouse
 window.__music = new Music(() => game.settings.volume);   // música ambiente: sala e partida
@@ -170,7 +178,8 @@ const lobby = new Lobby($('lobby'), {
   addPanel: () => addEl,
   getName: () => net.name !== 'Jogador' ? net.name : null,
   onName: v => net.setName(v),
-  online: () => net.room ? { host: net.isHost(), hostName: net.room.hostName, count: net.room.players.length } : null
+  online: () => net.room ? { host: net.isHost(), hostName: net.room.hostName, count: net.room.players.length, players: net.room.players, myId: net.id, hostId: net.room.host } : null,
+  sendChat: (who, t) => net.room ? net.sendChat(who, t) : false
 });
 
 async function startMode(mode, cfg) {
