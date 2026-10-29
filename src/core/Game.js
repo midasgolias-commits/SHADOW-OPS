@@ -46,6 +46,9 @@ export class Game {
     addEventListener('keydown', e => {   // Esc com o teclado preso (tela cheia): pausa do mesmo jeito
       if (e.code === 'Escape' && this.running && !this.paused && document.pointerLockElement && navigator.keyboard && document.fullscreenElement) document.exitPointerLock();
     });
+    addEventListener('keydown', e => {   // F: inspecionar a arma (viewmodel novo da pistola, 1ª pessoa)
+      if (e.code === 'KeyF' && !e.repeat && this.running && !this.paused && document.pointerLockElement && !this.nades?.equipped && this.weapons?.state === 'ready') this.fpv?.inspect();
+    });
     addEventListener('keydown', e => {   // V: alterna 1ª / 3ª pessoa
       if (e.code === 'KeyV' && !e.repeat && this.running && !this.paused && document.pointerLockElement) { this.setSetting('firstPerson', !this.settings.firstPerson); this.hooks.onView?.(this.settings.firstPerson); }
     });
@@ -274,6 +277,8 @@ export class Game {
     this._head = null; obj.traverse(n => { if (n.isBone && /Head$/.test(n.name)) this._head = n; });
     // 1ª pessoa (tecla V): braços e arma do Lab desenhados por cima do mapa
     this.fpv?.dispose(); this.fpv = new FirstPersonView(this.assets, skin);
+    // viewmodel novo da pistola (carrega em segundo plano; quando chegar, a pistola passa a usar ele na 1ª pessoa)
+    const fpvNow = this.fpv; this.assets.loadPistolVM?.().then(rig => { if (this.fpv === fpvNow) fpvNow.setPistolVM(rig); }).catch(() => {});
     // cano para o CAMINHO do tiro: só quando a arma está de verdade no mapa (3ª pessoa, ou mira pela arma na 1ª pessoa)
     this.weapons.muzzle = () => { if (this.player.fp || !this.held.holder.visible || !this.held.cur) return null; return this.held.muzzleWorld; };
     // cano para o RASTRO: na 1ª pessoa os braços são desenhados por cima (outra cena), então o rastro começa
@@ -309,7 +314,7 @@ export class Game {
     a.visible = !p.fp && !fp1 && adsK < .5;   // mirando pela arma: só a arma aparece, colada na frente da câmera
     this.showVM = fp1 && !p.fp && !!this.fpv;
     if (this.fpv && fp1) this.fpv.update(dt, { wid: w.id, switchK: nadeEq ? 1 : w.switchK, switchIn: nadeEq ? false : w.switchIn, speed: p.grounded ? p.speed : Math.min(p.speed, 2), air: !p.grounded,
-      reloading: w.state === 'reload', reloadP: w.reloadP, aiming: !!w.aiming, reloadTime: WEAPONS[w.id]?.reload, reloadTotal: w.reloadTotal, adsK });
+      reloading: w.state === 'reload', reloadP: w.reloadP, mag: w.mag, aiming: !!w.aiming, reloadTime: WEAPONS[w.id]?.reload, reloadTotal: w.reloadTotal, adsK });
     // na mira pela arma a cabeça (e o cabelo) some, senão tampa a visão da câmera colada na arma
     if (this._head) this._head.scale.setScalar(p.aim > .3 && w.aiming ? .001 : 1);
   }

@@ -3,7 +3,8 @@ import { upperOnly, OVER, forceMixerWrite } from './CharacterAnimator.js';
 import { CharacterAnimator } from './CharacterAnimator.js';
 import { ArmsOnly } from './ArmsOnly.js';
 import { HeldWeapon, WEAPON_MODELS, fpUsesIK, ensureWeaponEnv } from '../weapons/WeaponModels.js';
-import { SCENES, fpSceneOf, fpFor, gripFor } from '../weapons/Grips.js';
+import { SCENES, fpSceneOf, fpFor, gripFor, vmFor } from '../weapons/Grips.js';
+import { PistolViewmodel } from './PistolViewmodel.js';
 import { WEAPONS } from '../weapons/Weapons.js';
 import { KNIFE_SLASH, applyKnifeSlash, leftDuringSlash, slashValues } from './KnifeSlash.js';
 
@@ -64,7 +65,12 @@ export class FirstPersonView {
     this.mixer = new THREE.AnimationMixer(obj); this.overCache = {}; this.key = ''; this.base = this.over = null;
     this.yaw = 0; this.wid = null; this.fireT = 0;
     this.cam = new THREE.PerspectiveCamera(60, 16 / 9, .01, 20);
+    this.vm = null; this.vmOn = false;   // viewmodel novo (braços + arma do pacote) para a pistola: setPistolVM()
   }
+  /** Liga o viewmodel novo da pistola (rig do Assets.loadPistolVM). Com ele ligado no Lab (vm.pistol.on), a pistola usa ele. */
+  setPistolVM(rig) { if (!rig || this.vm) return; this.vm = new PistolViewmodel(rig, 'pistol'); }
+  /** Tecla F: inspecionar a arma (só no viewmodel novo, que tem o clipe). */
+  inspect() { if (this.vmOn) this.vm.inspect(); }
 
   /** Toca as animações (mesma lógica do Lab): clipe do corpo + clipe de tronco por cima. */
   _play(clip, overName, hold, overScale = 1) {
@@ -118,7 +124,7 @@ export class FirstPersonView {
   }
 
   /** Um tiro: tranco + clarão (e segura a cena "atirando" um pouco). */
-  shot(w, small = false) { this.fireT = .35; this.held.shotKick(small); this.held.muzzleFlash(!!w.auto, small); }
+  shot(w, small = false) { if (this.vmOn) { this.vm.shot(); return; } this.fireT = .35; this.held.shotKick(small); this.held.muzzleFlash(!!w.auto, small); }
   /** Golpe de faca. */
   melee() { this.slashFrom = this.meleeT != null ? slashValues(Math.min(1, this.meleeT / KNIFE_SLASH.dur), this.slashFrom) : null; this.fireT = .5; this.meleeT = 0; }   // golpe: o braço direito corta a partir da pose parada (KnifeSlash), o esquerdo recua
 
@@ -194,6 +200,11 @@ export class FirstPersonView {
     if (lf) this.held.leftHandFree(lf, FP_POLE, this.knifeT > .4 && this.meleeT == null && (this.walkK ?? 0) < .05);
     this.arms.show({ upper: this.swK <= 0 && this.meleeT == null, left: !knife || !!(lf && lf.on !== false) });   // golpe: sem o braço de cima
     this.held.leftHandIK(!knife && !!this.wid && k <= 0 && fpUsesIK(this.kind, this.wid) && (!animReload || (s.reloadP ?? 0) > RELOAD_GRIP_AT) && !away, dt, FP_POLE, this.gunT > .35);   // fim da recarga: a mão já volta para a SUA pegada (nunca passa pela frente da arma)   // fora da tela na troca: a mão não segura a arma parada (a pegada da AUG saía torta)   // igual ao Lab (recarga animada: a mão esquerda segue a animação)
+    // viewmodel novo da pistola: ele toca as animações do pacote; os braços antigos ficam escondidos (continuam prontos para as outras armas)
+    const vmNow = !!this.vm && this.wid === 'pistol' && vmFor('pistol').on;
+    if (this.vmOn && !vmNow) this.vm.cancel();
+    this.vmOn = vmNow;
+    if (vmNow) { this.vm.update(dt, s); this.obj.visible = false; this.held.holder.visible = false; }
   }
 
   /**
@@ -301,6 +312,7 @@ export class FirstPersonView {
    * Usado só para o rastro começar no cano; o acerto do tiro não depende disso. depth = distância (m) da câmera do jogo.
    */
   muzzleInWorld(camera, depth = .6) {
+    if (this.vmOn) return this.vm.muzzleInWorld(camera, depth);
     const m = this.held.cur && this.held.holder.visible ? this.held.muzzleWorld : null; if (!m) return null;
     this.cam.updateMatrixWorld(); m.project(this.cam);
     if (m.z > 1 || Math.abs(m.x) > 1.3 || Math.abs(m.y) > 1.3) return null;   // cano fora da tela: usa o ponto padrão
@@ -310,6 +322,7 @@ export class FirstPersonView {
 
   /** Desenha os braços e a arma por cima do que já está na tela (depois do mapa). aspect = largura/altura da tela. */
   render(renderer, aspect, worldFov = null) {
+    if (this.vmOn) { ensureWeaponEnv(renderer); this.vm.render(renderer, aspect); return; }
     const f = this._placeCam(), c = this.cam;
     // mirando: o zoom dos braços vai junto com o zoom da mira (a arma fica do mesmo tamanho que na 3ª pessoa)
     const k = this.adsK || 0; c.fov = worldFov && k > 0 ? f.fov + (worldFov - f.fov) * k : f.fov;
@@ -321,6 +334,7 @@ export class FirstPersonView {
   }
 
   dispose() {
+    this.vm?.dispose(); this.vm = null;
     this.mixer.stopAllAction(); this.held.dispose?.(); this.arms.dispose();
     this.scene.traverse(o => { if (o.isLight) o.dispose?.(); });
   }

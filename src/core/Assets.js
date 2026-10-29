@@ -51,6 +51,37 @@ export class Assets {
   }
 
   /**
+   * Viewmodel novo da pistola (pacote "Pistol 43 Tactical"): braços BF3 + Glock no mesmo esqueleto, com câmera e animações.
+   * Arquivo original sem mudanças em assets/weapons/glock_fps/glock_anim.fbx; texturas reduzidas (2048/1024) ao lado.
+   * Carrega em segundo plano depois do jogo pronto (não atrasa a tela de carregamento). Tira do arquivo o que é da cena
+   * de exemplo (luzes, plano de fundo e objetos vazios).
+   */
+  loadPistolVM() {
+    return this._pvmP ??= (async () => {
+      const D = A + 'weapons/glock_fps/', EMPTY = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+      const M = new THREE.LoadingManager(); M.setURLModifier(u => /\.(png|tga|dds|jpe?g)(\?|$)/i.test(u) && !u.startsWith('data:') && !u.startsWith('blob:') ? EMPTY : u);
+      const rig = await new FBXLoader(M).loadAsync(D + 'glock_anim.fbx');
+      const tl = new THREE.TextureLoader(), T = (f, srgb) => { const t = tl.load(D + f); if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; };
+      const gun = new THREE.MeshStandardMaterial({ name: 'Glock', map: T('glock_base.jpg', true), normalMap: T('glock_normal.jpg'), metalnessMap: T('glock_metal.jpg'),
+        roughnessMap: T('glock_rough.jpg'), metalness: 1, roughness: 1, emissiveMap: T('glock_emis.jpg', true), emissive: 0xffffff, emissiveIntensity: .6 });
+      const sleeve = new THREE.MeshStandardMaterial({ name: 'BF3_0011', map: T('tex_0011_1.jpg', true), roughness: .85, metalness: 0 });
+      const hand = new THREE.MeshStandardMaterial({ name: 'BF3_0012', map: T('tex_0012_1.jpg', true), roughness: .8, metalness: 0 });
+      const junk = [];
+      rig.traverse(o => {
+        if (o.isLight || (o.isMesh && !o.isSkinnedMesh)) junk.push(o);   // luzes e plano/esfera da cena de exemplo
+        if (o.isSkinnedMesh) {
+          o.frustumCulled = false; o.castShadow = o.receiveShadow = false;
+          if (o.name === 'Glock') o.material = gun;
+          else o.material = [].concat(o.material).map(m => /0011/.test(m.name) ? sleeve : /0012/.test(m.name) ? hand : m);
+        }
+      });
+      for (const o of junk) o.removeFromParent();
+      if (!rig.getObjectByName('Camera') || !rig.getObjectByName('Barrel_end')) throw new Error('viewmodel da pistola: arquivo sem Camera ou Barrel_end');
+      rig.userData.asset = true; this.pistolVM = rig; return rig;
+    })().catch(e => { this._pvmP = null; console.error('Viewmodel novo da pistola não carregou:', e); throw e; });
+  }
+
+  /**
    * Granada M67 (assets/weapons/grenade/grenade.fbx + texturas m67_d.jpg / m67_n.png).
    * O arquivo vem em outra escala e deitado: aqui fica de pé, com o centro do corpo no meio (pivô) e 9,5 cm de altura (tamanho real).
    * Visual separado da física: o colisor é uma esfera (Grenades.js / NADE.radius).

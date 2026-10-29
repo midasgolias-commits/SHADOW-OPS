@@ -4,6 +4,7 @@ import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { Assets } from '../core/Assets.js';
 import { CharacterAnimator, upperOnly, OVER, forceMixerWrite } from '../player/CharacterAnimator.js';
 import { BOB_KNIFE } from '../player/FirstPersonView.js';
+import { initVmLab } from './VmLab.js';
 import { KNIFE_SLASH, applyKnifeSlash, leftDuringSlash } from '../player/KnifeSlash.js';
 import { HeldWeapon, defaultLeftHand, leftHandOf, fpUsesIK, ensureWeaponEnv } from '../weapons/WeaponModels.js';
 import { WEAPONS, ORDER } from '../weapons/Weapons.js';
@@ -841,5 +842,6 @@ assets.load(p => { $('loadInfo').textContent = 'Carregando personagens, animaç�
     resize(); makeChar(); setTool('translate'); setView('game');
     $('status').textContent = grips().saved ? 'Último salvamento: ' + new Date(grips().saved).toLocaleString('pt-BR') : 'Nada salvo ainda: tudo na posição automática.';
     refresh(); frame();
+    initVmLab({ assets, draft: () => draft, changed });   // viewmodel novo da pistola (prévia + ajustes, mesmo Salvar)
   })
   .catch(e => { $('loadInfo').textContent = 'Falha ao carregar: ' + (e?.message || e); });

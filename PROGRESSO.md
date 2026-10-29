@@ -269,3 +269,16 @@ WASD move · Shift corre · Ctrl/C agacha · Espaço pula · botão esquerdo ati
 - **Publicar** (`4 - PUBLICAR NO GITHUB.bat` → `tools/publicar.ps1`): monta `..\site-github` só com o que o jogo usa (124 MB, 241 arquivos;
   fora: assets\armas, _fonte, source, Sounds, tools, _to_delete, extras, zip/rar, .bat) e envia pelo Git. Conferido servindo a cópia: carrega tudo, sem 404.
   No GitHub Pages o Lab/Sons não salvam (não há o server.py) — ajustar no PC e publicar de novo.
+
+## 29/10 — Sala estilo PB, patentes, granada
+- Menu inicial com a arte (MenuFx: faíscas, luzes, som ao passar o mouse). Carimbo de versão no menu (publicar.ps1 grava version.json).
+- Sala estilo Point Blank (lobby3.css): personagem grande, painel Informação/Mochila/Adicionar, janela com chat (online via Net.sendChat), barra com Mochila/Patentes/Configurações/Sair. Clique no nome = inspecionar personagem e armas.
+- Patentes (Ranks.js / RanksPanel.js, ícones em assets/ui/ranks/ranks.jpg): 87 de progressão + 4 funções. XP: 100/abate, 30/min (até 20). Criador: ID SO-F2YG-6KVN (ou localhost) tem todas.
+- GRANADA (src/weapons/Grenades.js, ajustes em NADE): tecla 4/G; segurar botão esquerdo = arco previsto; soltar = lança; direito = cancela. Física própria contra as caixas (CollisionWorld.sweepSphere: contato exato da esfera), quique/atrito/rolamento, explosão única, dano com queda e linha de visão. Modelo: assets/weapons/grenade/grenade.fbx (+ m67_d.jpg, m67_n.png). Online: os amigos veem a granada; o dano é calculado por quem jogou.
+
+## 29/10 — Viewmodel novo da pistola (pacote Pistol 43 Tactical)
+- Arquivo: assets/weapons/glock_fps/glock_anim.fbx (original) + texturas reduzidas. Braços BF3 + Glock no MESMO esqueleto (57 ossos), câmera própria (olha +X), clipes: Origin, Walk, Run, Shot, Reloat_t, Reloat_f, Inspect (sem clipe de sacar).
+- Decisão: usar os braços do pacote (retarget p/ Izzy deixaria a mão fora da arma: a arma anda pelos próprios ossos).
+- Código: src/player/PistolViewmodel.js (mixer único, base parado/andar/correr + ação por cima), ligado na FirstPersonView só para 'pistol'. Tecla F = inspecionar.
+- Ajuste: Lab → "Viewmodel novo da pistola" (prévia + botões de animação), salva em grips.json → vm.pistol (VM_DEFAULT em Grips.js).
+- Clarão: boca do cano = osso Barrel, eixo Slide→Barrel (Barrel_end aponta para cima).
