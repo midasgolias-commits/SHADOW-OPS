@@ -19,7 +19,7 @@ const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _c = new THREE.Vector3
   _q = new THREE.Quaternion(), _qh = new THREE.Quaternion(), _qp = new THREE.Quaternion(), _qw = new THREE.Quaternion(), _d1 = new THREE.Vector3(), _d2 = new THREE.Vector3();
 
 /** quadro da mão (quaternion no mundo) a partir de punho, base do médio, base do indicador e base do mindinho */
-function handFrame(W, M, I, K, out) {
+export function handFrame(W, M, I, K, out) {
   _y.subVectors(M, W).normalize();
   _x.subVectors(I, K); _x.addScaledVector(_y, -_x.dot(_y)).normalize();
   _z.crossVectors(_x, _y).normalize();
@@ -48,6 +48,18 @@ export class ArmRetarget {
     const sc = h.getWorldScale(new THREE.Vector3()).x;
     this.local = { frame: His.clone().multiply(F), palm: W.clone().lerp(M, .5).sub(W).applyQuaternion(His).divideScalar(sc) };
   }
+  /** quadro da palma (matriz no mundo, sem escala): do pacote (pack = true) ou da Izzy */
+  palmMatrix(pack, out) {
+    const pf = this.pf, z = this.zf;
+    const W = pack ? this._pw(this.p.wr, new THREE.Vector3()) : this.hand.getWorldPosition(new THREE.Vector3());
+    const M = pack ? this._pw(pf[1][0], new THREE.Vector3()) : z[1][0].getWorldPosition(new THREE.Vector3());
+    const I = pack ? this._pw(pf[0][0], new THREE.Vector3()) : z[0][0].getWorldPosition(new THREE.Vector3());
+    const K = pack ? this._pw(pf[2][0], new THREE.Vector3()) : z[2][0].getWorldPosition(new THREE.Vector3());
+    const q = handFrame(W, M, I, K, new THREE.Quaternion());
+    return out.compose(W.lerp(M, .5), q, new THREE.Vector3(1, 1, 1));
+  }
+  /** tamanho da mão (punho → base do dedo médio) */
+  handLen(pack) { return pack ? this._pw(this.p.wr, new THREE.Vector3()).distanceTo(this._pw(this.pf[1][0], new THREE.Vector3())) : this.hand.getWorldPosition(new THREE.Vector3()).distanceTo(this.zf[1][0].getWorldPosition(new THREE.Vector3())); }
   /** posição de um osso do pacote (ou do alvo que o substitui) */
   _pw(o, out) { const v = this.over?.get(o.userData.rtKey); return v ? out.copy(v) : o.getWorldPosition(out); }
   /** aplica a pose do pacote (os dois esqueletos já no mesmo mundo, em metros). k: 0..1 quanto aplicar. */

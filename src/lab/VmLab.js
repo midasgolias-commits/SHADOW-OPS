@@ -10,7 +10,7 @@ import { VM_DEFAULT, vmFor } from '../weapons/Grips.js';
 const FIELDS = [
   ['x', 'Lado (cm)', -30, 30, .1], ['y', 'Altura (cm)', -30, 30, .1], ['z', 'Frente/trás (cm)', -40, 40, .1],
   ['rx', 'Inclinar (°)', -45, 45, .5], ['ry', 'Virar (°)', -45, 45, .5], ['rz', 'Rolar (°)', -45, 45, .5],
-  ['fov', 'Campo de visão (°)', 35, 90, .5], ['near', 'Corte perto (cm)', .3, 20, .1], ['camK', 'Balanço da câmera animada (0–1)', 0, 1, .05]
+  ['fov', 'Campo de visão (°)', 35, 90, .5], ['near', 'Corte perto (cm)', .3, 20, .1], ['camK', 'Balanço da câmera animada (0–1)', 0, 1, .05], ['handScale', 'Tamanho da mão da Izzy (×)', .9, 1.4, .01]
 ];
 const ACTIONS = [['idle', 'Parado'], ['walk', 'Andando'], ['run', 'Correndo'], ['shot', 'Tiro'], ['reloadT', 'Recarga (com bala)'], ['reloadF', 'Recarga (vazia)'], ['inspect', 'Inspecionar (F)']];
 

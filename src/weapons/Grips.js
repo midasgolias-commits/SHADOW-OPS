@@ -131,7 +131,7 @@ export const GRIP_BASE = { aug: 'rifle', karambit: 'knife' };
  * da câmera animada do pacote entra (0 = câmera parada, 1 = balanço inteiro); on = usar o viewmodel novo nesta arma;
  * arms = 'izzy' (braços da Izzy seguindo a animação do pacote por IK) ou 'pack' (braços do próprio pacote).
  */
-export const VM_DEFAULT = { arms: 'izzy', on: true, x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0, fov: 60, near: 1, camK: .5 };
+export const VM_DEFAULT = { arms: 'pack', handScale: 1.2, on: true, x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0, fov: 60, near: 1, camK: .5 };
 export const vmFor = wid => ({ ...VM_DEFAULT, ...(DATA.vm?.[wid] || {}) });
 export const fpFor = (kind, wid, scene) => ({ ...FP_DEFAULT, ...(DATA.fp?.[kind] || {}), ...((wid && DATA.fpW?.[kind]?.[wid]) || {}), ...(fpSceneCam(kind, wid, scene) || {}) });
 /** Câmera própria de uma cena da 1ª pessoa (salva junto da pegada da cena: scenes.fp_walk.cam). Sem ela, a cena usa a câmera da arma. */

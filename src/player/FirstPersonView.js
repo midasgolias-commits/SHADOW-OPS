@@ -42,7 +42,7 @@ export const BOB = { fwd: .012, up: .003, freq: .9 };   // andando: balanço par
  */
 export const KNIFE_SWAP = { down: .8, back: .05, pitch: 14 };
 export const SWING = { pitch: 35, roll: -25, up: .28, right: .14, back: .06 };   // troca de arma: quanto o conjunto gira para cima/trás (graus) e recua (m)
-const _pv = new THREE.Vector3(), _lv = new THREE.Vector3();
+const _pv = new THREE.Vector3(), _lv = new THREE.Vector3(), _pc = new THREE.Vector3(), _pm = new THREE.Matrix4(), _pn = new THREE.Matrix4();
 export const DRAW = { up: .3, right: .08, fwd: -.02, pitch: 40, roll: -20 };   // sacar: de onde a arma começa a cair (m / graus, na visão da câmera)
 export const HOLSTER = { armUp: 55, armOut: -12, foreFold: 40, handTurn: 0, handRoll: 0, leftDown: -45 };
 const _ax = new THREE.Vector3(), _fw = new THREE.Vector3(), _up = new THREE.Vector3(), _bq = new THREE.Quaternion(), _rq = new THREE.Quaternion(), _pq = new THREE.Quaternion();
@@ -214,7 +214,7 @@ export class FirstPersonView {
       this.held.holder.visible = false;
       if (!this.izzyVM) this.obj.visible = false; else { this.vm.rig.visible = !away; this.arms.show({ upper: false, left: (this.leftK ?? 0) > .5 }); }   // só antebraço e mão: o ombro fica perto da câmera e tampava a tela
     } else this.vm?.setGuide(null);
-    if (!this.izzyVM && this._shBase) this.rt.forEach((r, i) => r.arm.position.copy(this._shBase[i]));   // outras armas: ombros no lugar de sempre
+    if (!this.izzyVM && this._shBase) this.rt.forEach((r, i) => { r.arm.position.copy(this._shBase[i]); r.hand.scale.setScalar(1); });   // outras armas: ombros e mãos no tamanho de sempre   // outras armas: ombros no lugar de sempre
   }
 
   /**
@@ -341,7 +341,18 @@ export class FirstPersonView {
       const [R, L] = this.rt; this.obj.updateMatrixWorld(true);
       if (!this._shBase) this._shBase = this.rt.map(r => r.arm.position.clone());
       this.rt.forEach((r, i) => { r.arm.position.copy(this._shBase[i]); r.moveShoulder = true; });
+      // PROPORÇÃO: a animação foi feita para uma mão grande (13,4 cm) e a da Izzy tem 10 cm. A mão da Izzy cresce um pouco (handScale)
+      // e a arma + braços-guia encolhem em volta da palma direita na medida que falta: mão e cabo ficam na mesma proporção do pacote
+      if (!this._hand0) this._hand0 = R.handLen(false) / R.hand.scale.x;
+      const hs = vc.handScale ?? 1.2; for (const r of this.rt) r.hand.scale.setScalar(hs);
+      const kg = Math.min(1.2, Math.max(.6, (this._hand0 * hs) / R.handLen(true)));
+      const P = R.palmMatrix(true, _pm).elements, pc = _pc.set(P[12], P[13], P[14]);
+      this.vm.rig.matrix.premultiply(_pm.makeTranslation(-pc.x, -pc.y, -pc.z)).premultiply(_pn.makeScale(kg, kg, kg)).premultiply(_pm.makeTranslation(pc.x, pc.y, pc.z));
+      this.vm.rig.updateMatrixWorld(true); this.vm.gunK = kg;
       R.apply(1);
+      // TRAVA: a arma vai junto com a mão da Izzy (onde a mão chegou de verdade): mão e arma nunca se separam
+      const Mi = R.palmMatrix(false, _pm), Mp = R.palmMatrix(true, _pn);
+      this.vm.rig.matrix.premultiply(Mi.multiply(Mp.invert())); this.vm.rig.updateMatrixWorld(true);
       // mão esquerda: só quando a do pacote está no quadro (parado ela fica baixa, fora da tela; na recarga ela some para pegar o carregador)
       // recarga tática: a mão esquerda segura o carregador que aparece (pegada copiada da recarga vazia)
       const mh = this.vm.magHold(this.dt || .016); L.over = mh ? mh.pts : null;
