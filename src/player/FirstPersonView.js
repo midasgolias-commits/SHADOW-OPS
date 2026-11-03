@@ -5,6 +5,7 @@ import { ArmsOnly } from './ArmsOnly.js';
 import { HeldWeapon, WEAPON_MODELS, fpUsesIK, ensureWeaponEnv } from '../weapons/WeaponModels.js';
 import { SCENES, fpSceneOf, fpFor, gripFor, vmFor } from '../weapons/Grips.js';
 import { PistolViewmodel } from './PistolViewmodel.js';
+import { ArmRetarget } from './ArmRetarget.js';
 import { WEAPONS } from '../weapons/Weapons.js';
 import { KNIFE_SLASH, applyKnifeSlash, leftDuringSlash, slashValues } from './KnifeSlash.js';
 
@@ -41,7 +42,7 @@ export const BOB = { fwd: .012, up: .003, freq: .9 };   // andando: balanço par
  */
 export const KNIFE_SWAP = { down: .8, back: .05, pitch: 14 };
 export const SWING = { pitch: 35, roll: -25, up: .28, right: .14, back: .06 };   // troca de arma: quanto o conjunto gira para cima/trás (graus) e recua (m)
-const _pv = new THREE.Vector3();
+const _pv = new THREE.Vector3(), _lv = new THREE.Vector3();
 export const DRAW = { up: .3, right: .08, fwd: -.02, pitch: 40, roll: -20 };   // sacar: de onde a arma começa a cair (m / graus, na visão da câmera)
 export const HOLSTER = { armUp: 55, armOut: -12, foreFold: 40, handTurn: 0, handRoll: 0, leftDown: -45 };
 const _ax = new THREE.Vector3(), _fw = new THREE.Vector3(), _up = new THREE.Vector3(), _bq = new THREE.Quaternion(), _rq = new THREE.Quaternion(), _pq = new THREE.Quaternion();
@@ -68,7 +69,7 @@ export class FirstPersonView {
     this.vm = null; this.vmOn = false;   // viewmodel novo (braços + arma do pacote) para a pistola: setPistolVM()
   }
   /** Liga o viewmodel novo da pistola (rig do Assets.loadPistolVM). Com ele ligado no Lab (vm.pistol.on), a pistola usa ele. */
-  setPistolVM(rig) { if (!rig || this.vm) return; this.vm = new PistolViewmodel(rig, 'pistol'); }
+  setPistolVM(rig) { if (!rig || this.vm) return; this.vm = new PistolViewmodel(rig, 'pistol'); this.rt = ['r', 'l'].map(sd => new ArmRetarget(this.obj, rig, sd)); }
   /** Tecla F: inspecionar a arma (só no viewmodel novo, que tem o clipe). */
   inspect() { if (this.vmOn) this.vm.inspect(); }
 
@@ -132,6 +133,7 @@ export class FirstPersonView {
    * s = { wid (arma na mão ou null na troca), speed (m/s), reloading, aiming, reloadTime, adsK (0..1: mira pela arma, botão direito) }
    */
   update(dt, s) {
+    this.obj.matrixAutoUpdate = true;   // o render da pistola (braços da Izzy) desloca o corpo só para o desenho
     this.dt = dt; this.adsK = s.adsK || 0; this.speedNow = s.speed || 0;
     if (this.meleeT != null) { this.meleeT += dt; if (this.meleeT > KNIFE_SLASH.dur || !WEAPONS[s.wid]?.melee) { this.meleeT = null; this.slashFrom = null; } }
     // desfaz o giro da troca de arma do quadro anterior: com a animação parada o mixer NÃO regrava os ossos (só grava quando o valor muda)
@@ -204,7 +206,15 @@ export class FirstPersonView {
     const vmNow = !!this.vm && this.wid === 'pistol' && vmFor('pistol').on;
     if (this.vmOn && !vmNow) this.vm.cancel();
     this.vmOn = vmNow;
-    if (vmNow) { this.vm.update(dt, s); this.obj.visible = false; this.held.holder.visible = false; }
+    this._objPos = this.obj.position.clone();   // posição do corpo neste quadro (o render desloca os ombros a partir dela)
+    this.izzyVM = vmNow && vmFor('pistol').arms === 'izzy';   // braços da Izzy seguindo a animação do pacote (IK no render)
+    if (vmNow) {
+      this.vm.setGuide(this.izzyVM ? this.scene : null);
+      this.vm.update(dt, this.izzyVM ? { ...s, switchK: 0 } : s);   // com a Izzy, a troca de arma é o movimento de sempre da câmera dos braços
+      this.held.holder.visible = false;
+      if (!this.izzyVM) this.obj.visible = false; else { this.vm.rig.visible = !away; this.arms.show({ upper: false, left: (this.leftK ?? 0) > .5 }); }   // só antebraço e mão: o ombro fica perto da câmera e tampava a tela
+    } else this.vm?.setGuide(null);
+    if (!this.izzyVM && this._shBase) this.rt.forEach((r, i) => r.arm.position.copy(this._shBase[i]));   // outras armas: ombros no lugar de sempre
   }
 
   /**
@@ -322,8 +332,24 @@ export class FirstPersonView {
 
   /** Desenha os braços e a arma por cima do que já está na tela (depois do mapa). aspect = largura/altura da tela. */
   render(renderer, aspect, worldFov = null) {
-    if (this.vmOn) { ensureWeaponEnv(renderer); this.vm.render(renderer, aspect); return; }
+    if (this.vmOn && !this.izzyVM) { ensureWeaponEnv(renderer); this.vm.render(renderer, aspect); return; }
     const f = this._placeCam(), c = this.cam;
+    if (this.vmOn && this.izzyVM) {   // a Glock do pacote presa na câmera; as mãos da Izzy vão até ela (IK)
+      const vc = vmFor('pistol'); f.fov = vc.fov;
+      this.vm.alignTo(c);
+      // cada ombro da Izzy vai para a linha do braço do pacote (na distância do braço dela): a mão alcança e o antebraço entra na tela no mesmo ângulo
+      const [R, L] = this.rt; this.obj.updateMatrixWorld(true);
+      if (!this._shBase) this._shBase = this.rt.map(r => r.arm.position.clone());
+      this.rt.forEach((r, i) => { r.arm.position.copy(this._shBase[i]); r.moveShoulder = true; });
+      R.apply(1);
+      // mão esquerda: só quando a do pacote está no quadro (parado ela fica baixa, fora da tela; na recarga ela some para pegar o carregador)
+      // recarga tática: a mão esquerda segura o carregador que aparece (pegada copiada da recarga vazia)
+      const mh = this.vm.magHold(this.dt || .016); L.over = mh ? mh.pts : null;
+      const lw = L._pw(L.p.wr, _lv).project(c), inView = lw.z < 1 && Math.abs(lw.x) < 1.6 && lw.y > -2.6 && lw.y < 1.3;   // perto da tela (o braço vem de baixo)
+      this.leftK = (this.leftK ?? 0) + ((inView || (mh && mh.k > .5) ? 1 : 0) - (this.leftK ?? 0)) * Math.min(1, (this.dt || .016) * 14);
+      if (this.leftK > .02) L.apply(this.leftK);
+      this.arms.show({ upper: false, left: this.leftK > .5 });
+    }
     // mirando: o zoom dos braços vai junto com o zoom da mira (a arma fica do mesmo tamanho que na 3ª pessoa)
     const k = this.adsK || 0; c.fov = worldFov && k > 0 ? f.fov + (worldFov - f.fov) * k : f.fov;
     c.near = k > 0 ? .01 : Math.max(.005, f.near / 100); c.aspect = aspect; c.updateProjectionMatrix();   // mirando: não corta a arma colada na câmera

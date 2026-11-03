@@ -37,7 +37,9 @@ export const WEAPON_MODELS = {
   smg:     { file: W + 'smg/vector.dae', len: .62, grip: .30, gripDown: .25, tex: { '*': W + 'smg/albedo.jpg' }, ads: { back: .14, up: -.018, dx: -.0055, dy: .0011 }, hand2: .2 },   // ads: câmera atrás da mira holográfica; dx/dy centralizam a janela do holográfico no ponto vermelho
   sniper:  { file: W + 'sniper/sniper.fbx', hand2: .34, len: 1.15, grip: .33, gripDown: .2, tex: { '*': W + 'sniper/color.jpg' } },
   shotgun: { file: W + 'shotgun/spas.dae', hand2: .34, len: 1.0, grip: .3, gripDown: .2, tex: { Parts1: W + 'shotgun/parts1.jpg', Parts2: W + 'shotgun/parts2.jpg' } },
-  pistol:  { file: W + 'pistol/magnum.fbx', hand2: .04, hand2Down: .05, cull: { axis: 'x', below: -50 }, len: .3, grip: .25, gripDown: .45, tex: { '*': W + 'pistol/color.jpg' } },
+  // pistola: Glock do pacote "Pistol 43 Tactical" (desde 29/10; peças separadas: ferrolho, cano, carregador…). A P-19 (Magnum) antiga fica guardada abaixo.
+  pistol:  { file: W + 'glock_fps/glock_world.fbx', hand2: .04, hand2Down: .05, len: .19, grip: .3, gripDown: .12, tex: { '*': W + 'glock_fps/glock_base.jpg' }, pbr: { '*': W + 'glock_fps/glock' } },
+  // pistolOld: { file: W + 'pistol/magnum.fbx', hand2: .04, hand2Down: .05, cull: { axis: 'x', below: -50 }, len: .3, grip: .25, gripDown: .45, tex: { '*': W + 'pistol/color.jpg' } },
   // faca de energia (convertida do .blend com o Blender do usuário); Material.001 = lâmina que brilha
   // faca: M9 Bayonet (lâmina de aço, guarda, cabo) com materiais completos (cor, relevo, metal/aspereza) — desde 28/10
   knife:   { file: W + 'm9/knife.obj', len: .36, grip: .14, gripDown: .5, tex: { Blade: W + 'm9/blade_color.jpg', Guard: W + 'm9/guard_color.jpg', Handle: W + 'm9/handle_color.jpg' },
@@ -416,7 +418,7 @@ const acos = x => Math.acos(Math.max(-1, Math.min(1, x)));
  * k: 0..1 (quanto aplicar).
  */
 const _pa = new THREE.Vector3(), _pe = new THREE.Vector3(), _pp = new THREE.Vector3(), _eq = new THREE.Quaternion(), _ew = new THREE.Quaternion(), _er = new THREE.Quaternion();
-function elbowToward(boneA, boneB, hand, pole, k = 1) {
+export function elbowToward(boneA, boneB, hand, pole, k = 1) {
   const a = boneA.getWorldPosition(_ia), h = hand.getWorldPosition(_ic), ax = _pa.subVectors(h, a); if (ax.lengthSq() < 1e-8) return; ax.normalize();
   const e = boneB.getWorldPosition(_ib).sub(a); e.addScaledVector(ax, -e.dot(ax));
   const p = _pp.copy(pole); p.addScaledVector(ax, -p.dot(ax));
@@ -428,7 +430,7 @@ function elbowToward(boneA, boneB, hand, pole, k = 1) {
 }
 
 /** IK analítico de dois ossos (ombro A → cotovelo B → mão C) para alcançar T, mantendo o plano atual do cotovelo. */
-function twoBoneIK(boneA, boneB, a, b, c, t) {
+export function twoBoneIK(boneA, boneB, a, b, c, t) {
   const lab = _v1.subVectors(b, a).length(), lcb = _v2.subVectors(c, b).length();
   const lat = Math.max(.01, Math.min(_v3.subVectors(t, a).length(), lab + lcb - .001));
   const ac = _v1.subVectors(c, a), ab = _v2.subVectors(b, a), at = _v3.subVectors(t, a);

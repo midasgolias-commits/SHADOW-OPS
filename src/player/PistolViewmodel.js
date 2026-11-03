@@ -55,8 +55,37 @@ export class PistolViewmodel {
     this.flash = new MuzzleFlash({ light: true }); this.muzzle = new THREE.Group(); sc.add(this.muzzle);
     this.muzzle.userData.muzzle = { x: 0, y: 0, z: 0 }; this.flash.attach(this.muzzle);
     this.swE = 0; this.reloading = false; this.cfg = vmFor(id);
+    this._recordMagGrip();
   }
 
+  /**
+   * Correção da recarga TÁTICA do pacote: nela o carregador que aparece na tela sai e volta sozinho (a mão esquerda do
+   * pacote fica lá embaixo, fora da tela, com o outro carregador). Na recarga VAZIA a mão segura o carregador direito
+   * (aos 33% do clipe, a palma fica a 5 cm dele). Aqui é guardada essa pegada (mão esquerda no espaço do carregador)
+   * para a mão da Izzy segurar o carregador da recarga tática do mesmo jeito.
+   */
+  _recordMagGrip() {
+    const rig = this.rig, B = n => rig.getObjectByName(n), names = [];
+    for (const n of ['upperarm', 'forearm', 'wrist']) names.push('l_' + n);
+    for (const f of ['index', 'middle', 'ring', 'pinky', 'thumb']) for (const k of ['low', 'mid', 'tip', 'tip_end']) names.push(`l_${f}_${k}`);
+    const tmp = new THREE.AnimationMixer(rig), body = B('Wpn_body'), mag = B('Magazine'), mag2 = B('Magazine2');
+    const at = (clip, t) => { tmp.stopAllAction(); const a = tmp.clipAction(rig.animations.find(c => c.name === clip)); a.play(); tmp.setTime(t * a.getClip().duration); rig.updateMatrixWorld(true); };
+    at(VM_CLIPS.reloadF, .33);
+    const inv = mag2.matrixWorld.clone().invert(), grip = new Map();
+    for (const n of names) { const o = B(n); if (o) grip.set(n, o.getWorldPosition(new THREE.Vector3()).applyMatrix4(inv)); }
+    at(VM_CLIPS.idle, 0);
+    this.magSeat = mag.getWorldPosition(new THREE.Vector3()).applyMatrix4(body.matrixWorld.clone().invert());   // carregador no lugar (espaço do corpo da arma)
+    tmp.stopAllAction(); tmp.uncacheRoot(rig); this.mixer.update(0); rig.updateMatrixWorld(true);
+    this.magGrip = { grip, mag, body, k: 0, pts: new Map([...grip.keys()].map(n => [n, new THREE.Vector3()])) };
+  }
+  /** recarga tática com o carregador fora do lugar: alvos da mão esquerda segurando ele (k = 0..1) */
+  magHold(dt) {
+    const G = this.magGrip; if (!G) return null;
+    const out = this.one === 'reloadT' && G.mag.getWorldPosition(_w).distanceTo(_d.copy(this.magSeat).applyMatrix4(G.body.matrixWorld)) > this.unit * 1.2 * (this.guide ? 1 / (this.unit * 100) : 1);
+    G.k += ((out ? 1 : 0) - G.k) * Math.min(1, dt * 16);
+    if (out) for (const [n, v] of G.grip) G.pts.get(n).copy(v).applyMatrix4(G.mag.matrixWorld);   // fora do lugar: segue o carregador; voltando: fica onde soltou
+    return G.k > .01 ? G : null;
+  }
   /** troca suave da animação de base */
   _setBase(k, fade = .25) {
     if (this.base === k) return;
@@ -128,12 +157,34 @@ export class PistolViewmodel {
   _flash() {
     if (!this._muzzle(this.muzzle.position, _v)) return;
     this.muzzle.lookAt(_w.copy(this.muzzle.position).add(_v));   // +Z para fora do cano
-    this.muzzle.scale.setScalar(this.unit * 100);   // o clarão é medido em metros
+    this.muzzle.scale.setScalar(this.guide ? 1 : this.unit * 100);   // o clarão é medido em metros (no modo guia o mundo já está em metros)
     this.muzzle.updateMatrixWorld(true);
     this.flash.fire(this.id, false, false);
   }
 
   /** desenha por cima do mapa (como a FirstPersonView) */
+  /**
+   * MODO GUIA (braços da Izzy): o rig vai para a cena dos braços da Izzy, alinhado à câmera dela (mundo em metros),
+   * os braços do pacote ficam invisíveis (só servem de alvo para o IK) e a Glock animada aparece.
+   */
+  setGuide(scene) {
+    const on = !!scene; if (on === !!this.guide && (!on || this.rig.parent === scene)) return;
+    this.guide = on;
+    (on ? scene : this.scene).add(this.rig); (on ? scene : this.scene).add(this.muzzle);
+    this.rig.matrixAutoUpdate = !on;
+    if (!on) { this.rig.position.set(0, 0, 0); this.rig.quaternion.identity(); this.rig.scale.set(1, 1, 1); this.rig.updateMatrixWorld(true); }
+    this.rig.traverse(o => { if (o.isSkinnedMesh && o.name !== 'Glock') o.visible = !on; });
+  }
+  /** modo guia: põe o rig de forma que a câmera do pacote (com o ajuste do Lab) fique exatamente na câmera dos braços da Izzy */
+  alignTo(cam) {
+    this.rig.matrix.identity(); this.rig.matrixWorld.identity(); this.rig.updateMatrixWorld(true);   // medir no espaço do próprio rig
+    this.mixer.update(0); this.rig.updateMatrixWorld(true);
+    this._placeCam(1);
+    _m.compose(this.cam.position, this.cam.quaternion, _s.set(1, 1, 1)).invert();
+    const k = 1 / (this.unit * 100);   // unidades do arquivo → metros
+    this.rig.matrix.copy(cam.matrixWorld).multiply(new THREE.Matrix4().makeScale(k, k, k)).multiply(_m);
+    this.rig.updateMatrixWorld(true);
+  }
   render(renderer, aspect) {
     this._placeCam(aspect);
     const ac = renderer.autoClear; renderer.autoClear = false; renderer.clearDepth();
@@ -148,6 +199,7 @@ export class PistolViewmodel {
     return camera.position.clone().addScaledVector(v, depth);
   }
   dispose() {
+    this.setGuide(null);
     this.mixer.stopAllAction(); this.mixer.uncacheRoot(this.rig);
     this.scene.remove(this.rig); this.flash.dispose(); this.scene.remove(this.muzzle);
   }

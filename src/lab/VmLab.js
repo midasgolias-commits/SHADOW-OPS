@@ -19,10 +19,11 @@ export function initVmLab({ assets, draft, changed }) {
   const $ = id => document.getElementById(id), D = () => { const d = draft(); d.vm ??= {}; return d.vm.pistol ??= { ...VM_DEFAULT }; };
   $('vmFields').innerHTML = FIELDS.map(([k, l, a, b, s]) => `<label class="vmrow"><span>${l}</span><input type="range" id="vm_${k}" min="${a}" max="${b}" step="${s}"><input type="number" id="vmn_${k}" min="${a}" max="${b}" step="${s}"></label>`).join('');
   $('vmActs').innerHTML = ACTIONS.map(([k, l]) => `<button data-vmact="${k}">${l}</button>`).join('');
-  const show = () => { const c = vmFor('pistol'); $('vmOn').checked = !!c.on; for (const [k] of FIELDS) { $('vm_' + k).value = c[k]; $('vmn_' + k).value = c[k]; } };
+  const show = () => { const c = vmFor('pistol'); $('vmOn').checked = !!c.on; $('vmPack').checked = c.arms === 'pack'; for (const [k] of FIELDS) { $('vm_' + k).value = c[k]; $('vmn_' + k).value = c[k]; } };
   const set = (k, v) => { D()[k] = v; changed(); show(); };
   for (const [k, , a, b] of FIELDS) for (const id of ['vm_' + k, 'vmn_' + k]) $(id).addEventListener('input', e => { const v = Math.min(b, Math.max(a, +e.target.value)); if (isFinite(v)) set(k, v); });
   $('vmOn').addEventListener('change', e => set('on', e.target.checked));
+  $('vmPack').addEventListener('change', e => set('arms', e.target.checked ? 'pack' : 'izzy'));
   $('vmReset').onclick = () => { const d = draft(); d.vm ??= {}; d.vm.pistol = { ...VM_DEFAULT }; changed(); show(); };
   show();
 

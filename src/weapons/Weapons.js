@@ -41,7 +41,7 @@ export const WEAPONS = {
     recoil: { p: .045, y: .006, ramp: 0, cap: 1 }, speedMul: .93
   },
   pistol: {
-    id: 'pistol', slot: 5, name: 'P-19', kind: 'Pistola', auto: false, rpm: 400,
+    id: 'pistol', slot: 5, name: 'GLOCK', kind: 'Pistola', auto: false, rpm: 400,
     dmg: 25, head: 3.5, limb: .8, falloff: .96, range: 120, pellets: 1,
     mag: 13, reserve: 52, reload: 1.7,
     spread: .003, moveSpread: .006, botMoveSpread: .03, airSpread: .05, burstSpread: .003,

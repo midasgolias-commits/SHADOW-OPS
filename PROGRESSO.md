@@ -282,3 +282,9 @@ WASD move · Shift corre · Ctrl/C agacha · Espaço pula · botão esquerdo ati
 - Código: src/player/PistolViewmodel.js (mixer único, base parado/andar/correr + ação por cima), ligado na FirstPersonView só para 'pistol'. Tecla F = inspecionar.
 - Ajuste: Lab → "Viewmodel novo da pistola" (prévia + botões de animação), salva em grips.json → vm.pistol (VM_DEFAULT em Grips.js).
 - Clarão: boca do cano = osso Barrel, eixo Slide→Barrel (Barrel_end aponta para cima).
+
+## 29/10–03/11 — Glock nos braços da Izzy (substitui a P-19)
+- Arma 'pistol' agora se chama GLOCK; modelo glock_world.fbx (3ª pessoa, inventário, foto nova; foto antiga em assets/ui/weapons/pistol_p19_antiga.png; Magnum guardada comentada em WeaponModels.js).
+- 1ª pessoa: braços da IZZY seguem a animação do pacote por IK (src/player/ArmRetarget.js): quadro da mão medido pelos dedos (Izzy não tem osso de mindinho → usa anelar), IK de 2 ossos, cotovelo para o lado do pacote, dedos copiados falange a falange, ombro reposicionado na linha do braço do pacote.
+- Recarga tática: o pacote não põe a mão esquerda no carregador; a pegada da recarga vazia (33%) é reaproveitada para a mão da Izzy segurar o carregador (PistolViewmodel.magHold).
+- Mão esquerda só aparece quando a do pacote está perto da tela. Lab: caixa "Usar os braços do pacote" (vm.pistol.arms = 'izzy' | 'pack').

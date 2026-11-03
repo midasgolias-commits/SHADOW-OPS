@@ -128,9 +128,10 @@ export const GRIP_BASE = { aug: 'rifle', karambit: 'knife' };
 /**
  * VIEWMODEL NOVO (braços + arma do pacote, PistolViewmodel.js): ajuste da câmera dele, por arma (grips.json → vm.<arma>).
  * x lado, y cima, z frente (cm); rx/ry/rz giro (graus); fov (graus); near = corte perto (cm); camK = quanto do balanço
- * da câmera animada do pacote entra (0 = câmera parada, 1 = balanço inteiro); on = usar o viewmodel novo nesta arma.
+ * da câmera animada do pacote entra (0 = câmera parada, 1 = balanço inteiro); on = usar o viewmodel novo nesta arma;
+ * arms = 'izzy' (braços da Izzy seguindo a animação do pacote por IK) ou 'pack' (braços do próprio pacote).
  */
-export const VM_DEFAULT = { on: true, x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0, fov: 60, near: 1, camK: .5 };
+export const VM_DEFAULT = { arms: 'izzy', on: true, x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0, fov: 60, near: 1, camK: .5 };
 export const vmFor = wid => ({ ...VM_DEFAULT, ...(DATA.vm?.[wid] || {}) });
 export const fpFor = (kind, wid, scene) => ({ ...FP_DEFAULT, ...(DATA.fp?.[kind] || {}), ...((wid && DATA.fpW?.[kind]?.[wid]) || {}), ...(fpSceneCam(kind, wid, scene) || {}) });
 /** Câmera própria de uma cena da 1ª pessoa (salva junto da pegada da cena: scenes.fp_walk.cam). Sem ela, a cena usa a câmera da arma. */
