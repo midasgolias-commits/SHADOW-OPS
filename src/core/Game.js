@@ -17,7 +17,7 @@ import { Assets } from './Assets.js';
 import { CharacterAnimator } from '../player/CharacterAnimator.js';
 import { HeldWeapon, WEAPON_MODELS, setScopeCut, ensureWeaponEnv } from '../weapons/WeaponModels.js';
 import { vfov } from './Fov.js';
-import { loadGrips } from '../weapons/Grips.js';
+import { loadGrips, vmFor } from '../weapons/Grips.js';
 import { SETTINGS_DEFAULTS } from '../ui/Settings.js';
 import { getLoadout, loadoutWeapons } from '../ui/Loadout.js';
 import { GrenadeSystem } from '../weapons/Grenades.js';
@@ -278,7 +278,7 @@ export class Game {
     // 1ª pessoa (tecla V): braços e arma do Lab desenhados por cima do mapa
     this.fpv?.dispose(); this.fpv = new FirstPersonView(this.assets, skin);
     // viewmodel novo da pistola (carrega em segundo plano; quando chegar, a pistola passa a usar ele na 1ª pessoa)
-    const fpvNow = this.fpv; this.assets.loadPistolVM?.().then(rig => { if (this.fpv === fpvNow) fpvNow.setPistolVM(rig); }).catch(() => {});
+    const fpvNow = this.fpv, kit = vmFor('pistol').kit; this.assets.loadPistolKit?.(kit).then(rig => { if (this.fpv === fpvNow) fpvNow.setPistolVM(rig, kit); }).catch(() => {});
     // cano para o CAMINHO do tiro: só quando a arma está de verdade no mapa (3ª pessoa, ou mira pela arma na 1ª pessoa)
     this.weapons.muzzle = () => { if (this.player.fp || !this.held.holder.visible || !this.held.cur) return null; return this.held.muzzleWorld; };
     // cano para o RASTRO: na 1ª pessoa os braços são desenhados por cima (outra cena), então o rastro começa

@@ -26,14 +26,25 @@ export function handFrame(W, M, I, K, out) {
   return out.setFromRotationMatrix(_m.makeBasis(_x, _y, _z));
 }
 
+/** nomes dos ossos de cada tipo de braço: Mixamo (Izzy) e os braços MakeHuman do OpenGameArt ("FPS arms", CC0) */
+export const RIGS = {
+  mixamo: S => ({ arm: S('Right', 'Left') + 'Arm', fore: S('Right', 'Left') + 'ForeArm', hand: S('Right', 'Left') + 'Hand',
+    fing: FINGERS.map(f => [1, 2, 3, 4].map(i => `${S('Right', 'Left')}Hand${f}${i}`)) }),
+  oga: S => { const x = S('R', 'L'), n = { Index: 'f_index', Middle: 'f_middle', Ring: 'f_ring', Pinky: 'f_pinky', Thumb: 'thumb' };
+    return { arm: 'upper_arm' + x, fore: 'forearm' + x, hand: 'hand' + x, foreEnd: 'forearm' + x + '_end',
+      fing: FINGERS.map(f => ['01', '02', '03', '03'].map((k, i) => `${n[f]}${k}${x}${i === 3 ? '_end' : ''}`)) }; }
+};
+
 export class ArmRetarget {
-  /** izzy: personagem (Mixamo). pack: rig do pacote. side: 'r' | 'l'. */
-  constructor(izzy, pack, side) {
-    const S = side === 'r' ? 'Right' : 'Left', bz = {}, bp = n => { const o = pack.getObjectByName(`${side}_${n}`); if (o) o.userData.rtKey = `${side}_${n}`; return o; };
+  /** izzy: braços de destino (Izzy ou outro). pack: rig do pacote. side: 'r' | 'l'. rig: 'mixamo' | 'oga'. */
+  constructor(izzy, pack, side, rig = 'mixamo') {
+    const bz = {}, bp = n => { const o = pack.getObjectByName(`${side}_${n}`); if (o) o.userData.rtKey = `${side}_${n}`; return o; };
     this.over = null;   // Map nome → posição no mundo: alvos que substituem os ossos do pacote (ex.: mão no carregador)
     izzy.traverse(n => { if (n.isBone) bz[n.name.replace(/^mixamorig\d*:?/, '')] = n; });
-    this.arm = bz[S + 'Arm']; this.fore = bz[S + 'ForeArm']; this.hand = bz[S + 'Hand'];
-    this.zf = FINGERS.map(f => [1, 2, 3, 4].map(i => bz[`${S}Hand${f}${i}`]));
+    const N = RIGS[rig](( r, l) => side === 'r' ? r : l);
+    this.arm = bz[N.arm]; this.fore = bz[N.fore]; this.hand = bz[N.hand]; this.foreEnd = N.foreEnd ? bz[N.foreEnd] : null;
+    this.free = !!this.hand && this.hand.parent !== this.fore;   // mão solta (não é filha do antebraço): vai direto ao alvo
+    this.zf = N.fing.map(f => f.map(n => bz[n]));
     this.p = { sh: bp('upperarm'), el: bp('forearm'), wr: bp('wrist') };
     this.pf = FINGERS.map(f => ['low', 'mid', 'tip', 'tip_end'].map(k => bp(`${f.toLowerCase()}_${k}`)));
     this.ok = !!(this.arm && this.fore && this.hand && this.p.wr && this.p.el && this.zf[0][0] && this.zf[1][0] && this.zf[2][0] && this.pf[2][0]);
@@ -79,14 +90,17 @@ export class ArmRetarget {
       this.arm.position.copy(par.worldToLocal(S.clone())); this.arm.updateWorldMatrix(false, true);
     }
     // braço: IK até o punho e cotovelo para o mesmo lado do cotovelo do pacote
-    const a = this.arm.getWorldPosition(new THREE.Vector3()), b = this.fore.getWorldPosition(new THREE.Vector3()), c = this.hand.getWorldPosition(new THREE.Vector3());
-    if (k < 1) target.lerp(c, 1 - k);
+    const end = this.free ? (this.foreEnd || this.hand) : this.hand;
+    const a = this.arm.getWorldPosition(new THREE.Vector3()), b = this.fore.getWorldPosition(new THREE.Vector3()), c = end.getWorldPosition(new THREE.Vector3());
+    if (k < 1) target.lerp(this.hand.getWorldPosition(_t), 1 - k);
     twoBoneIK(this.arm, this.fore, a, b, c, target);
     const sh = this._pw(P.sh, new THREE.Vector3()), el = this._pw(P.el, new THREE.Vector3());
     const pole = el.sub(sh.lerp(W, .5));
-    if (pole.lengthSq() > 1e-8) elbowToward(this.arm, this.fore, this.hand, pole, k);
+    if (pole.lengthSq() > 1e-8) elbowToward(this.arm, this.fore, end, pole, k);
+    // mão solta: vai exatamente para o alvo (o antebraço já chegou lá pelo IK)
+    if (this.free) { const par = this.hand.parent; par.updateWorldMatrix(true, false); this.hand.position.copy(par.worldToLocal(target.clone())); }
     // mão: giro absoluto no mundo → local
-    this.fore.updateWorldMatrix(true, false); this.fore.getWorldQuaternion(_qw);
+    this.hand.parent.updateWorldMatrix(true, false); this.hand.parent.getWorldQuaternion(_qw);
     const want = _q.copy(_qw).invert().multiply(Qh);
     this.hand.quaternion.slerp(want, k); this.hand.updateWorldMatrix(false, true);
     // dedos: cada falange aponta como a do pacote
@@ -109,7 +123,7 @@ export class ArmRetarget {
   shoulderTarget(reach = .97) {
     const W = this._pw(this.p.wr, new THREE.Vector3()), S = this._pw(this.p.sh, new THREE.Vector3()), E = this._pw(this.p.el, new THREE.Vector3());
     const lp = S.distanceTo(E) + E.distanceTo(W);
-    const a = this.arm.getWorldPosition(_a), b = this.fore.getWorldPosition(_b), c = this.hand.getWorldPosition(_c), lz = a.distanceTo(b) + b.distanceTo(c);
+    const a = this.arm.getWorldPosition(_a), b = this.fore.getWorldPosition(_b), c = (this.free ? (this.foreEnd || this.hand) : this.hand).getWorldPosition(_c), lz = a.distanceTo(b) + b.distanceTo(c);
     return W.clone().add(S.sub(W).normalize().multiplyScalar(Math.min(lz * reach, lp)));
   }
   packShoulder() { return this.p.sh.getWorldPosition(new THREE.Vector3()); }

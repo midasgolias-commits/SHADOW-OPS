@@ -81,6 +81,58 @@ export class Assets {
     })().catch(e => { this._pvmP = null; console.error('Viewmodel novo da pistola não carregou:', e); throw e; });
   }
 
+  /** viewmodel da pistola pelo nome do kit (PistolViewmodel.KITS): 'mm9' (padrão) ou 'glock' */
+  loadPistolKit(kit = 'mm9') { return kit === 'glock' ? this.loadPistolVM() : this.loadPistolMM9(); }
+  /**
+   * Kit "Pistol Animations (BLENDER)" do Sketchfab (autor LokitoBlu; arma 9 mm de @TORI106): braços + arma + câmera +
+   * animações num esqueleto só. Convertido do .blend com o Blender para assets/weapons/pistol_anim/pistol_anim.glb (sem imagens
+   * dentro); as texturas ficam ao lado, em JPG. orm = oclusão (R), aspereza (G), metal (B).
+   */
+  loadPistolMM9() {
+    return this._mm9P ??= (async () => {
+      const D = A + 'weapons/pistol_anim/';
+      const g = await new GLTFLoader().loadAsync(D + 'pistol_anim.glb');
+      const tl = new THREE.TextureLoader(), T = (f, srgb) => { const t = tl.load(D + f); t.flipY = false; if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; };
+      const gun = n => new THREE.MeshStandardMaterial({ name: '9' + n, map: T(`p9${n}_color.jpg`, true), normalMap: T(`p9${n}_normal.jpg`),
+        roughnessMap: T(`p9${n}_orm.jpg`), metalnessMap: T(`p9${n}_orm.jpg`), roughness: 1, metalness: 1 });
+      const M = {
+        m1: gun('m1'), m2: gun('m2'),
+        arm: new THREE.MeshStandardMaterial({ name: 'pele', map: T('arm_color.jpg', true), normalMap: T('arm_normal.jpg'), roughness: .62, metalness: 0 }),
+        sleeve: new THREE.MeshStandardMaterial({ name: 'manga', map: T('sleeve_color.jpg', true), normalMap: T('sleeve_normal.jpg'), roughness: .9, metalness: 0 }),
+        shell: new THREE.MeshStandardMaterial({ name: 'cápsula', map: T('shell_color.jpg', true), roughness: .35, metalness: 1 }),
+        bullet: new THREE.MeshStandardMaterial({ name: 'bala', map: T('bullet_color.jpg', true), roughness: .35, metalness: 1 })
+      };
+      const pick = n => /^9m1/.test(n) ? M.m1 : /^9m2/.test(n) ? M.m2 : /shell/.test(n) ? M.shell : /bullet/.test(n) ? M.bullet
+        : /sleeve/.test(n) ? M.sleeve : /arm|organic/.test(n) ? M.arm : null;
+      const rig = g.scene; rig.animations = g.animations; const junk = [];
+      rig.traverse(o => {
+        if (o.isLight) junk.push(o);
+        if (o.isMesh) { o.frustumCulled = false; o.castShadow = o.receiveShadow = false; const m = pick(o.material?.name || ''); if (m) o.material = m; }
+      });
+      for (const o of junk) o.removeFromParent();
+      if (!rig.getObjectByName('Camera') || !rig.getObjectByName('Slide') || !rig.getObjectByName('r_wrist')) throw new Error('viewmodel 9 mm: arquivo sem Camera, Slide ou r_wrist');
+      rig.userData.asset = true; this.pistolMM9 = rig; return rig;
+    })().catch(e => { this._mm9P = null; console.error('Viewmodel 9 mm não carregou:', e); throw e; });
+  }
+
+  /**
+   * Braços "FPS arms (rigged only)" do OpenGameArt (autor: para, licença CC0, malha feita no MakeHuman).
+   * Em metros; mão solta do antebraço (no Blender ela era presa por IK, que o FBX não traz): o ArmRetarget leva a mão
+   * direto à pegada da arma e dobra o braço até ela. Carrega junto com o viewmodel da pistola, em segundo plano.
+   */
+  loadOgaArms() {
+    return this._ogaP ??= (async () => {
+      const D = A + 'weapons/fps_arms/', EMPTY = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+      const M = new THREE.LoadingManager(); M.setURLModifier(u => /\.(png|tga|jpe?g)(\?|$)/i.test(u) && !u.startsWith('data:') && !u.startsWith('blob:') ? EMPTY : u);
+      const obj = await new FBXLoader(M).loadAsync(D + 'arms.fbx');
+      const map = new THREE.TextureLoader().load(D + 'arms_diff.png'); map.colorSpace = THREE.SRGBColorSpace; map.anisotropy = 4;
+      const mat = new THREE.MeshStandardMaterial({ name: 'pele', map, roughness: .62, metalness: 0 });
+      obj.traverse(o => { if (o.isSkinnedMesh) { o.material = mat; o.frustumCulled = false; o.castShadow = o.receiveShadow = false; } });
+      if (!obj.getObjectByName('handR') || !obj.getObjectByName('upper_armR')) throw new Error('braços OGA: ossos não encontrados');
+      obj.userData.asset = true; this.ogaArms = obj; return obj;
+    })().catch(e => { this._ogaP = null; console.error('Braços OGA não carregaram:', e); throw e; });
+  }
+
   /**
    * Granada M67 (assets/weapons/grenade/grenade.fbx + texturas m67_d.jpg / m67_n.png).
    * O arquivo vem em outra escala e deitado: aqui fica de pé, com o centro do corpo no meio (pivô) e 9,5 cm de altura (tamanho real).

@@ -129,10 +129,12 @@ export const GRIP_BASE = { aug: 'rifle', karambit: 'knife' };
  * VIEWMODEL NOVO (braços + arma do pacote, PistolViewmodel.js): ajuste da câmera dele, por arma (grips.json → vm.<arma>).
  * x lado, y cima, z frente (cm); rx/ry/rz giro (graus); fov (graus); near = corte perto (cm); camK = quanto do balanço
  * da câmera animada do pacote entra (0 = câmera parada, 1 = balanço inteiro); on = usar o viewmodel novo nesta arma;
- * arms = 'izzy' (braços da Izzy seguindo a animação do pacote por IK) ou 'pack' (braços do próprio pacote).
+ * kit = 'mm9' (braços + 9 mm do Sketchfab, com sacar) ou 'glock' (pacote antigo); arms (só no kit glock) = 'izzy' (braços da Izzy seguindo a animação do pacote por IK) ou 'pack' (braços do próprio pacote).
  */
-export const VM_DEFAULT = { arms: 'pack', handScale: 1.2, on: true, x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0, fov: 60, near: 1, camK: .5 };
-export const vmFor = wid => ({ ...VM_DEFAULT, ...(DATA.vm?.[wid] || {}) });
+export const VM_DEFAULT = { kit: 'mm9', arms: 'pack', handScale: 1.2, on: true, x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0, fov: 60, near: 1, camK: .5 };
+/** campo de visão padrão de cada kit (no Blender o 9 mm usa lente de 16 mm = 58,7° vertical; 50° deixa a arma um pouco maior na tela) */
+export const KIT_FOV = { mm9: 50, glock: 60 };
+export const vmFor = wid => { const sv = DATA.vm?.[wid] || {}, c = { ...VM_DEFAULT, ...sv }; if (sv.fov == null || (sv.fovKit ?? 'glock') !== c.kit) c.fov = KIT_FOV[c.kit] ?? c.fov; return c; };
 export const fpFor = (kind, wid, scene) => ({ ...FP_DEFAULT, ...(DATA.fp?.[kind] || {}), ...((wid && DATA.fpW?.[kind]?.[wid]) || {}), ...(fpSceneCam(kind, wid, scene) || {}) });
 /** Câmera própria de uma cena da 1ª pessoa (salva junto da pegada da cena: scenes.fp_walk.cam). Sem ela, a cena usa a câmera da arma. */
 export function fpSceneCam(kind, wid, scene) {

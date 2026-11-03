@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { MuzzleFlash } from '../weapons/MuzzleFlash.js';
 import { vmFor } from '../weapons/Grips.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
 /**
  * VIEWMODEL NOVO DA PISTOLA (pacote "Pistol 43 Tactical": braços BF3 + Glock num esqueleto só, com câmera própria).
@@ -19,16 +20,27 @@ import { vmFor } from '../weapons/Grips.js';
 export const VM_CLIPS = { idle: 'Hands|Origin', walk: 'Hands|Walk', run: 'Hands|Run', shot: 'Hands|Shot', reloadT: 'Hands|Reloat_t', reloadF: 'Hands|Reloat_f', inspect: 'Hands|Inspect' };
 export const VM_SWAP = { down: 14, pitch: 26 };   // troca de arma: quanto desce (cm) e gira (graus) até sumir da tela
 const FWD_FIX = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), -Math.PI / 2);   // câmera do arquivo olha +X; a do three olha -Z
+/**
+ * KITS de viewmodel (cada um = braços + arma + animações feitos juntos):
+ *  glock: pacote "Pistol 43 Tactical" (FBX; câmera olha +X; tem inspecionar; sem sacar/guardar);
+ *  mm9:   "Pistol Animations (BLENDER)" do Sketchfab (autor LokitoBlu; arma de @TORI106), convertido do .blend com o Blender
+ *         para GLB; câmera já olha -Z; tem SACAR (Draw) e GUARDAR (Not_Draw), recarga rápida e completa; sem inspecionar.
+ */
+export const KITS = {
+  glock: { clips: VM_CLIPS, camFix: FWD_FIX, muzzle: 'barrel', magGrip: true },
+  mm9: { clips: { idle: 'Idle', walk: 'Walk', run: 'Jog', shot: 'Fire', reloadT: 'Reload_Fast', reloadF: 'Reload_Complete', draw: 'Draw', holster: 'Not_Draw' },
+    camFix: null, muzzle: 'mesh', magGrip: false, gun: /^Cube005/, lightCam: true, env: true }
+};
 const _w = new THREE.Vector3(), _d = new THREE.Vector3(), _p = new THREE.Vector3(), _q = new THREE.Quaternion(), _s = new THREE.Vector3(), _e = new THREE.Euler(), _v = new THREE.Vector3(), _m = new THREE.Matrix4();
 
 export class PistolViewmodel {
   /** rig: objeto preparado no Assets.loadPistolVM() (o mesmo é reaproveitado entre partidas). id: arma do jogo. */
-  constructor(rig, id = 'pistol') {
-    this.rig = rig; this.id = id;
+  constructor(rig, id = 'pistol', kit = 'glock') {
+    this.rig = rig; this.id = id; this.kitName = kit; this.kit = KITS[kit];
     const sc = this.scene = new THREE.Scene();
     sc.add(new THREE.HemisphereLight(0xe8eef6, 0x4a4036, 1.25));
     const key = new THREE.DirectionalLight(0xfff0dc, 2.2); key.position.set(1, 2.5, 1.5); sc.add(key);
-    const fill = new THREE.DirectionalLight(0x9fb8d8, .7); fill.position.set(-2, 1, -1); sc.add(fill);
+    const fill = new THREE.DirectionalLight(0x9fb8d8, .7); fill.position.set(-2, 1, -1); sc.add(fill); this.lights = [key, fill];
     sc.add(rig); rig.position.set(0, 0, 0); rig.updateMatrixWorld(true);
     this.camNode = rig.getObjectByName('Camera');
     const b = n => rig.getObjectByName(n);
@@ -37,7 +49,7 @@ export class PistolViewmodel {
     this.mixer = new THREE.AnimationMixer(rig);
     const clip = n => { const c = rig.animations.find(a => a.name === n); if (!c) throw new Error('Viewmodel: clipe não encontrado no arquivo: ' + n); return c; };
     this.act = {};
-    for (const [k, n] of Object.entries(VM_CLIPS)) {
+    for (const [k, n] of Object.entries(this.kit.clips)) {
       const a = this.mixer.clipAction(clip(n));
       if (k === 'idle' || k === 'walk' || k === 'run') { a.setLoop(THREE.LoopRepeat); a.enabled = true; a.setEffectiveWeight(0); a.play(); }
       else { a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished = true; }
@@ -49,14 +61,32 @@ export class PistolViewmodel {
     this.mixer.update(0); rig.updateMatrixWorld(true);
     // câmera "parada" (pose Origin): base estável; o balanço da câmera animada entra pela fração camK do ajuste
     this.rest = { p: new THREE.Vector3(), q: new THREE.Quaternion() }; this.camNode.matrixWorld.decompose(this.rest.p, this.rest.q, _s);
+    // kit com luz presa à câmera: a luz vem de trás/cima da câmera (no arquivo a câmera não olha para o mesmo lado do pacote antigo)
+    if (this.kit.lightCam) { this.lights[0].position.set(1.2, 2.2, 1.6).applyQuaternion(this.rest.q); this.lights[1].position.set(-2, .6, .8).applyQuaternion(this.rest.q); this.lights[0].intensity = 2.6; }
     this.unit = this.bones.forearm.getWorldPosition(new THREE.Vector3()).distanceTo(this.bones.wrist.getWorldPosition(new THREE.Vector3())) / 26;   // unidades do arquivo por cm
     this.cam = new THREE.PerspectiveCamera(60, 16 / 9, this.unit * .5, this.unit * 5000);
     // clarão do tiro: na boca do cano (Barrel_end), com +Z apontando para fora do cano
     this.flash = new MuzzleFlash({ light: true }); this.muzzle = new THREE.Group(); sc.add(this.muzzle);
     this.muzzle.userData.muzzle = { x: 0, y: 0, z: 0 }; this.flash.attach(this.muzzle);
     this.swE = 0; this.reloading = false; this.cfg = vmFor(id);
-    this._recordMagGrip();
+    if (this.kit.magGrip) this._recordMagGrip();
+    if (this.kit.muzzle === 'mesh') this._findMuzzle();
   }
+  /** kit sem osso na boca do cano: acha a ponta da arma na malha (pose parada) e guarda no espaço do ferrolho */
+  _findMuzzle() {
+    const rig = this.rig, slide = rig.getObjectByName('Slide'); rig.updateMatrixWorld(true);
+    const inv = this.camNode.matrixWorld.clone().invert(), pts = [], v = new THREE.Vector3();
+    rig.traverse(o => { if (!o.isSkinnedMesh || !this.kit.gun.test(o.name) || !/9m/.test([].concat(o.material)[0]?.name || '')) return;
+      const n = o.geometry.attributes.position.count; for (let i = 0; i < n; i += 2) { o.getVertexPosition(i, v); o.localToWorld(v); pts.push(v.clone()); } });
+    if (!pts.length || !slide) return;
+    const cs = pts.map(p => p.clone().applyMatrix4(inv)), zmin = Math.min(...cs.map(p => p.z)), tip = new THREE.Vector3(); let n = 0;
+    cs.forEach((p, i) => { if (p.z < zmin + this.unit * .8) { tip.add(pts[i]); n++; } }); tip.divideScalar(n);
+    const fwd = new THREE.Vector3(0, 0, -1).transformDirection(this.camNode.matrixWorld);
+    const sInv = slide.matrixWorld.clone().invert();
+    this.muzzleLocal = { bone: slide, p: tip.clone().applyMatrix4(sInv), d: fwd.clone().transformDirection(sInv) };
+  }
+  /** sacar a arma (kits com o clipe Draw): ao trocar para ela ou ao aparecer na tela */
+  draw(speed = 1.6) { if (this.act.draw) this._playOne('draw', speed, .02); }
 
   /**
    * Correção da recarga TÁTICA do pacote: nela o carregador que aparece na tela sai e volta sozinho (a mão esquerda do
@@ -68,7 +98,7 @@ export class PistolViewmodel {
     const rig = this.rig, B = n => rig.getObjectByName(n), names = [];
     for (const n of ['upperarm', 'forearm', 'wrist']) names.push('l_' + n);
     for (const f of ['index', 'middle', 'ring', 'pinky', 'thumb']) for (const k of ['low', 'mid', 'tip', 'tip_end']) names.push(`l_${f}_${k}`);
-    const tmp = new THREE.AnimationMixer(rig), body = B('Wpn_body'), mag = B('Magazine'), mag2 = B('Magazine2');
+    const tmp = new THREE.AnimationMixer(rig), body = B('Wpn_body'), mag = B('Magazine'), mag2 = B('Magazine2'); if (!body || !mag || !mag2) return;
     const at = (clip, t) => { tmp.stopAllAction(); const a = tmp.clipAction(rig.animations.find(c => c.name === clip)); a.play(); tmp.setTime(t * a.getClip().duration); rig.updateMatrixWorld(true); };
     at(VM_CLIPS.reloadF, .33);
     const inv = mag2.matrixWorld.clone().invert(), grip = new Map();
@@ -110,7 +140,7 @@ export class PistolViewmodel {
   /** Tiro (evento real do jogo). */
   shot() { if (this.one === 'reloadT' || this.one === 'reloadF') return; this._playOne('shot', 1, .03); this._flash(); }
   /** Inspecionar (tecla F, só com a arma parada e pronta). */
-  inspect() { if (!this.one && this.swE < .05) this._playOne('inspect', 1, .2); }
+  inspect() { if (this.act.inspect && !this.one && this.swE < .05) this._playOne('inspect', 1, .2); }
   /** Cancela o que estiver por cima (troca de arma, morte, renascer). */
   cancel() { if (this.one) this._endOne(.1); this.reloading = false; }
 
@@ -129,9 +159,11 @@ export class PistolViewmodel {
     const sp = s.air ? 0 : (s.speed || 0);
     this._setBase(sp > 5.2 ? 'run' : sp > .6 ? 'walk' : 'idle');
     if (this.one === 'inspect' && (sp > .6 || s.switchK > 0)) this._endOne(.2);
-    // troca de arma: desce e gira para fora da tela (igual aos outros braços)
-    const sk = s.switchK || 0; this.swE = sk * sk * (3 - 2 * sk);
-    if (this.swE > .9 && this.one) this.cancel();
+    // troca de arma: desce e gira para fora da tela; kit com SACAR: na volta toca a animação de sacar no lugar da subida
+    const sk = s.switchK || 0;
+    if (this.act.draw && s.switchIn && sk > 0) { if (!this._drew) { this._drew = true; this.draw(1.6); } this.swE = 0; }
+    else { if (!sk) this._drew = false; this.swE = sk * sk * (3 - 2 * sk); }
+    if (this.swE > .9 && this.one && this.one !== 'draw') this.cancel();
     this.mixer.update(dt);
     this.rig.updateMatrixWorld(true);
     this.flash.update(dt);
@@ -141,7 +173,7 @@ export class PistolViewmodel {
   _placeCam(aspect) {
     const c = this.cam, f = this.cfg, u = this.unit;
     this.camNode.matrixWorld.decompose(_p, _q, _s);
-    c.position.copy(this.rest.p).lerp(_p, f.camK); c.quaternion.copy(this.rest.q).slerp(_q, f.camK).multiply(FWD_FIX);
+    c.position.copy(this.rest.p).lerp(_p, f.camK); c.quaternion.copy(this.rest.q).slerp(_q, f.camK); if (this.kit.camFix) c.quaternion.multiply(this.kit.camFix);
     const R = Math.PI / 180;
     c.quaternion.multiply(_q.setFromEuler(_e.set((f.rx + this.swE * VM_SWAP.pitch) * R, f.ry * R, f.rz * R, 'YXZ')));
     c.position.add(_v.set(f.x * u, (f.y + this.swE * VM_SWAP.down) * u, f.z * u).applyQuaternion(c.quaternion));
@@ -150,6 +182,8 @@ export class PistolViewmodel {
   /** boca do cano e direção do cano: o osso Barrel fica na boca; o eixo do cano é Slide → Barrel
    *  (o osso Barrel_end aponta para CIMA, é só a ponta do osso, não serve de direção) */
   _muzzle(pos, dir) {
+    const L = this.muzzleLocal;
+    if (L) { pos.copy(L.p).applyMatrix4(L.bone.matrixWorld); dir.copy(L.d).transformDirection(L.bone.matrixWorld); pos.addScaledVector(dir, this.unit * .6 * (this.guide ? 1 / (this.unit * 100) : 1)); return true; }
     const a = this.bones.barrel, sl = this.bones.slide; if (!a || !sl) return false;
     a.getWorldPosition(pos); sl.getWorldPosition(dir); dir.subVectors(pos, dir).normalize();
     pos.addScaledVector(dir, this.unit * 1.5); return true;
@@ -187,6 +221,9 @@ export class PistolViewmodel {
   }
   render(renderer, aspect) {
     this._placeCam(aspect);
+    if (this.kit.env && !this.scene.environment) {   // reflexo suave (metal da arma sem ambiente fica preto)
+      this._pm ??= new THREE.PMREMGenerator(renderer); this.scene.environment = this._pm.fromScene(new RoomEnvironment(), .04).texture; this.scene.environmentIntensity = .55;
+    }
     const ac = renderer.autoClear; renderer.autoClear = false; renderer.clearDepth();
     renderer.render(this.scene, this.cam); renderer.autoClear = ac;
   }

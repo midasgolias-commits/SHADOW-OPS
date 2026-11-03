@@ -69,7 +69,7 @@ export class FirstPersonView {
     this.vm = null; this.vmOn = false;   // viewmodel novo (braços + arma do pacote) para a pistola: setPistolVM()
   }
   /** Liga o viewmodel novo da pistola (rig do Assets.loadPistolVM). Com ele ligado no Lab (vm.pistol.on), a pistola usa ele. */
-  setPistolVM(rig) { if (!rig || this.vm) return; this.vm = new PistolViewmodel(rig, 'pistol'); this.rt = ['r', 'l'].map(sd => new ArmRetarget(this.obj, rig, sd)); }
+  setPistolVM(rig, kit = 'glock') { if (!rig || this.vm) return; this.vm = new PistolViewmodel(rig, 'pistol', kit); this.rt = ['r', 'l'].map(sd => new ArmRetarget(this.obj, rig, sd)); }
   /** Tecla F: inspecionar a arma (só no viewmodel novo, que tem o clipe). */
   inspect() { if (this.vmOn) this.vm.inspect(); }
 
@@ -207,7 +207,7 @@ export class FirstPersonView {
     if (this.vmOn && !vmNow) this.vm.cancel();
     this.vmOn = vmNow;
     this._objPos = this.obj.position.clone();   // posição do corpo neste quadro (o render desloca os ombros a partir dela)
-    this.izzyVM = vmNow && vmFor('pistol').arms === 'izzy';   // braços da Izzy seguindo a animação do pacote (IK no render)
+    this.izzyVM = vmNow && this.vm.kitName === 'glock' && vmFor('pistol').arms === 'izzy';   // braços da Izzy seguindo a animação do pacote (IK no render)
     if (vmNow) {
       this.vm.setGuide(this.izzyVM ? this.scene : null);
       this.vm.update(dt, this.izzyVM ? { ...s, switchK: 0 } : s);   // com a Izzy, a troca de arma é o movimento de sempre da câmera dos braços
