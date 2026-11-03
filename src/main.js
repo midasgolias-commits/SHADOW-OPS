@@ -39,7 +39,9 @@ if (new URLSearchParams(location.search).has('autoshot')) import('../tools/fpche
 // modelos (mapa, Izzy, bot, animações) carregam uma vez ao abrir a página
 const loadInfo = $('loadInfo');
 game.assets.load(p => { loadInfo.textContent = 'Carregando mapa, personagens e animações… ' + Math.round(p * 100) + '%'; })
-  .then(() => { loadInfo.textContent = 'Pronto para jogar.'; loadInfo.classList.add('ok'); })
+  .then(() => { loadInfo.textContent = 'Pronto para jogar.'; loadInfo.classList.add('ok');
+    // já baixa em segundo plano os braços+arma de 1ª pessoa do personagem escolhido (pistola e AK): na partida eles já estão prontos
+    const sk = getLoadout().skin; game.assets.loadKit?.('p9', sk).catch(() => {}); game.assets.loadKit?.('ak', sk).catch(() => {}); })
   .catch(e => { loadInfo.textContent = 'Falha ao carregar os modelos.'; report('Falha ao carregar modelos: ' + (e?.message || e) + ' (confira a pasta assets e se o servidor foi aberto na pasta do jogo)'); });
 let settingsFrom = 'menu', minimap = null, slotsKey = '', hitTimer = 0;
 const wSwitch = new WeaponSwitch($('wswitch'));

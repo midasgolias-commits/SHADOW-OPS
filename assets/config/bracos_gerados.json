@@ -1,0 +1,12 @@
+{
+ "kits": {
+  "p9": {
+   "izzy": "assets/weapons/pistol_anim/p9_izzy.glb",
+   "bot": "assets/weapons/pistol_anim/p9_bot.glb"
+  },
+  "ak": {
+   "izzy": "assets/weapons/ak_anim/ak_izzy.glb",
+   "bot": "assets/weapons/ak_anim/ak_bot.glb"
+  }
+ }
+}

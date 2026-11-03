@@ -131,13 +131,17 @@ export const GRIP_BASE = { ak: 'rifle', aug: 'rifle', karambit: 'knife' };
  * da câmera animada do pacote entra (0 = câmera parada, 1 = balanço inteiro); on = usar o viewmodel novo nesta arma;
  * kit = 'mm9' (braços + 9 mm do Sketchfab, com sacar) ou 'glock' (pacote antigo); arms (só no kit glock) = 'izzy' (braços da Izzy seguindo a animação do pacote por IK) ou 'pack' (braços do próprio pacote).
  */
-export const VM_DEFAULT = { kit: 'izzy9', arms: 'pack', handScale: 1.2, on: true, x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0, fov: 60, near: 1, camK: .5 };
+export const VM_DEFAULT = { kit: 'p9', arms: 'pack', handScale: 1.2, on: true, x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0, fov: 60, near: 1, camK: .5 };
 /** campo de visão padrão de cada kit (no Blender o 9 mm usa lente de 16 mm = 58,7° vertical; 50° deixa a arma um pouco maior na tela) */
-export const KIT_FOV = { izzy9: 50, mm9: 50, ak: 60, glock: 60 };
+export const KIT_FOV = { p9: 50, izzy9: 50, mm9: 50, ak: 60, glock: 60 };
 /** kit de cada arma com viewmodel próprio (o da pistola pode ser trocado no Lab) */
-export const VM_KIT = { pistol: 'izzy9', ak: 'ak' };
+export const VM_KIT = { pistol: 'p9', ak: 'ak' };
 export const vmFor = wid => { const sv = DATA.vm?.[wid] || {}, c = { ...VM_DEFAULT, kit: VM_KIT[wid] || VM_DEFAULT.kit, ...sv }; if (sv.fov == null || (sv.fovKit ?? 'glock') !== c.kit) c.fov = KIT_FOV[c.kit] ?? c.fov; return c; };
-export const fpFor = (kind, wid, scene) => ({ ...FP_DEFAULT, ...(DATA.fp?.[kind] || {}), ...((wid && DATA.fpW?.[kind]?.[wid]) || {}), ...(fpSceneCam(kind, wid, scene) || {}) });
+export const fpFor = (kind, wid, scene) => {
+  // personagem sem câmera da 1ª pessoa ajustada no Lab (ex.: agente mascarado, operadores novos): usa a da Izzy (mesmo esqueleto Mixamo)
+  const k = (DATA.fp?.[kind] || DATA.fpW?.[kind]) ? kind : 'izzy';
+  return { ...FP_DEFAULT, ...(DATA.fp?.[k] || {}), ...((wid && DATA.fpW?.[k]?.[wid]) || {}), ...(fpSceneCam(kind, wid, scene) || {}) };
+};
 /** Câmera própria de uma cena da 1ª pessoa (salva junto da pegada da cena: scenes.fp_walk.cam). Sem ela, a cena usa a câmera da arma. */
 export function fpSceneCam(kind, wid, scene) {
   if (!wid || !scene?.startsWith('fp_')) return null;
@@ -156,7 +160,11 @@ export function gripFor(kind, w, scene) {
   const S = e?.scenes;
   // 1ª pessoa: cena sem ajuste usa "andando" da 1ª pessoa (depois o ajuste antigo "fp" e, por último, o Geral)
   const has = k => S?.[k]?.p ? S[k] : null;   // cena só com câmera (sem pegada) usa a pegada de reserva
-  if (scene?.startsWith('fp_')) return has(scene) || has('fp_walk') || has('fp') || has('all') || ZERO;
+  if (scene?.startsWith('fp_')) {
+    const own = has(scene) || has('fp_walk') || has('fp');
+    if (!own && kind !== 'izzy') { const z = weaponOf('izzy', w)?.scenes, hz = k => z?.[k]?.p ? z[k] : null; const iz = hz(scene) || hz('fp_walk') || hz('fp'); if (iz) return iz; }   // personagem sem 1ª pessoa ajustada: usa a da Izzy
+    return own || has('all') || ZERO;
+  }
   return has(scene) || has('all') || ZERO;
 }
 /** Mão esquerda salva (ou null = usa o padrão da arma). */

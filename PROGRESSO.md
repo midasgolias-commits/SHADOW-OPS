@@ -284,3 +284,9 @@ WASD move · Shift corre · Ctrl/C agacha · Espaço pula · botão esquerdo ati
 - FirstPersonView agora tem um viewmodel por arma (`setVM(wid, rig, kit)`).
 - Créditos em CREDITOS.md (CC BY 4.0).
 - Falta: animações próprias para VX-47, AUG, Vector, sniper, escopeta, faca, karambit e granada no mesmo braço.
+
+## 03/11 — Sistema de braços por personagem (qualquer operador) + Agente Mascarado
+- Guia completo: `_fonte/bracos/COMO_FAZER.md`. Lista: `_fonte/bracos/bracos.json`. Gerar: `5 - GERAR BRACOS DOS PERSONAGENS.bat`.
+- Agente Mascarado: esqueleto assimétrico (escala média das mãos), dedos sem osso presos no dedo do kit mais perto, braço de cima cortado perto do ombro.
+- Jogo: kits pré-carregados ao abrir; arma escondida enquanto o kit carrega; correr da pistola = andar rápido (sem mão gigante).
+- Testado (fotos): Agente Mascarado e Izzy, pistola e AK — parado, rajada, tiros seguidos, recargas, sacar, andar, correr; faca no sistema antigo.

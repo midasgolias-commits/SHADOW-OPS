@@ -32,7 +32,7 @@ export const KITS = {
     camFix: null, muzzle: 'mesh', magGrip: false, gun: /^Cube005/, gunMat: /9m/, lightCam: true, env: true }
 };
 // izzy9 / ak: os MESMOS kits com os braços da Izzy no lugar da luva (feito no Blender: _fonte/izzy_arms/build.py) — braço único em todas as armas
-KITS.izzy9 = { ...KITS.mm9 };
+KITS.p9 = { ...KITS.mm9, clips: { ...KITS.mm9.clips, run: 'Walk' }, runSpeed: 1.45 }; KITS.izzy9 = KITS.p9;   // correr = andar mais rápido: no Jog do kit a mão esquerda passa enorme na frente da câmera com braços de personagem   // izzy9 = nome antigo do p9
 KITS.ak = { ...KITS.mm9, clips: { idle: 'Idle', walk: 'Walk', run: 'Walk', shot: 'Shot', reloadT: 'Reload_Fast', reloadF: 'Reload_Complete', draw: 'Draw', holster: 'Not_Draw' },
   gun: /^AK/, gunMat: null, runSpeed: 1.45 };
 const _w = new THREE.Vector3(), _d = new THREE.Vector3(), _p = new THREE.Vector3(), _q = new THREE.Quaternion(), _s = new THREE.Vector3(), _e = new THREE.Euler(), _v = new THREE.Vector3(), _m = new THREE.Matrix4();

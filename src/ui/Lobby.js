@@ -6,7 +6,7 @@ import { CharacterPreview } from './CharacterPreview.js';
 import { weaponPhoto } from './Inventory.js';
 import { myRankCell, rankIcon, rankName, botRankCell } from './Ranks.js';
 
-const BOT_GUNS = ['rifle', 'smg', 'shotgun', 'sniper', 'aug', 'rifle', 'smg'];
+const BOT_GUNS = ['rifle', 'smg', 'shotgun', 'sniper', 'aug', 'ak', 'rifle', 'smg'];
 const botGun = name => { let h = 7; for (const ch of String(name)) h = (h * 33 + ch.charCodeAt(0)) >>> 0; return BOT_GUNS[h % BOT_GUNS.length]; };
 
 const AGENTS = [

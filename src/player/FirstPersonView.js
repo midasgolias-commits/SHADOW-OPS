@@ -66,7 +66,7 @@ export class FirstPersonView {
     this.mixer = new THREE.AnimationMixer(obj); this.overCache = {}; this.key = ''; this.base = this.over = null;
     this.yaw = 0; this.wid = null; this.fireT = 0;
     this.cam = new THREE.PerspectiveCamera(60, 16 / 9, .01, 20);
-    this.vm = null; this.vmOn = false; this.vms = {};   // viewmodels (braços + arma + animações num arquivo só) por arma: setVM(); this.vm = o da arma na mão
+    this.vm = null; this.vmOn = false; this.vms = {}; this.vmPending = new Set();   // viewmodels (braços + arma + animações num arquivo só) por arma: setVM(); this.vm = o da arma na mão
   }
   /** Liga o viewmodel novo da pistola (rig do Assets.loadPistolVM). Com ele ligado no Lab (vm.pistol.on), a pistola usa ele. */
   setPistolVM(rig, kit = 'glock') { this.setVM('pistol', rig, kit); }
@@ -222,6 +222,8 @@ export class FirstPersonView {
       this.held.holder.visible = false;
       if (!this.izzyVM) this.obj.visible = false; else { this.vm.rig.visible = !away; this.arms.show({ upper: false, left: (this.leftK ?? 0) > .5 }); }   // só antebraço e mão: o ombro fica perto da câmera e tampava a tela
     } else this.vm?.setGuide(null);
+    // arma com viewmodel próprio ainda carregando (início da partida): não mostra nada em vez da arma solta do sistema antigo
+    if (!vmNow && this.vmPending.has(this.wid)) { this.held.holder.visible = false; this.obj.visible = false; }
     if (!this.izzyVM && this._shBase && this.rt) this.rt.forEach((r, i) => { r.arm.position.copy(this._shBase[i]); r.hand.scale.setScalar(1); });   // outras armas: ombros e mãos no tamanho de sempre   // outras armas: ombros no lugar de sempre
   }
 

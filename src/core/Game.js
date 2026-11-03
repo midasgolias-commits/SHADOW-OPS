@@ -261,7 +261,7 @@ export class Game {
   /** Personagem do jogador (Izzy) em 3ª pessoa. */
   _makeAvatar() {
     if (!this.assets.ready) return;
-    const skin = this.loadout?.skin === 'bot' ? 'bot' : 'izzy';   // skin escolhida na mochila
+    const skin = this.assets.chars[this.loadout?.skin] ? this.loadout.skin : 'izzy';   // skin escolhida na mochila (qualquer personagem carregado)
     const { obj, clips } = this.assets.instance(skin);
     obj.scale.setScalar(.01);   // arquivo em centímetros
     this.avatar = obj; this.scene.add(obj);
@@ -278,8 +278,11 @@ export class Game {
     // 1ª pessoa (tecla V): braços e arma do Lab desenhados por cima do mapa
     this.fpv?.dispose(); this.fpv = new FirstPersonView(this.assets, skin);
     // viewmodel novo da pistola (carrega em segundo plano; quando chegar, a pistola passa a usar ele na 1ª pessoa)
-    const fpvNow = this.fpv, kit = vmFor('pistol').kit; this.assets.loadPistolKit?.(kit).then(rig => { if (this.fpv === fpvNow) fpvNow.setVM('pistol', rig, kit); }).catch(() => {});
-    this.assets.loadKit?.('ak').then(rig => { if (this.fpv === fpvNow) fpvNow.setVM('ak', rig, 'ak'); }).catch(() => {});   // AK-74M: braços da Izzy + AK do kit
+    const fpvNow = this.fpv, kit = vmFor('pistol').kit, fim = w => () => fpvNow.vmPending.delete(w);
+    fpvNow.vmPending.add('pistol'); fpvNow.vmPending.add('ak');   // enquanto carrega, a arma não aparece (em vez da 1ª pessoa antiga com a arma solta)
+    this.assets.loadPistolKit?.(kit, skin).then(rig => { if (this.fpv === fpvNow) fpvNow.setVM('pistol', rig, kit); }).catch(() => {}).finally(fim('pistol'));
+    // kits com os braços DO PERSONAGEM escolhido (gerados por _fonte/bracos/gerar_todos.py para cada personagem)
+    this.assets.loadKit?.('ak', skin).then(rig => { if (this.fpv === fpvNow) fpvNow.setVM('ak', rig, 'ak'); }).catch(() => {}).finally(fim('ak'));
     // cano para o CAMINHO do tiro: só quando a arma está de verdade no mapa (3ª pessoa, ou mira pela arma na 1ª pessoa)
     this.weapons.muzzle = () => { if (this.player.fp || !this.held.holder.visible || !this.held.cur) return null; return this.held.muzzleWorld; };
     // cano para o RASTRO: na 1ª pessoa os braços são desenhados por cima (outra cena), então o rastro começa

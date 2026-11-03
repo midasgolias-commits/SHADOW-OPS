@@ -45,7 +45,7 @@ export function initVmLab({ assets, draft, changed }) {
     if (!open) return;
     if (!vm) {
       const kit = vmFor('pistol').kit; msg.textContent = 'Carregando o kit (braços + arma)…';
-      try { const rig = await assets.loadPistolKit(kit); ren ??= new THREE.WebGLRenderer({ canvas: cv, antialias: true }); ren.outputColorSpace = THREE.SRGBColorSpace; ren.toneMapping = THREE.ACESFilmicToneMapping; ren.setPixelRatio(devicePixelRatio); vm = new PistolViewmodel(rig, 'pistol', kit); msg.textContent = ''; }
+      try { const rig = await assets.loadPistolKit(kit, 'izzy'); ren ??= new THREE.WebGLRenderer({ canvas: cv, antialias: true }); ren.outputColorSpace = THREE.SRGBColorSpace; ren.toneMapping = THREE.ACESFilmicToneMapping; ren.setPixelRatio(devicePixelRatio); vm = new PistolViewmodel(rig, 'pistol', kit); msg.textContent = ''; }
       catch (e) { msg.textContent = 'Não carregou: ' + (e?.message || e); open = false; return; }
     }
     last = 0; requestAnimationFrame(loop);
