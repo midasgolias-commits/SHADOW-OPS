@@ -61,8 +61,11 @@ WEAPONS.aug = { ...WEAPONS.rifle, id: 'aug', slot: 7, name: 'AUG A3', kind: 'Fuz
 
 // Karambit: segunda faca (mesmo dano da faca; pegada invertida, lâmina curva saindo por baixo do mindinho)
 WEAPONS.karambit = { ...WEAPONS.knife, id: 'karambit', slot: 8, name: 'KARAMBIT', recoil: { ...WEAPONS.knife.recoil } };
+// AK-74M (kit do LokitoBlu, CC BY 4.0): fuzil mais forte e com mais recuo que a VX-47; viewmodel próprio com os braços da Izzy
+WEAPONS.ak = { ...WEAPONS.rifle, id: 'ak', slot: 9, name: 'AK-74M', kind: 'Fuzil', dmg: 36, rpm: 600, reload: 2.6, burstSpread: .0016,
+  recoil: { p: .014, y: .006, ramp: .12, cap: 10 }, ads: null };   // sem mirar pela arma por enquanto (o kit não tem animação de mira)
 /** Arma branca (faca, karambit…): usa a mesma 1ª pessoa, golpe e cenas da faca. */
 export const isMelee = id => !!WEAPONS[id]?.melee;
 
 /** Ordem das teclas 1..6 (sem mochila) e da lista do Lab. A AUG fica no fim (tecla 7) para não mudar as outras. */
-export const ORDER = ['rifle', 'smg', 'sniper', 'shotgun', 'pistol', 'knife', 'aug', 'karambit'];
+export const ORDER = ['rifle', 'smg', 'sniper', 'shotgun', 'pistol', 'knife', 'aug', 'karambit', 'ak'];

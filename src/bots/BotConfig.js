@@ -9,9 +9,9 @@ export const AGENT_COLOR = { viper: 0xd9482b, ghost: 0x3d8bd9, rook: 0xc9b458, n
 export const TEAM_COLOR = { att: 0xc2452a, def: 0x3d7fc9 };
 
 /** Distância em que cada arma rende mais (o bot tenta ficar por aí). */
-export const IDEAL = { aug: 24, rifle: 24, smg: 13, sniper: 48, shotgun: 7, pistol: 17 };
+export const IDEAL = { ak: 24, aug: 24, rifle: 24, smg: 13, sniper: 48, shotgun: 7, pistol: 17 };
 /** Raio em que o tiro é ouvido por inimigos. */
-export const NOISE = { aug: 45, rifle: 45, smg: 35, sniper: 75, shotgun: 45, pistol: 32, knife: 6, karambit: 6 };
+export const NOISE = { ak: 48, aug: 45, rifle: 45, smg: 35, sniper: 75, shotgun: 45, pistol: 32, knife: 6, karambit: 6 };
 
 const POOL = {
   competitive: [['rifle', .5], ['smg', .2], ['shotgun', .1], ['sniper', .1], ['pistol', .1]],

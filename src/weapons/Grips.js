@@ -124,17 +124,19 @@ export const FP_DEFAULT = { x: 0, y: 0, z: 0, fov: 60, rx: 0, ry: 0, rz: 0, near
  * Ponto de partida de uma arma nova no Lab: se ela ainda não tem ajuste, o Lab copia o desta arma (ex.: AUG ← VX-47).
  * É só uma cópia na primeira vez: depois cada arma tem o seu ajuste, separado.
  */
-export const GRIP_BASE = { aug: 'rifle', karambit: 'knife' };
+export const GRIP_BASE = { ak: 'rifle', aug: 'rifle', karambit: 'knife' };
 /**
  * VIEWMODEL NOVO (braços + arma do pacote, PistolViewmodel.js): ajuste da câmera dele, por arma (grips.json → vm.<arma>).
  * x lado, y cima, z frente (cm); rx/ry/rz giro (graus); fov (graus); near = corte perto (cm); camK = quanto do balanço
  * da câmera animada do pacote entra (0 = câmera parada, 1 = balanço inteiro); on = usar o viewmodel novo nesta arma;
  * kit = 'mm9' (braços + 9 mm do Sketchfab, com sacar) ou 'glock' (pacote antigo); arms (só no kit glock) = 'izzy' (braços da Izzy seguindo a animação do pacote por IK) ou 'pack' (braços do próprio pacote).
  */
-export const VM_DEFAULT = { kit: 'mm9', arms: 'pack', handScale: 1.2, on: true, x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0, fov: 60, near: 1, camK: .5 };
+export const VM_DEFAULT = { kit: 'izzy9', arms: 'pack', handScale: 1.2, on: true, x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0, fov: 60, near: 1, camK: .5 };
 /** campo de visão padrão de cada kit (no Blender o 9 mm usa lente de 16 mm = 58,7° vertical; 50° deixa a arma um pouco maior na tela) */
-export const KIT_FOV = { mm9: 50, glock: 60 };
-export const vmFor = wid => { const sv = DATA.vm?.[wid] || {}, c = { ...VM_DEFAULT, ...sv }; if (sv.fov == null || (sv.fovKit ?? 'glock') !== c.kit) c.fov = KIT_FOV[c.kit] ?? c.fov; return c; };
+export const KIT_FOV = { izzy9: 50, mm9: 50, ak: 60, glock: 60 };
+/** kit de cada arma com viewmodel próprio (o da pistola pode ser trocado no Lab) */
+export const VM_KIT = { pistol: 'izzy9', ak: 'ak' };
+export const vmFor = wid => { const sv = DATA.vm?.[wid] || {}, c = { ...VM_DEFAULT, kit: VM_KIT[wid] || VM_DEFAULT.kit, ...sv }; if (sv.fov == null || (sv.fovKit ?? 'glock') !== c.kit) c.fov = KIT_FOV[c.kit] ?? c.fov; return c; };
 export const fpFor = (kind, wid, scene) => ({ ...FP_DEFAULT, ...(DATA.fp?.[kind] || {}), ...((wid && DATA.fpW?.[kind]?.[wid]) || {}), ...(fpSceneCam(kind, wid, scene) || {}) });
 /** Câmera própria de uma cena da 1ª pessoa (salva junto da pegada da cena: scenes.fp_walk.cam). Sem ela, a cena usa a câmera da arma. */
 export function fpSceneCam(kind, wid, scene) {

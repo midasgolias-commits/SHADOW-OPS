@@ -10,7 +10,7 @@ const SAMPLES = ['rifle', 'aug', 'reload_aug', 'sniper', 'smg', 'pistol', 'shotg
  * sniper = tiro do fuzil mais grave e mais alto (só se faltar assets/sounds/sniper.mp3 — L115A1, desde 27/10).
  * AUG: se existir assets/sounds/aug.mp3 (e reload_aug.mp3), usa o arquivo dela; senão o do fuzil, um pouco mais agudo.
  */
-const ALIAS = { sniper: { src: 'rifle', rate: .72, gain: 1.35 }, aug: { src: 'rifle', rate: 1.07, gain: 1 }, reload_aug: { src: 'reload_rifle' } };
+const ALIAS = { ak: { src: 'rifle', rate: .9, gain: 1.15 }, reload_ak: { src: 'reload_rifle' }, sniper: { src: 'rifle', rate: .72, gain: 1.35 }, aug: { src: 'rifle', rate: 1.07, gain: 1 }, reload_aug: { src: 'reload_rifle' } };
 export class ProceduralAudio {
   constructor() { this.ctx = null; this.volume = .6; this.raw = {}; this.buf = {}; this.loops = {}; this._preload(); }
 

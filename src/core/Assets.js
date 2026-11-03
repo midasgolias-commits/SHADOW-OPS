@@ -82,7 +82,45 @@ export class Assets {
   }
 
   /** viewmodel da pistola pelo nome do kit (PistolViewmodel.KITS): 'mm9' (padrão) ou 'glock' */
-  loadPistolKit(kit = 'mm9') { return kit === 'glock' ? this.loadPistolVM() : this.loadPistolMM9(); }
+  loadPistolKit(kit = 'izzy9') { return kit === 'glock' ? this.loadPistolVM() : kit === 'mm9' ? this.loadPistolMM9() : this.loadKit(kit); }
+  /**
+   * Kits com os BRAÇOS DA IZZY (o mesmo braço em todas as armas): feitos no Blender a partir dos kits do LokitoBlu
+   * (_fonte/izzy_arms/build.py: malha dos braços da Izzy vestida no esqueleto do kit, com o tamanho de braço dela).
+   * A pele usa a MESMA textura da Izzy (vem do modelo dela, já carregado); a arma usa as texturas do kit.
+   *  izzy9 = pistola 9 mm; ak = AK-74M.
+   */
+  loadKit(kit) {
+    this._kitP ??= {};
+    return this._kitP[kit] ??= (async () => {
+      const K = { izzy9: { dir: 'pistol_anim/', file: 'pistol_izzy.glb', gun: { '9m1': 'p9m1', '9m2': 'p9m2' } },
+                  ak: { dir: 'ak_anim/', file: 'ak_izzy.glb', gun: { '*': 'ak' } } }[kit];
+      if (!K) throw new Error('kit desconhecido: ' + kit);
+      const D = A + 'weapons/' + K.dir, g = await new GLTFLoader().loadAsync(D + K.file);
+      const tl = new THREE.TextureLoader(), T = (f, srgb) => { const t = tl.load(D + f); t.flipY = false; if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; };
+      const mats = {}, gunMat = key => mats[key] ??= new THREE.MeshStandardMaterial({ name: key, map: T(key + '_color.jpg', true), normalMap: T(key + '_normal.jpg'),
+        roughnessMap: T(key + '_orm.jpg'), metalnessMap: T(key + '_orm.jpg'), roughness: 1, metalness: 1 });
+      const skin = await this._izzySkin();
+      const shell = new THREE.MeshStandardMaterial({ name: 'cápsula', map: T('../pistol_anim/shell_color.jpg', true), roughness: .35, metalness: 1 });
+      const rig = g.scene; rig.animations = g.animations;
+      rig.traverse(o => {
+        if (!o.isMesh) return; o.frustumCulled = false; o.castShadow = o.receiveShadow = false;
+        const n = o.material?.name || '';
+        o.material = /izzy/.test(n) ? skin : /shell|bullet/.test(n) ? shell : gunMat(K.gun[n.replace(/\..*/, '')] || K.gun['*'] || Object.values(K.gun)[0]);
+      });
+      if (!rig.getObjectByName('Camera') || !rig.getObjectByName('Slide') || !rig.getObjectByName('r_wrist')) throw new Error('kit ' + kit + ': arquivo sem Camera, Slide ou r_wrist');
+      rig.userData.asset = true; return rig;
+    })().catch(e => { this._kitP[kit] = null; console.error('Kit ' + kit + ' não carregou:', e); throw e; });
+  }
+  /** pele dos braços: a textura da própria Izzy (a do modelo carregado; no Lab, carrega o modelo dela se ainda não estiver) */
+  async _izzySkin() {
+    return this._skinP ??= (async () => {
+      let root = this.chars.izzy?.root; if (!root) root = await new FBXLoader().loadAsync(A + 'characters/izzy.fbx');
+      let src = null; root.traverse(o => { if (o.isMesh && !src) src = [].concat(o.material)[0]; });
+      const map = src?.map ? src.map.clone() : null;
+      if (map) { map.flipY = false; map.colorSpace = THREE.SRGBColorSpace; map.needsUpdate = true; }   // UV do GLB é invertida em relação ao FBX
+      return new THREE.MeshStandardMaterial({ name: 'pele_izzy', map, roughness: .7, metalness: 0 });
+    })();
+  }
   /**
    * Kit "Pistol Animations (BLENDER)" do Sketchfab (autor LokitoBlu; arma 9 mm de @TORI106): braços + arma + câmera +
    * animações num esqueleto só. Convertido do .blend com o Blender para assets/weapons/pistol_anim/pistol_anim.glb (sem imagens

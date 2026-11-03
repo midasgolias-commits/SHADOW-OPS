@@ -66,10 +66,16 @@ export class FirstPersonView {
     this.mixer = new THREE.AnimationMixer(obj); this.overCache = {}; this.key = ''; this.base = this.over = null;
     this.yaw = 0; this.wid = null; this.fireT = 0;
     this.cam = new THREE.PerspectiveCamera(60, 16 / 9, .01, 20);
-    this.vm = null; this.vmOn = false;   // viewmodel novo (braços + arma do pacote) para a pistola: setPistolVM()
+    this.vm = null; this.vmOn = false; this.vms = {};   // viewmodels (braços + arma + animações num arquivo só) por arma: setVM(); this.vm = o da arma na mão
   }
   /** Liga o viewmodel novo da pistola (rig do Assets.loadPistolVM). Com ele ligado no Lab (vm.pistol.on), a pistola usa ele. */
-  setPistolVM(rig, kit = 'glock') { if (!rig || this.vm) return; this.vm = new PistolViewmodel(rig, 'pistol', kit); this.rt = ['r', 'l'].map(sd => new ArmRetarget(this.obj, rig, sd)); }
+  setPistolVM(rig, kit = 'glock') { this.setVM('pistol', rig, kit); }
+  /** liga o viewmodel de uma arma (rig do Assets.loadKit / loadPistolKit). A pistola com o kit Glock ainda pode usar os braços da Izzy por IK (rt). */
+  setVM(wid, rig, kit) {
+    if (!rig || this.vms[wid]) return;
+    this.vms[wid] = new PistolViewmodel(rig, wid, kit);
+    if (wid === 'pistol') this.rt = ['r', 'l'].map(sd => new ArmRetarget(this.obj, rig, sd));
+  }
   /** Tecla F: inspecionar a arma (só no viewmodel novo, que tem o clipe). */
   inspect() { if (this.vmOn) this.vm.inspect(); }
 
@@ -203,18 +209,20 @@ export class FirstPersonView {
     this.arms.show({ upper: this.swK <= 0 && this.meleeT == null, left: !knife || !!(lf && lf.on !== false) });   // golpe: sem o braço de cima
     this.held.leftHandIK(!knife && !!this.wid && k <= 0 && fpUsesIK(this.kind, this.wid) && (!animReload || (s.reloadP ?? 0) > RELOAD_GRIP_AT) && !away, dt, FP_POLE, this.gunT > .35);   // fim da recarga: a mão já volta para a SUA pegada (nunca passa pela frente da arma)   // fora da tela na troca: a mão não segura a arma parada (a pegada da AUG saía torta)   // igual ao Lab (recarga animada: a mão esquerda segue a animação)
     // viewmodel novo da pistola: ele toca as animações do pacote; os braços antigos ficam escondidos (continuam prontos para as outras armas)
-    const vmNow = !!this.vm && this.wid === 'pistol' && vmFor('pistol').on;
+    const cand = this.vms[this.wid] || null;
+    if (cand !== this.vm) { if (this.vmOn) this.vm.cancel(); this.vm?.setGuide(null); this.vm = cand; this.vmOn = false; }
+    const vmNow = !!this.vm && vmFor(this.wid).on;
     if (this.vmOn && !vmNow) this.vm.cancel();
     this.vmOn = vmNow;
     this._objPos = this.obj.position.clone();   // posição do corpo neste quadro (o render desloca os ombros a partir dela)
-    this.izzyVM = vmNow && this.vm.kitName === 'glock' && vmFor('pistol').arms === 'izzy';   // braços da Izzy seguindo a animação do pacote (IK no render)
+    this.izzyVM = vmNow && this.wid === 'pistol' && this.vm.kitName === 'glock' && vmFor('pistol').arms === 'izzy';   // braços da Izzy seguindo a animação do pacote (IK no render)
     if (vmNow) {
       this.vm.setGuide(this.izzyVM ? this.scene : null);
       this.vm.update(dt, this.izzyVM ? { ...s, switchK: 0 } : s);   // com a Izzy, a troca de arma é o movimento de sempre da câmera dos braços
       this.held.holder.visible = false;
       if (!this.izzyVM) this.obj.visible = false; else { this.vm.rig.visible = !away; this.arms.show({ upper: false, left: (this.leftK ?? 0) > .5 }); }   // só antebraço e mão: o ombro fica perto da câmera e tampava a tela
     } else this.vm?.setGuide(null);
-    if (!this.izzyVM && this._shBase) this.rt.forEach((r, i) => { r.arm.position.copy(this._shBase[i]); r.hand.scale.setScalar(1); });   // outras armas: ombros e mãos no tamanho de sempre   // outras armas: ombros no lugar de sempre
+    if (!this.izzyVM && this._shBase && this.rt) this.rt.forEach((r, i) => { r.arm.position.copy(this._shBase[i]); r.hand.scale.setScalar(1); });   // outras armas: ombros e mãos no tamanho de sempre   // outras armas: ombros no lugar de sempre
   }
 
   /**
@@ -371,7 +379,7 @@ export class FirstPersonView {
   }
 
   dispose() {
-    this.vm?.dispose(); this.vm = null;
+    for (const v of Object.values(this.vms)) v.dispose(); this.vms = {}; this.vm = null;
     this.mixer.stopAllAction(); this.held.dispose?.(); this.arms.dispose();
     this.scene.traverse(o => { if (o.isLight) o.dispose?.(); });
   }

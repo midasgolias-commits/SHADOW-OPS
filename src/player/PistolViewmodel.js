@@ -29,8 +29,12 @@ const FWD_FIX = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 
 export const KITS = {
   glock: { clips: VM_CLIPS, camFix: FWD_FIX, muzzle: 'barrel', magGrip: true },
   mm9: { clips: { idle: 'Idle', walk: 'Walk', run: 'Jog', shot: 'Fire', reloadT: 'Reload_Fast', reloadF: 'Reload_Complete', draw: 'Draw', holster: 'Not_Draw' },
-    camFix: null, muzzle: 'mesh', magGrip: false, gun: /^Cube005/, lightCam: true, env: true }
+    camFix: null, muzzle: 'mesh', magGrip: false, gun: /^Cube005/, gunMat: /9m/, lightCam: true, env: true }
 };
+// izzy9 / ak: os MESMOS kits com os braços da Izzy no lugar da luva (feito no Blender: _fonte/izzy_arms/build.py) — braço único em todas as armas
+KITS.izzy9 = { ...KITS.mm9 };
+KITS.ak = { ...KITS.mm9, clips: { idle: 'Idle', walk: 'Walk', run: 'Walk', shot: 'Shot', reloadT: 'Reload_Fast', reloadF: 'Reload_Complete', draw: 'Draw', holster: 'Not_Draw' },
+  gun: /^AK/, gunMat: null, runSpeed: 1.45 };
 const _w = new THREE.Vector3(), _d = new THREE.Vector3(), _p = new THREE.Vector3(), _q = new THREE.Quaternion(), _s = new THREE.Vector3(), _e = new THREE.Euler(), _v = new THREE.Vector3(), _m = new THREE.Matrix4();
 
 export class PistolViewmodel {
@@ -49,8 +53,10 @@ export class PistolViewmodel {
     this.mixer = new THREE.AnimationMixer(rig);
     const clip = n => { const c = rig.animations.find(a => a.name === n); if (!c) throw new Error('Viewmodel: clipe não encontrado no arquivo: ' + n); return c; };
     this.act = {};
+    const used = new Set();
     for (const [k, n] of Object.entries(this.kit.clips)) {
-      const a = this.mixer.clipAction(clip(n));
+      const c0 = clip(n), a = this.mixer.clipAction(used.has(n) ? c0.clone() : c0); used.add(n);   // mesmo clipe em duas funções (AK: andar/correr): cópia
+      if (k === 'run' && this.kit.runSpeed) a.timeScale = this.kit.runSpeed;
       if (k === 'idle' || k === 'walk' || k === 'run') { a.setLoop(THREE.LoopRepeat); a.enabled = true; a.setEffectiveWeight(0); a.play(); }
       else { a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished = true; }
       this.act[k] = a;
@@ -64,6 +70,8 @@ export class PistolViewmodel {
     // kit com luz presa à câmera: a luz vem de trás/cima da câmera (no arquivo a câmera não olha para o mesmo lado do pacote antigo)
     if (this.kit.lightCam) { this.lights[0].position.set(1.2, 2.2, 1.6).applyQuaternion(this.rest.q); this.lights[1].position.set(-2, .6, .8).applyQuaternion(this.rest.q); this.lights[0].intensity = 2.6; }
     this.unit = this.bones.forearm.getWorldPosition(new THREE.Vector3()).distanceTo(this.bones.wrist.getWorldPosition(new THREE.Vector3())) / 26;   // unidades do arquivo por cm
+    // kits do LokitoBlu: medida pela MÃO (punho → base do médio = 13,4 cm), que não muda quando o braço vira o da Izzy (o antebraço muda)
+    const mid = b('r_middle_low'); if (this.kit.muzzle === 'mesh' && mid) this.unit = mid.getWorldPosition(new THREE.Vector3()).distanceTo(this.bones.wrist.getWorldPosition(new THREE.Vector3())) / 13.36;
     this.cam = new THREE.PerspectiveCamera(60, 16 / 9, this.unit * .5, this.unit * 5000);
     // clarão do tiro: na boca do cano (Barrel_end), com +Z apontando para fora do cano
     this.flash = new MuzzleFlash({ light: true }); this.muzzle = new THREE.Group(); sc.add(this.muzzle);
@@ -76,7 +84,7 @@ export class PistolViewmodel {
   _findMuzzle() {
     const rig = this.rig, slide = rig.getObjectByName('Slide'); rig.updateMatrixWorld(true);
     const inv = this.camNode.matrixWorld.clone().invert(), pts = [], v = new THREE.Vector3();
-    rig.traverse(o => { if (!o.isSkinnedMesh || !this.kit.gun.test(o.name) || !/9m/.test([].concat(o.material)[0]?.name || '')) return;
+    rig.traverse(o => { if (!o.isSkinnedMesh || !this.kit.gun.test(o.name) || (this.kit.gunMat && !this.kit.gunMat.test([].concat(o.material)[0]?.name || ''))) return;
       const n = o.geometry.attributes.position.count; for (let i = 0; i < n; i += 2) { o.getVertexPosition(i, v); o.localToWorld(v); pts.push(v.clone()); } });
     if (!pts.length || !slide) return;
     const cs = pts.map(p => p.clone().applyMatrix4(inv)), zmin = Math.min(...cs.map(p => p.z)), tip = new THREE.Vector3(); let n = 0;

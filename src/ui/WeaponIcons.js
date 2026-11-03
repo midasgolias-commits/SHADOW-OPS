@@ -4,6 +4,7 @@
  */
 const P = {
   rifle: 'M8 30h22l4-6h70l3-4h46v4h34v6h-34v5h-22l-6 4h-14l-3 14h-12l2-14h-20l-10 18h-14l8-18h-16l-10 6H8z M70 24v-6h26v6 M118 20v-5h8v5',
+  ak: 'M6 30h26l6-6h62l4-4h38v4h50v5h-50v5h-26l-4 4h-12l-10 20h-12l8-20h-12l-6 14q-6 6-14 0l8-18h-14l-10 6H6z M118 20v-6h6v6 M150 24v-4h6v4',   // AK: carregador curvo
   aug: 'M10 34h18l6-8h42l6-4h24v-8h42v8h26v4h16v6h-16v4h-44l-6 6h-12l-6 18h-12l6-18h-14l-5 14h-11l3-14h-14l-6 6H10z M92 14v-5h40v5',   // bullpup com luneta
   smg: 'M30 26h18l3-6h56l6 6h40v6h-34l-4 6h-20l-8 18h-14l6-18h-10l-4 22h-12l3-22h-8l-12 6H30z M64 20v-6h22v6 M150 26v-4h12',
   sniper: 'M4 30h26l4-5h54l3-3h60v3h50v5h-50v4h-22l-4 4h-16l-6 12h-12l4-12h-16l-12 8H4z M60 22v-10h52v10 M54 14h64 M124 38v12h8V38',

@@ -10,6 +10,7 @@ import { MuzzleFlash } from './MuzzleFlash.js';
  */
 export const SHOT_KICK = {
   rifle: { back: .016, up: .004, pitch: 2.5, dur: .12 },
+  ak: { back: .018, up: .005, pitch: 3, dur: .12 },
   aug: { back: .007, up: .0015, pitch: .9, dur: .1 },   // AUG: tranco leve (pedido: só um toque, sem inclinar)
   smg: { back: .011, up: .003, pitch: 1.6, dur: .09 },
   pistol: { back: .02, up: .006, pitch: 7, dur: .16 },
@@ -34,6 +35,8 @@ export const WEAPON_MODELS = {
   // hand2/hand2Down: mão esquerda na empunhadura vertical da frente; hand2Rot: giro da mão (graus) para fechar em volta dela
   aug:     { file: W + 'aug/aug.fbx', len: .79, grip: .39, gripDown: .1, hand2: .19, hand2Down: .02, hand2Rot: [45, -90, -90], glass: /Lense/i, tex: { '*': W + 'aug/color.jpg' }, scopeCut: { tan: .094, near: .125, far: .8 },
              ads: { back: .16, up: 0, dx: 0, dy: 0, sight: { x: -.0079, y: .165, z: -.012 } } },
+  // AK-74M: arma do kit do LokitoBlu (malha parada, exportada do .blend com _fonte/izzy_arms/world.py); texturas com relevo e metal/aspereza
+  ak:      { file: W + 'ak_anim/ak_world.glb', len: .94, grip: .37, gripDown: .2, hand2: .3, tex: { '*': W + 'ak_anim/ak_color.jpg' }, pbr: { '*': W + 'ak_anim/ak' }, flipTex: true },
   smg:     { file: W + 'smg/vector.dae', len: .62, grip: .30, gripDown: .25, tex: { '*': W + 'smg/albedo.jpg' }, ads: { back: .14, up: -.018, dx: -.0055, dy: .0011 }, hand2: .2 },   // ads: câmera atrás da mira holográfica; dx/dy centralizam a janela do holográfico no ponto vermelho
   sniper:  { file: W + 'sniper/sniper.fbx', hand2: .34, len: 1.15, grip: .33, gripDown: .2, tex: { '*': W + 'sniper/color.jpg' } },
   shotgun: { file: W + 'shotgun/spas.dae', hand2: .34, len: 1.0, grip: .3, gripDown: .2, tex: { Parts1: W + 'shotgun/parts1.jpg', Parts2: W + 'shotgun/parts2.jpg' } },
@@ -94,7 +97,7 @@ export function normalizeWeapon(obj, cfg, texLoader) {
   const cache = {};
   const texFor = name => {
     const url = cfg.tex[name] || cfg.tex['*'] || Object.values(cfg.tex)[0]; if (!url) return null;
-    if (!cache[url]) { cache[url] = texLoader.load(url); cache[url].colorSpace = THREE.SRGBColorSpace; cache[url].anisotropy = 4; }
+    if (!cache[url]) { cache[url] = texLoader.load(url); cache[url].colorSpace = THREE.SRGBColorSpace; cache[url].anisotropy = 4; if (cfg.flipTex) cache[url].flipY = false; }   // GLB: UV invertida
     return cache[url];
   };
   const pts = [];
@@ -106,7 +109,7 @@ export function normalizeWeapon(obj, cfg, texLoader) {
       const mat = new THREE.MeshStandardMaterial({ map: texFor(nm), metalness: .55, roughness: .5, name: nm });
       const pb = cfg.pbr?.[nm] || cfg.pbr?.['*'];   // materiais completos: relevo (normal) + aspereza (G) e metal (B) num só arquivo
       if (pb) {
-        const ld = (u, srgb) => { const t = texLoader.load(u); if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; };
+        const ld = (u, srgb) => { const t = texLoader.load(u); if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; if (cfg.flipTex) t.flipY = false; return t; };
         mat.normalMap = ld(pb + '_normal.jpg'); const orm = ld(pb + '_orm.jpg'); mat.roughnessMap = mat.metalnessMap = orm; mat.metalness = 1; mat.roughness = 1;
         mat.userData.wantsEnv = true; ENV_MATS.push(mat);   // metal precisa de reflexo (sem ele o aço fica preto)
       }

@@ -278,7 +278,8 @@ export class Game {
     // 1ª pessoa (tecla V): braços e arma do Lab desenhados por cima do mapa
     this.fpv?.dispose(); this.fpv = new FirstPersonView(this.assets, skin);
     // viewmodel novo da pistola (carrega em segundo plano; quando chegar, a pistola passa a usar ele na 1ª pessoa)
-    const fpvNow = this.fpv, kit = vmFor('pistol').kit; this.assets.loadPistolKit?.(kit).then(rig => { if (this.fpv === fpvNow) fpvNow.setPistolVM(rig, kit); }).catch(() => {});
+    const fpvNow = this.fpv, kit = vmFor('pistol').kit; this.assets.loadPistolKit?.(kit).then(rig => { if (this.fpv === fpvNow) fpvNow.setVM('pistol', rig, kit); }).catch(() => {});
+    this.assets.loadKit?.('ak').then(rig => { if (this.fpv === fpvNow) fpvNow.setVM('ak', rig, 'ak'); }).catch(() => {});   // AK-74M: braços da Izzy + AK do kit
     // cano para o CAMINHO do tiro: só quando a arma está de verdade no mapa (3ª pessoa, ou mira pela arma na 1ª pessoa)
     this.weapons.muzzle = () => { if (this.player.fp || !this.held.holder.visible || !this.held.cur) return null; return this.held.muzzleWorld; };
     // cano para o RASTRO: na 1ª pessoa os braços são desenhados por cima (outra cena), então o rastro começa

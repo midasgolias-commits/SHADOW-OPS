@@ -10,7 +10,7 @@ export const SKINS = [
   { id: 'bot', name: 'AGENTE MASCARADO', desc: 'O uniforme dos bots.' }
 ];
 export const SLOTS = [
-  { k: 'primary', label: 'Principal', key: 1, ids: ['rifle', 'aug', 'smg', 'sniper', 'shotgun'] },
+  { k: 'primary', label: 'Principal', key: 1, ids: ['rifle', 'ak', 'aug', 'smg', 'sniper', 'shotgun'] },
   { k: 'secondary', label: 'Secundária', key: 2, ids: ['pistol'] },
   { k: 'melee', label: 'Arma branca', key: 3, ids: ['knife', 'karambit'] }
 ];
