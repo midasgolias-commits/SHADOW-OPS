@@ -125,18 +125,23 @@ export class PistolViewmodel {
     return G.k > .01 ? G : null;
   }
   /** troca suave da animação de base */
-  _setBase(k, fade = .25) {
+  _setBase(k, fade = .3) {
     if (this.base === k) return;
     const from = this.act[this.base], to = this.act[k]; this.base = k;
+    // passo sincronizado: andar ↔ correr continua no mesmo ponto do passo (antes recomeçava do zero = "tranco")
+    const fd = from.getClip().duration, td = to.getClip().duration;
+    to.time = fd > 0 && td > 0 ? (from.time / fd) * td : 0;
     if (this.one) { to.setEffectiveWeight(0); return; }   // uma ação por cima está tocando: a base volta quando ela acabar
-    to.time = 0; to.enabled = true; to.setEffectiveWeight(1); to.crossFadeFrom(from, fade, false);
+    to.enabled = true; to.setEffectiveWeight(1); to.crossFadeFrom(from, fade, false);
   }
   /** ação por cima (substitui a base enquanto toca: os clipes são de pose inteira) */
   _playOne(k, timeScale = 1, fade = .06) {
     const a = this.act[k];
-    if (this.one && this.one !== k) this.act[this.one].fadeOut(fade);
+    // a mesma ação de novo (tiro seguido): só volta ao começo, com peso cheio. Antes ela "reaparecia" do peso 0 e,
+    // nesse instante, nada segurava a pose: braços e mãos iam para a pose de descanso do arquivo (mão saindo da arma)
+    if (this.one === k) { a.stopFading(); a.enabled = true; a.paused = false; a.time = 0; a.timeScale = timeScale; a.setEffectiveWeight(1); return; }
+    this.act[this.one || this.base].fadeOut(fade);   // a soma dos pesos fica sempre em 1 (sem buraco)
     a.reset(); a.timeScale = timeScale; a.setEffectiveWeight(1); a.fadeIn(fade); a.play();
-    if (!this.one) this.act[this.base].fadeOut(fade);
     this.one = k;
   }
   _endOne(fade = .15) {
@@ -165,7 +170,12 @@ export class PistolViewmodel {
     this.reloading = !!s.reloading;
     // base: parado / andando / correndo (no ar: parado)
     const sp = s.air ? 0 : (s.speed || 0);
-    this._setBase(sp > 5.2 ? 'run' : sp > .6 ? 'walk' : 'idle');
+    // parado / andar / correr com folga (histerese) e tempo mínimo: a velocidade oscila um pouco e trocava de animação toda hora (tremedeira)
+    // (velocidades do jogador: agachado 2,6 · andando 5,2 · correndo com Shift 7,6 — vezes o peso da arma. Antes o limite de correr era 5,2,
+    //  exatamente a velocidade de andar: a animação ficava trocando entre andar e correr a cada quadro)
+    const b0 = this.base, want = b0 === 'run' ? (sp > 5.9 ? 'run' : sp > .45 ? 'walk' : 'idle') : b0 === 'walk' ? (sp > 6.3 ? 'run' : sp > .35 ? 'walk' : 'idle') : (sp > 6.3 ? 'run' : sp > 1 ? 'walk' : 'idle');
+    this._baseT = (this._baseT || 0) + dt;
+    if (want !== b0 && this._baseT > .25) { this._setBase(want); this._baseT = 0; }
     if (this.one === 'inspect' && (sp > .6 || s.switchK > 0)) this._endOne(.2);
     // troca de arma: desce e gira para fora da tela; kit com SACAR: na volta toca a animação de sacar no lugar da subida
     const sk = s.switchK || 0;
