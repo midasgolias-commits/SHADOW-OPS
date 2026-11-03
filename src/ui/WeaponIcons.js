@@ -14,6 +14,7 @@ const P = {
   grenade: 'M92 12h16v8h-16z M84 20h32v6H84z M100 26a26 24 0 1 1-.1 0z M116 22c14 0 26 8 30 22l-6 2c-4-10-12-16-24-16z M86 42h28 M86 54h28',
   karambit: 'M40 30a10 10 0 1 1 0 .1z M50 34h34l6-4h8v12H90l-6-4H50z M98 30c30-14 62-10 84 8-26-8-54-8-82 2z'
 };
+P.m4a1s = P.rifle; P.smg2 = P.smg; P.sniper2 = P.sniper; P.magnum = P.pistol; P.faca2 = P.knife;
 /** Símbolo de tiro na cabeça (alvo com marca), também em contorno. */
 const HEAD = '<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="30" r="16"/><path d="M32 6v12M32 42v14M8 30h12M44 30h12"/><circle cx="32" cy="30" r="4" class="fill"/></svg>';
 

@@ -74,7 +74,7 @@ function makeChar() {
   playScene();
 }
 // na visão 1ª pessoa só aparecem as 4 cenas dela (andar, correr, atirar, recarregar); nas outras visões, as cenas da 3ª pessoa
-const BLADE_ID = id => id === 'knife' || id === 'karambit';   // armas brancas usam as cenas da faca
+const BLADE_ID = id => id === 'knife' || id === 'karambit' || id === 'faca2';   // armas brancas usam as cenas da faca
 const sceneList = () => st.view === 'fp' ? SCENES[BLADE_ID(st.wid) ? 'fpKnife' : 'fpGun'] : SCENES[BLADE_ID(st.wid) ? 'knife' : 'gun'];
 const sceneDef = () => sceneList().find(s => s.id === st.scene) || sceneList()[0];
 // golpe das facas: é a pose de "andando" com o golpe por cima (igual ao jogo) — mexer nesta cena mexe na pose de "andando"

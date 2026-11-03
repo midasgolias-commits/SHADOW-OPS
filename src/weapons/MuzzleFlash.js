@@ -25,7 +25,7 @@ function shared() {
 const mat = map => new THREE.MeshBasicMaterial({ map, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, toneMapped: false, fog: false });
 
 /** Tamanho do clarão por arma (comprimento da chama em metros). */
-const SIZE = { ak: .36, rifle: .34, aug: .34, smg: .26, sniper: .5, shotgun: .48, pistol: .22 };
+const SIZE = { m4a1s: .12, smg2: .26, sniper2: .2, magnum: .3, ak: .36, rifle: .34, aug: .34, smg: .26, sniper: .5, shotgun: .48, pistol: .22 };
 
 export class MuzzleFlash {
   /** light: true acende uma luz rápida (só para o jogador; nos bots ficaria caro). */

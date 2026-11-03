@@ -290,3 +290,13 @@ WASD move · Shift corre · Ctrl/C agacha · Espaço pula · botão esquerdo ati
 - Agente Mascarado: esqueleto assimétrico (escala média das mãos), dedos sem osso presos no dedo do kit mais perto, braço de cima cortado perto do ombro.
 - Jogo: kits pré-carregados ao abrir; arma escondida enquanto o kit carrega; correr da pistola = andar rápido (sem mão gigante).
 - Testado (fotos): Agente Mascarado e Izzy, pistola e AK — parado, rajada, tiros seguidos, recargas, sacar, andar, correr; faca no sistema antigo.
+
+## 03/11 (tarde) — 7 pacotes novos de armas com animação (adaptador universal de braços)
+- L11 (sniper, novo pacote), faca nova (Baioneta, Karambit e FACA TÁTICA nova usam as animações; a faca do jogo é trocada na mão), M4A1-S (nova),
+  MAGNUM (nova secundária; o revólver antigo já não estava no jogo), SNIPER SD (nova), SHORTY (substitui a SPAS-12), SST-30 (SMG nova).
+- Braços da Izzy em todas pelo adaptador universal (`_fonte/bracos/assar_kit.py`, ver COMO_FAZER.md). Armas novas sem mirar pela arma.
+- Fotos do inventário novas (sniper/shotgun antigas guardadas como `_antiga.png`). 3ª pessoa com o modelo parado de cada pacote.
+- Correções: Magnum usa pose de pistola na 3ª pessoa e vaga de secundária no treino (antes só a Glock); faca com troca de modelo travava
+  (`this.assets` faltando no FirstPersonView); clipe faltando não quebra mais a arma.
+- Testado com fotos (1600×900): todas as armas novas parado/tiro ou golpe/recarga/andando; Glock e AK sem mudança; 3ª pessoa atirando.
+- Créditos dos 7 pacotes: A CONFIRMAR (CREDITOS.md).

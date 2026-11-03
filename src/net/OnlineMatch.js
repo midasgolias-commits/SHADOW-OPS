@@ -49,7 +49,7 @@ class RemotePlayer {
     if (s.dead) { this.anim.update(dt, { dead: true, deadCrouch: !!s.c }); this.held.update(false); this.tag.visible = false; return; }
     if (this.fireT > 0 || s.aim) this.anim.aimHold(!!s.c);
     this.held.set(s.sw ? null : s.w);
-    this.anim.update(dt, { speed: s.sp, fwd: s.f, side: s.sd, crouch: !!s.c, air: !!s.a, melee: !!WEAPONS[s.w]?.melee, pistol: s.w === 'pistol', dead: false, pitch: (this.anim.aiming ? s.pi : s.pi * .5) });
+    this.anim.update(dt, { speed: s.sp, fwd: s.f, side: s.sd, crouch: !!s.c, air: !!s.a, melee: !!WEAPONS[s.w]?.melee, pistol: WEAPONS[s.w]?.kind === 'Pistola', dead: false, pitch: (this.anim.aiming ? s.pi : s.pi * .5) });
     this.held.scene = this.anim.scene; this.held.update(true, null, dt);
     if (!WEAPONS[s.w]?.melee && s.st !== 'reload') this.held.leftHandIK(true, dt);
     this.tag.visible = true; this.tag.position.set(this.pos.x, this.pos.y + (s.c ? 1.55 : 2.05), this.pos.z);

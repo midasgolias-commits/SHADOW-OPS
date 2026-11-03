@@ -15,6 +15,20 @@ export { ANIMS, AUTHORED } from './AnimTable.js';
  */
 const A = 'assets/';
 
+/**
+ * Kits do ADAPTADOR UNIVERSAL (_fonte/bracos/assar_kit.py + kits_universais.json): arquivo assets/weapons/vm/<kit>_<personagem>.glb,
+ * texturas da arma em assets/weapons/vm/<prefixo>_color/_normal/_orm.jpg. gun: nome do material original -> prefixo ('#vidro' = lente).
+ */
+export const KITS_V2 = {
+  l11: { v2: true, dir: 'vm/', gun: { sniper: 'l11_sniper', lens: '#vidro', scopereticle: '#esconder' } },
+  sniper2: { v2: true, dir: 'vm/', gun: { sniper: 'sniper2_sniper', lens: '#vidro' } },
+  faca: { v2: true, dir: 'vm/', gun: { knife: 'faca_knife' } },
+  magnum: { v2: true, dir: 'vm/', gun: { '*': 'magnum_arma' } },
+  shotgun2: { v2: true, dir: 'vm/', gun: { '*': 'shotgun2_boomstick' } },
+  smg2: { v2: true, dir: 'vm/', gun: { Material_457: 'smg2_corpo', Material_458: 'smg2_guarda', Material_459: 'smg2_corpo', '*': 'smg2_corpo' } },
+  m4a1s: { v2: true, dir: 'vm/', gun: { '*': 'm4a1s_corpo' } }
+};
+
 export class Assets {
   constructor() { this.ready = false; this.error = null; this.map = null; this.chars = {}; this.clips = {}; this.weapons = {}; this.progress = 0; }
 
@@ -93,14 +107,16 @@ export class Assets {
     this._kitP ??= {};
     return this._kitP[kit + '/' + char] ??= (async () => {
       // texturas da ARMA de cada kit (a pele vem do personagem)
-      const K = { p9: { dir: 'pistol_anim/', gun: { '9m1': 'p9m1', '9m2': 'p9m2' } }, ak: { dir: 'ak_anim/', gun: { '*': 'ak' } } }[kit];
+      const K = { p9: { dir: 'pistol_anim/', gun: { '9m1': 'p9m1', '9m2': 'p9m2' } }, ak: { dir: 'ak_anim/', gun: { '*': 'ak' } }, ...KITS_V2 }[kit];
       if (!K) throw new Error('kit desconhecido: ' + kit);
       // quais personagens já têm braços gerados neste kit (assets/config/bracos_gerados.json); sem o personagem, usa os da Izzy
       this._bracosP ??= fetch(A + 'config/bracos_gerados.json', { cache: 'no-cache' }).then(r => r.ok ? r.json() : { kits: {} }).catch(() => ({ kits: {} }));
       const lista = (await this._bracosP).kits?.[kit] || {}, who = lista[char] ? char : lista.izzy ? 'izzy' : char;
       if (who !== char) console.warn(`Braços de "${char}" ainda não gerados no kit ${kit}: usando os da Izzy (rode "5 - GERAR BRACOS DOS PERSONAGENS.bat")`);
-      const file = lista[who] || `assets/weapons/${K.dir}${kit}_${who}.glb`;
-      const D = A + 'weapons/' + K.dir, g = await new GLTFLoader().loadAsync(file);
+      let file = lista[who] || `assets/weapons/${K.dir}${kit}_${who}.glb`;
+      const D = A + 'weapons/' + K.dir;
+      let g; try { g = await new GLTFLoader().loadAsync(file); }
+      catch (e) { if (who === 'izzy') throw e; console.warn(`Braços de "${who}" não encontrados no kit ${kit}: usando os da Izzy`); g = await new GLTFLoader().loadAsync(file = `assets/weapons/${K.dir}${kit}_izzy.glb`); }
       const tl = new THREE.TextureLoader(), T = (f, srgb) => { const t = tl.load(D + f); t.flipY = false; if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; };
       const mats = {}, gunMat = key => mats[key] ??= new THREE.MeshStandardMaterial({ name: key, map: T(key + '_color.jpg', true), normalMap: T(key + '_normal.jpg'),
         roughnessMap: T(key + '_orm.jpg'), metalnessMap: T(key + '_orm.jpg'), roughness: 1, metalness: 1 });
@@ -111,11 +127,18 @@ export class Assets {
       rig.traverse(o => {
         if (!o.isMesh) return; o.frustumCulled = false; o.castShadow = o.receiveShadow = false;
         const n = o.material?.name || '';
+        if (n.startsWith('arma:')) {   // kit do adaptador universal: material da arma pelo nome original
+          const t = K.gun[n.slice(5)] ?? K.gun['*'];
+          o.material = t === '#vidro' ? new THREE.MeshStandardMaterial({ name: 'vidro', color: 0x0a1418, roughness: .05, metalness: .9, transparent: true, opacity: .55 })
+            : t === '#esconder' ? new THREE.MeshBasicMaterial({ visible: false }) : t ? gunMat(t) : new THREE.MeshStandardMaterial({ name: n, color: 0x2a2d30, roughness: .45, metalness: .7 });
+          return;
+        }
         o.material = (o.name.startsWith('Bracos_') || n.startsWith('pele:')) ? skin(n.replace(/^pele:/, '')) : /shell|bullet/.test(n) ? shell : gunMat(K.gun[n.replace(/\..*/, '')] || K.gun['*'] || Object.values(K.gun)[0]);
       });
-      if (!rig.getObjectByName('Camera') || !rig.getObjectByName('Slide') || !rig.getObjectByName('r_wrist')) throw new Error('kit ' + kit + ': arquivo sem Camera, Slide ou r_wrist');
+      const camOk = rig.getObjectByName('Camera') || (() => { let c = null; rig.traverse(o => { if (o.isCamera && !c) c = o; }); if (c) c.name = 'Camera'; return c; })();
+      if (!camOk || (!K.v2 && (!rig.getObjectByName('Slide') || !rig.getObjectByName('r_wrist')))) throw new Error('kit ' + kit + ': arquivo sem Camera, Slide ou r_wrist');
       rig.userData.asset = true; return rig;
-    })().catch(e => { this._kitP[kit] = null; console.error('Kit ' + kit + ' não carregou:', e); throw e; });
+    })().catch(e => { this._kitP[kit + '/' + char] = null; console.error('Kit ' + kit + ' não carregou:', e); throw e; });
   }
   /** pele dos braços: o material do PRÓPRIO personagem com esse nome (no Lab, carrega o modelo dele se ainda não estiver) */
   _charSkin(char, matName) {

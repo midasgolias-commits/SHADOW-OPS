@@ -21,7 +21,7 @@ export class WeaponSwitch {
 
   show(slots, cur, last) {
     const rows = slots.filter(s => s.owned).map(s => {
-      const role = s.id === cur ? 'cur' : (s.id === last || s.id === 'knife' || s.id === 'karambit') ? 'near' : 'far';
+      const role = s.id === cur ? 'cur' : (s.id === last || s.id === 'knife' || s.id === 'karambit' || s.id === 'faca2') ? 'near' : 'far';
       return `<li class="ws-${role}"><span class="ws-key">${s.n}</span>${weaponIcon(s.id)}<b>${s.name}</b></li>`;
     }).join('');
     this.root.innerHTML = `<ul>${rows}</ul>`;

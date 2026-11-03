@@ -93,7 +93,7 @@ export class WeaponSystem {
    */
   give(id) {
     const W = WEAPONS[id]; if (!W) return;
-    const i = W.melee ? 2 : id === 'pistol' ? 1 : 0, slot = Math.min(i, this.loadout.length - 1);
+    const i = W.melee ? 2 : W.kind === 'Pistola' ? 1 : 0, slot = Math.min(i, this.loadout.length - 1);
     if (this.loadout[slot] !== id) { this.loadout[slot] = id; this.owned = new Set(this.loadout); }
     this.ammo[id] ??= { mag: W.mag ?? 0, reserve: W.reserve ?? 0 };
     if (this.cur !== id) this.switchTo(id);

@@ -35,6 +35,15 @@ export const KITS = {
 KITS.p9 = { ...KITS.mm9, clips: { ...KITS.mm9.clips, run: 'Walk' }, runSpeed: 1.45 }; KITS.izzy9 = KITS.p9;   // correr = andar mais rápido: no Jog do kit a mão esquerda passa enorme na frente da câmera com braços de personagem   // izzy9 = nome antigo do p9
 KITS.ak = { ...KITS.mm9, clips: { idle: 'Idle', walk: 'Walk', run: 'Walk', shot: 'Shot', reloadT: 'Reload_Fast', reloadF: 'Reload_Complete', draw: 'Draw', holster: 'Not_Draw' },
   gun: /^AK/, gunMat: null, runSpeed: 1.45 };
+/**
+ * KITS DO ADAPTADOR UNIVERSAL (_fonte/bracos/assar_kit.py): qualquer pacote de 1ª pessoa, já com os braços do personagem,
+ * em METROS, com animações de nomes padrão (idle, walk, run, shot, reloadT, reloadF, draw, holster, inspect, pump,
+ * reloadStart/reloadOne/reloadLast, atk1..4). Peças da arma = malhas "Arma_*"; câmera = nó "Camera".
+ */
+const V2 = extra => ({ v2: true, clips: null, camFix: null, muzzle: 'mesh', magGrip: false, gun: /^Arma_/, gunMat: null, lightCam: true, env: true, unitFixed: .01, runSpeed: 1.45, ...extra });
+KITS.l11 = V2({ bolt: true }); KITS.sniper2 = V2({ bolt: true }); KITS.magnum = V2({}); KITS.smg2 = V2({ runSpeed: 1 }); KITS.m4a1s = V2({});
+KITS.shotgun2 = V2({ after: { shot: 'pump' }, shell: true }); KITS.faca = V2({ melee: true, muzzle: null });
+const BASE_CLIPS = ['idle', 'walk', 'run', 'shot', 'reloadT', 'reloadF', 'draw', 'holster', 'inspect', 'pump', 'reloadStart', 'reloadOne', 'reloadLast', 'atk1', 'atk2', 'atk3', 'atk4'];
 const _w = new THREE.Vector3(), _d = new THREE.Vector3(), _p = new THREE.Vector3(), _q = new THREE.Quaternion(), _s = new THREE.Vector3(), _e = new THREE.Euler(), _v = new THREE.Vector3(), _m = new THREE.Matrix4();
 
 export class PistolViewmodel {
@@ -54,7 +63,15 @@ export class PistolViewmodel {
     const clip = n => { const c = rig.animations.find(a => a.name === n); if (!c) throw new Error('Viewmodel: clipe não encontrado no arquivo: ' + n); return c; };
     this.act = {};
     const used = new Set();
-    for (const [k, n] of Object.entries(this.kit.clips)) {
+    let clipMap = this.kit.clips;
+    if (this.kit.v2) {   // nomes padrão; o que faltar usa o parecido (andar = parado com balanço; correr = andar mais rápido; recarga com bala = vazia)
+      const has = n => rig.animations.some(a => a.name === n); clipMap = {};
+      for (const k of BASE_CLIPS) if (has(k)) clipMap[k] = k;
+      clipMap.walk ??= 'idle'; if (!has('walk')) this.noWalk = true;
+      clipMap.run ??= clipMap.walk; if (has('run')) this.kit = { ...this.kit, runSpeed: 1 };
+      if (clipMap.reloadF) clipMap.reloadT ??= clipMap.reloadF;
+    }
+    for (const [k, n] of Object.entries(clipMap)) {
       const c0 = clip(n), a = this.mixer.clipAction(used.has(n) ? c0.clone() : c0); used.add(n);   // mesmo clipe em duas funções (AK: andar/correr): cópia
       if (k === 'run' && this.kit.runSpeed) a.timeScale = this.kit.runSpeed;
       if (k === 'idle' || k === 'walk' || k === 'run') { a.setLoop(THREE.LoopRepeat); a.enabled = true; a.setEffectiveWeight(0); a.play(); }
@@ -63,15 +80,21 @@ export class PistolViewmodel {
     }
     this.act.idle.setEffectiveWeight(1);
     this.base = 'idle'; this.one = null;   // animação de base (parado/andar/correr) e ação por cima (tiro/recarga/inspecionar)
-    this.mixer.addEventListener('finished', e => { if (this.one && e.action === this.act[this.one]) this._endOne(.18); });
+    this.mixer.addEventListener('finished', e => {
+      if (!this.one || e.action !== this.act[this.one]) return;
+      const nx = this.kit.after?.[this.one];                                   // shotgun: depois do tiro, bombeia
+      if (nx && this.act[nx]) { this._playOne(nx, 1, .05); return; }
+      if (this.kit.shell && (this.one === 'reloadStart' || this.one === 'reloadOne') && this.reloading) { this._playOne('reloadOne', this._shellTs || 1, .04); return; }   // um cartucho por vez
+      this._endOne(.18);
+    });
     this.mixer.update(0); rig.updateMatrixWorld(true);
     // câmera "parada" (pose Origin): base estável; o balanço da câmera animada entra pela fração camK do ajuste
     this.rest = { p: new THREE.Vector3(), q: new THREE.Quaternion() }; this.camNode.matrixWorld.decompose(this.rest.p, this.rest.q, _s);
     // kit com luz presa à câmera: a luz vem de trás/cima da câmera (no arquivo a câmera não olha para o mesmo lado do pacote antigo)
     if (this.kit.lightCam) { this.lights[0].position.set(1.2, 2.2, 1.6).applyQuaternion(this.rest.q); this.lights[1].position.set(-2, .6, .8).applyQuaternion(this.rest.q); this.lights[0].intensity = 2.6; }
-    this.unit = this.bones.forearm.getWorldPosition(new THREE.Vector3()).distanceTo(this.bones.wrist.getWorldPosition(new THREE.Vector3())) / 26;   // unidades do arquivo por cm
+    this.unit = this.kit.unitFixed || this.bones.forearm.getWorldPosition(new THREE.Vector3()).distanceTo(this.bones.wrist.getWorldPosition(new THREE.Vector3())) / 26;   // unidades do arquivo por cm
     // kits do LokitoBlu: medida pela MÃO (punho → base do médio = 13,4 cm), que não muda quando o braço vira o da Izzy (o antebraço muda)
-    const mid = b('r_middle_low'); if (this.kit.muzzle === 'mesh' && mid) this.unit = mid.getWorldPosition(new THREE.Vector3()).distanceTo(this.bones.wrist.getWorldPosition(new THREE.Vector3())) / 13.36;
+    const mid = b('r_middle_low'); if (!this.kit.unitFixed && this.kit.muzzle === 'mesh' && mid) this.unit = mid.getWorldPosition(new THREE.Vector3()).distanceTo(this.bones.wrist.getWorldPosition(new THREE.Vector3())) / 13.36;
     this.cam = new THREE.PerspectiveCamera(60, 16 / 9, this.unit * .5, this.unit * 5000);
     // clarão do tiro: na boca do cano (Barrel_end), com +Z apontando para fora do cano
     this.flash = new MuzzleFlash({ light: true }); this.muzzle = new THREE.Group(); sc.add(this.muzzle);
@@ -82,7 +105,11 @@ export class PistolViewmodel {
   }
   /** kit sem osso na boca do cano: acha a ponta da arma na malha (pose parada) e guarda no espaço do ferrolho */
   _findMuzzle() {
-    const rig = this.rig, slide = rig.getObjectByName('Slide'); rig.updateMatrixWorld(true);
+    const rig = this.rig; let slide = rig.getObjectByName('Slide'); rig.updateMatrixWorld(true);
+    if (!slide) {   // kit do adaptador: o osso da maior peça da arma
+      let big = null; rig.traverse(o => { if (o.isSkinnedMesh && this.kit.gun.test(o.name) && (!big || o.geometry.attributes.position.count > big.geometry.attributes.position.count)) big = o; });
+      slide = big?.skeleton.bones.find(b => /^arma_/.test(b.name)) || null;
+    }
     const inv = this.camNode.matrixWorld.clone().invert(), pts = [], v = new THREE.Vector3();
     rig.traverse(o => { if (!o.isSkinnedMesh || !this.kit.gun.test(o.name) || (this.kit.gunMat && !this.kit.gunMat.test([].concat(o.material)[0]?.name || ''))) return;
       const n = o.geometry.attributes.position.count; for (let i = 0; i < n; i += 2) { o.getVertexPosition(i, v); o.localToWorld(v); pts.push(v.clone()); } });
@@ -151,7 +178,11 @@ export class PistolViewmodel {
   }
 
   /** Tiro (evento real do jogo). */
-  shot() { if (this.one === 'reloadT' || this.one === 'reloadF') return; this._playOne('shot', 1, .03); this._flash(); }
+  shot() { if (!this.act.shot || this.one === 'reloadT' || this.one === 'reloadF') return; this._playOne('shot', 1, .03); this._flash(); }
+  /** Golpe de faca (kit com atk1..4): um golpe diferente a cada vez. */
+  melee() { const ks = ['atk1', 'atk2', 'atk3', 'atk4'].filter(k => this.act[k]); if (!ks.length) return false;
+    let k = ks[Math.floor(Math.random() * ks.length)]; if (k === this._lastAtk && ks.length > 1) k = ks[(ks.indexOf(k) + 1) % ks.length]; this._lastAtk = k;
+    this._playOne(k, 1.15, .04); return true; }
   /** Inspecionar (tecla F, só com a arma parada e pronta). */
   inspect() { if (this.act.inspect && !this.one && this.swE < .05) this._playOne('inspect', 1, .2); }
   /** Cancela o que estiver por cima (troca de arma, morte, renascer). */
@@ -163,7 +194,10 @@ export class PistolViewmodel {
   update(dt, s) {
     this.cfg = vmFor(this.id);
     // recarga: começa junto com a recarga do jogo; tática (ainda tem bala) ou vazia; dura o mesmo tempo da recarga do jogo
-    if (s.reloading && !this.reloading) {
+    if (this.kit.shell && this.act.reloadStart) {
+      if (s.reloading && !this.reloading) { this._shellTs = this.act.reloadOne.getClip().duration / Math.max(.25, s.reloadTime || .45); this._playOne('reloadStart', 1.3, .08); }
+      else if (!s.reloading && this.reloading && /^reload/.test(this.one || '')) this._playOne('reloadLast', 1.2, .05);
+    } else if (s.reloading && !this.reloading && this.act.reloadT) {
       const k = (s.mag ?? 1) > 0 ? 'reloadT' : 'reloadF', clip = this.act[k].getClip();
       this._playOne(k, clip.duration / Math.max(.3, s.reloadTotal || s.reloadTime || clip.duration), .08);
     } else if (!s.reloading && this.reloading && (this.one === 'reloadT' || this.one === 'reloadF')) this._endOne(.12);   // recarga interrompida
@@ -177,6 +211,7 @@ export class PistolViewmodel {
     this._baseT = (this._baseT || 0) + dt;
     if (want !== b0 && this._baseT > .25) { this._setBase(want); this._baseT = 0; }
     if (this.one === 'inspect' && (sp > .6 || s.switchK > 0)) this._endOne(.2);
+    this._spd = sp; if (this.noWalk && !this.one) this._bobT = (this._bobT || 0) + dt * Math.min(1.4, sp / 5.2);   // sem animação de andar: balanço feito em código
     // troca de arma: desce e gira para fora da tela; kit com SACAR: na volta toca a animação de sacar no lugar da subida
     const sk = s.switchK || 0;
     if (this.act.draw && s.switchIn && sk > 0) { if (!this._drew) { this._drew = true; this.draw(1.6); } this.swE = 0; }
@@ -195,6 +230,10 @@ export class PistolViewmodel {
     const R = Math.PI / 180;
     c.quaternion.multiply(_q.setFromEuler(_e.set((f.rx + this.swE * VM_SWAP.pitch) * R, f.ry * R, f.rz * R, 'YXZ')));
     c.position.add(_v.set(f.x * u, (f.y + this.swE * VM_SWAP.down) * u, f.z * u).applyQuaternion(c.quaternion));
+    if (this.noWalk && this._bobT) {   // balanço de andar para kits sem animação de andar (passos ~1,9 por segundo)
+      const k = Math.min(1, (this._spd || 0) / 5.2), t = this._bobT * Math.PI * 2 * 1.9;
+      c.position.add(_v.set(Math.cos(t) * .8 * k * u, -Math.abs(Math.sin(t)) * 1.1 * k * u, 0).applyQuaternion(c.quaternion));
+    }
     c.fov = f.fov; c.aspect = aspect; c.near = u * Math.max(.3, f.near); c.updateProjectionMatrix(); c.updateMatrixWorld(true);
   }
   /** boca do cano e direção do cano: o osso Barrel fica na boca; o eixo do cano é Slide → Barrel

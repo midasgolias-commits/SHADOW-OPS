@@ -43,7 +43,7 @@ export class CharacterPreview {
     if (weapon !== this.weapon) {
       this.weapon = weapon; this.held.set(weapon); this.held.snap = true;
       this.mixer.stopAllAction();
-      const knife = weapon === 'knife' || weapon === 'karambit';
+      const knife = weapon === 'knife' || weapon === 'karambit' || weapon === 'faca2';
       // pose de vitrine: parado com a arma erguida (pose de mira), como no menu do Point Blank; faca: pose da faca
       const base = this.mixer.clipAction(this.clips[knife ? 'knife_idle' : 'idle']); base.play();
       if (!knife && this.clips.fire) { const o = this.mixer.clipAction(upperOnly(this.clips.fire)); o.setEffectiveWeight(OVER); o.play(); o.time = o.getClip().duration * .999; o.timeScale = 0; }
@@ -63,7 +63,7 @@ export class CharacterPreview {
     if (this.obj) {
       if (this.drag === null) this.yaw += dt * .25;   // gira devagar sozinho
       this.obj.rotation.y = this.yaw; this.mixer.update(dt); this.obj.updateMatrixWorld(true);
-      this.held.update(true, null, dt); if (this.weapon !== 'knife' && this.weapon !== 'karambit') this.held.leftHandIK(true, 1);
+      this.held.update(true, null, dt); if (this.weapon !== 'knife' && this.weapon !== 'karambit' && this.weapon !== 'faca2') this.held.leftHandIK(true, 1);
     }
     this.renderer.render(this.scene, this.camera);
   }

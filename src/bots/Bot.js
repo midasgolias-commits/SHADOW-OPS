@@ -248,7 +248,7 @@ export class Bot {
       } else { const k = Math.exp(-dt * 5); fix.yaw *= k; fix.pitch *= k; }
       b.group.position.copy(this.pos); b.group.rotation.y = this.yaw + Math.PI + fix.yaw;
       this.anim.update(dt, { speed: sp, fwd: -sy * this.vel.x - cy * this.vel.z, side: cy * this.vel.x - sy * this.vel.z,
-        crouch: false, air: !this.grounded, melee: false, pistol: this.wid === 'pistol', dead: false, pitch: aimPose ? fix.pitch : 0 });
+        crouch: false, air: !this.grounded, melee: false, pistol: WEAPONS[this.wid]?.kind === 'Pistola', dead: false, pitch: aimPose ? fix.pitch : 0 });
       this.held.scene = this.anim.scene; this.held.update(true, null, dt); this.held.leftHandIK(this.reloadT <= 0, dt); return;
     }
     this.phase += sp * dt * 2.3; const sw = Math.sin(this.phase) * Math.min(sp / 4, 1) * .8;

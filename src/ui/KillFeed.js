@@ -30,8 +30,8 @@ export class KillFeed {
     const now = performance.now();
     this.streak = now - this.lastKill < STREAK_WINDOW ? this.streak + 1 : 1; this.lastKill = now;
     const n = Math.min(this.streak, STREAK.length - 1);
-    const title = (e.weapon === 'knife' || e.weapon === 'karambit') ? 'FACADA' : e.head ? 'TIRO NA CABEÇA' : STREAK[n];
-    const sub = ((e.weapon === 'knife' || e.weapon === 'karambit') || e.head) && n > 1 ? STREAK[n] : esc(e.victim);
+    const title = (e.weapon === 'knife' || e.weapon === 'karambit' || e.weapon === 'faca2') ? 'FACADA' : e.head ? 'TIRO NA CABEÇA' : STREAK[n];
+    const sub = ((e.weapon === 'knife' || e.weapon === 'karambit' || e.weapon === 'faca2') || e.head) && n > 1 ? STREAK[n] : esc(e.victim);
     this.banner.innerHTML = `<div class="kb-emb">${e.head ? headIcon() : weaponIcon(e.weapon)}${n > 1 ? `<i>${this.streak}</i>` : ''}</div>` +
       `<b>${title}</b><small>${sub}</small>`;
     this.banner.className = 'kb';

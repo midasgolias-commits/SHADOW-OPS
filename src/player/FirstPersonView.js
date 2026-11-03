@@ -3,7 +3,8 @@ import { upperOnly, OVER, forceMixerWrite } from './CharacterAnimator.js';
 import { CharacterAnimator } from './CharacterAnimator.js';
 import { ArmsOnly } from './ArmsOnly.js';
 import { HeldWeapon, WEAPON_MODELS, fpUsesIK, ensureWeaponEnv } from '../weapons/WeaponModels.js';
-import { SCENES, fpSceneOf, fpFor, gripFor, vmFor } from '../weapons/Grips.js';
+import { SCENES, fpSceneOf, fpFor, gripFor, vmFor, VM_KIT } from '../weapons/Grips.js';
+import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 import { PistolViewmodel } from './PistolViewmodel.js';
 import { ArmRetarget } from './ArmRetarget.js';
 import { WEAPONS } from '../weapons/Weapons.js';
@@ -49,7 +50,7 @@ const _ax = new THREE.Vector3(), _fw = new THREE.Vector3(), _up = new THREE.Vect
 
 export class FirstPersonView {
   constructor(assets, skin) {
-    this.kind = skin; this.scene = new THREE.Scene();
+    this.kind = skin; this.assets = assets; this.scene = new THREE.Scene();
     this.scene.add(new THREE.HemisphereLight(0xe4ecf4, 0x463c32, 1.35));
     const key = new THREE.DirectionalLight(0xfff0dc, 1.9); key.position.set(1.5, 3, 1); this.scene.add(key);
     const fill = new THREE.DirectionalLight(0x9fb8d8, .6); fill.position.set(-2, 1, -2); this.scene.add(fill);
@@ -73,8 +74,32 @@ export class FirstPersonView {
   /** liga o viewmodel de uma arma (rig do Assets.loadKit / loadPistolKit). A pistola com o kit Glock ainda pode usar os braços da Izzy por IK (rt). */
   setVM(wid, rig, kit) {
     if (!rig || this.vms[wid]) return;
+    // o mesmo arquivo serve a mais de uma arma (faca/karambit/faca nova): cada uma usa uma cópia
+    if (rig.userData.vmEmUso) { const c = cloneSkinned(rig); c.animations = rig.animations; c.userData = { ...rig.userData }; rig = c; }
+    rig.userData.vmEmUso = true;
+    if (WEAPONS[wid]?.trocaFaca) this._trocaFaca(rig, wid);   // M9 e karambit: animação da faca do pacote com a lâmina do jogo
     this.vms[wid] = new PistolViewmodel(rig, wid, kit);
     if (wid === 'pistol') this.rt = ['r', 'l'].map(sd => new ArmRetarget(this.obj, rig, sd));
+  }
+  /**
+   * Faca do kit trocada pela faca do jogo (M9, karambit): esconde a lâmina do pacote e põe o modelo do jogo no osso dela,
+   * com o cabo na mão direita e a ponta para o mesmo lado da lâmina do pacote.
+   */
+  _trocaFaca(rig, wid) {
+    const model = this.assets.weapons?.[wid]; let knife = null; rig.traverse(o => { if (o.isSkinnedMesh && /^Arma_/.test(o.name)) knife = o; });
+    if (!model || !knife) return;
+    rig.updateMatrixWorld(true);
+    const bone = knife.skeleton.bones.find(b => /^arma_/.test(b.name)), hand = rig.getObjectByName('ch_RightHand');
+    const pts = [], v = new THREE.Vector3(); const n = knife.geometry.attributes.position.count;
+    for (let i = 0; i < n; i += 3) { knife.getVertexPosition(i, v); pts.push(knife.localToWorld(v.clone())); }
+    const c = pts.reduce((a, p) => a.add(p), new THREE.Vector3()).divideScalar(pts.length), h = hand.getWorldPosition(new THREE.Vector3());
+    const tip = pts.reduce((a, p) => p.distanceTo(h) > a.distanceTo(h) ? p : a, c), ax = tip.clone().sub(h).normalize();
+    const grip = h.clone().add(ax.clone().multiplyScalar(c.clone().sub(h).dot(ax) * .25));
+    const up = new THREE.Vector3(0, 1, 0).sub(ax.clone().multiplyScalar(ax.y)).normalize(), x = new THREE.Vector3().crossVectors(up, ax);
+    const M = new THREE.Matrix4().makeBasis(x, up, ax).setPosition(grip);
+    const g = model.clone(true); g.traverse(o => { if (o.isMesh) { o.frustumCulled = false; o.castShadow = false; } });
+    const holder = new THREE.Group(); holder.matrixAutoUpdate = false; holder.matrix.copy(bone.matrixWorld.clone().invert().multiply(M)); holder.add(g); bone.add(holder);
+    knife.visible = false;
   }
   /** Tecla F: inspecionar a arma (só no viewmodel novo, que tem o clipe). */
   inspect() { if (this.vmOn) this.vm.inspect(); }
@@ -133,7 +158,7 @@ export class FirstPersonView {
   /** Um tiro: tranco + clarão (e segura a cena "atirando" um pouco). */
   shot(w, small = false) { if (this.vmOn) { this.vm.shot(); return; } this.fireT = .35; this.held.shotKick(small); this.held.muzzleFlash(!!w.auto, small); }
   /** Golpe de faca. */
-  melee() { this.slashFrom = this.meleeT != null ? slashValues(Math.min(1, this.meleeT / KNIFE_SLASH.dur), this.slashFrom) : null; this.fireT = .5; this.meleeT = 0; }   // golpe: o braço direito corta a partir da pose parada (KnifeSlash), o esquerdo recua
+  melee() { if (this.vmOn && this.vm.melee()) return; this.slashFrom = this.meleeT != null ? slashValues(Math.min(1, this.meleeT / KNIFE_SLASH.dur), this.slashFrom) : null; this.fireT = .5; this.meleeT = 0; }   // golpe: o braço direito corta a partir da pose parada (KnifeSlash), o esquerdo recua
 
   /**
    * s = { wid (arma na mão ou null na troca), speed (m/s), reloading, aiming, reloadTime, adsK (0..1: mira pela arma, botão direito) }
@@ -144,7 +169,11 @@ export class FirstPersonView {
     if (this.meleeT != null) { this.meleeT += dt; if (this.meleeT > KNIFE_SLASH.dur || !WEAPONS[s.wid]?.melee) { this.meleeT = null; this.slashFrom = null; } }
     // desfaz o giro da troca de arma do quadro anterior: com a animação parada o mixer NÃO regrava os ossos (só grava quando o valor muda)
     if (this._hsave) { for (const [b, q] of this._hsave) b.quaternion.copy(q); this._hsave = null; }
-    if (s.wid !== this.wid) { this.wid = s.wid; this.held.set(s.wid); this.key = ''; if (!(s.switchK > 0)) this._yawSnap = true; }   // arma aparece sem troca (início/renascer): corpo já certo
+    if (s.wid !== this.wid) { this.wid = s.wid; this.held.set(s.wid); this.key = ''; if (!(s.switchK > 0)) this._yawSnap = true; }
+    // arma com pacote de 1ª pessoa ainda não carregado: pede (Game.loadVM) e esconde até chegar
+    if (this.wid && VM_KIT[this.wid] && !this.vms[this.wid] && !this.vmPending.has(this.wid) && !this._vmPedido?.has(this.wid) && this.loadVM) {
+      (this._vmPedido ??= new Set()).add(this.wid); this.vmPending.add(this.wid); this.loadVM(this.wid);
+    }   // arma aparece sem troca (início/renascer): corpo já certo
     this.fireT = Math.max(0, this.fireT - dt);
     const knife = !!WEAPONS[this.wid]?.melee, moving = s.speed > .6;   // faca e karambit
     const sc = fpSceneOf({ reloading: s.reloading, firing: this.fireT > 0 || s.aiming, speed: s.speed });

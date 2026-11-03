@@ -124,7 +124,7 @@ export const FP_DEFAULT = { x: 0, y: 0, z: 0, fov: 60, rx: 0, ry: 0, rz: 0, near
  * Ponto de partida de uma arma nova no Lab: se ela ainda não tem ajuste, o Lab copia o desta arma (ex.: AUG ← VX-47).
  * É só uma cópia na primeira vez: depois cada arma tem o seu ajuste, separado.
  */
-export const GRIP_BASE = { ak: 'rifle', aug: 'rifle', karambit: 'knife' };
+export const GRIP_BASE = { m4a1s: 'rifle', sniper2: 'sniper', smg2: 'smg', magnum: 'pistol', faca2: 'knife', ak: 'rifle', aug: 'rifle', karambit: 'knife' };
 /**
  * VIEWMODEL NOVO (braços + arma do pacote, PistolViewmodel.js): ajuste da câmera dele, por arma (grips.json → vm.<arma>).
  * x lado, y cima, z frente (cm); rx/ry/rz giro (graus); fov (graus); near = corte perto (cm); camK = quanto do balanço
@@ -133,9 +133,9 @@ export const GRIP_BASE = { ak: 'rifle', aug: 'rifle', karambit: 'knife' };
  */
 export const VM_DEFAULT = { kit: 'p9', arms: 'pack', handScale: 1.2, on: true, x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0, fov: 60, near: 1, camK: .5 };
 /** campo de visão padrão de cada kit (no Blender o 9 mm usa lente de 16 mm = 58,7° vertical; 50° deixa a arma um pouco maior na tela) */
-export const KIT_FOV = { p9: 50, izzy9: 50, mm9: 50, ak: 60, glock: 60 };
+export const KIT_FOV = { p9: 50, izzy9: 50, mm9: 50, ak: 60, glock: 60, l11: 60, sniper2: 60, faca: 60, magnum: 60, shotgun2: 60, smg2: 55, m4a1s: 50 };
 /** kit de cada arma com viewmodel próprio (o da pistola pode ser trocado no Lab) */
-export const VM_KIT = { pistol: 'p9', ak: 'ak' };
+export const VM_KIT = { pistol: 'p9', ak: 'ak', sniper: 'l11', sniper2: 'sniper2', shotgun: 'shotgun2', smg2: 'smg2', m4a1s: 'm4a1s', magnum: 'magnum', knife: 'faca', karambit: 'faca', faca2: 'faca' };
 export const vmFor = wid => { const sv = DATA.vm?.[wid] || {}, c = { ...VM_DEFAULT, kit: VM_KIT[wid] || VM_DEFAULT.kit, ...sv }; if (sv.fov == null || (sv.fovKit ?? 'glock') !== c.kit) c.fov = KIT_FOV[c.kit] ?? c.fov; return c; };
 export const fpFor = (kind, wid, scene) => {
   // personagem sem câmera da 1ª pessoa ajustada no Lab (ex.: agente mascarado, operadores novos): usa a da Izzy (mesmo esqueleto Mixamo)

@@ -17,7 +17,7 @@ import { Assets } from './Assets.js';
 import { CharacterAnimator } from '../player/CharacterAnimator.js';
 import { HeldWeapon, WEAPON_MODELS, setScopeCut, ensureWeaponEnv } from '../weapons/WeaponModels.js';
 import { vfov } from './Fov.js';
-import { loadGrips, vmFor } from '../weapons/Grips.js';
+import { loadGrips, vmFor, VM_KIT } from '../weapons/Grips.js';
 import { SETTINGS_DEFAULTS } from '../ui/Settings.js';
 import { getLoadout, loadoutWeapons } from '../ui/Loadout.js';
 import { GrenadeSystem } from '../weapons/Grenades.js';
@@ -278,11 +278,13 @@ export class Game {
     // 1ª pessoa (tecla V): braços e arma do Lab desenhados por cima do mapa
     this.fpv?.dispose(); this.fpv = new FirstPersonView(this.assets, skin);
     // viewmodel novo da pistola (carrega em segundo plano; quando chegar, a pistola passa a usar ele na 1ª pessoa)
-    const fpvNow = this.fpv, kit = vmFor('pistol').kit, fim = w => () => fpvNow.vmPending.delete(w);
-    fpvNow.vmPending.add('pistol'); fpvNow.vmPending.add('ak');   // enquanto carrega, a arma não aparece (em vez da 1ª pessoa antiga com a arma solta)
-    this.assets.loadPistolKit?.(kit, skin).then(rig => { if (this.fpv === fpvNow) fpvNow.setVM('pistol', rig, kit); }).catch(() => {}).finally(fim('pistol'));
+    // pacotes de 1ª pessoa (braços DO PERSONAGEM escolhido): a FirstPersonView pede quando a arma aparece; enquanto carrega, a arma não aparece
+    const fpvNow = this.fpv;
+    fpvNow.loadVM = wid => { const kit = vmFor(wid).kit;
+      (wid === 'pistol' ? this.assets.loadPistolKit(kit, skin) : this.assets.loadKit(kit, skin))
+        .then(rig => { if (this.fpv === fpvNow) fpvNow.setVM(wid, rig, kit); }).catch(() => {}).finally(() => fpvNow.vmPending.delete(wid)); };
+    for (const w of this.weapons.loadout) if (VM_KIT[w]) { (fpvNow._vmPedido ??= new Set()).add(w); fpvNow.vmPending.add(w); fpvNow.loadVM(w); }
     // kits com os braços DO PERSONAGEM escolhido (gerados por _fonte/bracos/gerar_todos.py para cada personagem)
-    this.assets.loadKit?.('ak', skin).then(rig => { if (this.fpv === fpvNow) fpvNow.setVM('ak', rig, 'ak'); }).catch(() => {}).finally(fim('ak'));
     // cano para o CAMINHO do tiro: só quando a arma está de verdade no mapa (3ª pessoa, ou mira pela arma na 1ª pessoa)
     this.weapons.muzzle = () => { if (this.player.fp || !this.held.holder.visible || !this.held.cur) return null; return this.held.muzzleWorld; };
     // cano para o RASTRO: na 1ª pessoa os braços são desenhados por cima (outra cena), então o rastro começa
@@ -304,7 +306,7 @@ export class Game {
     a.position.copy(p.pos); a.rotation.y = p.yaw + Math.PI + fix.yaw;   // modelo Mixamo olha para +z; yaw 0 do jogo olha para -z
     if (p.vault) { a.rotation.y = p.vault.yaw + Math.PI; fix.yaw = 0; }   // salto por cima: o corpo vai na direção do salto
     this.anim.update(dt, { speed: p.speed, fwd: p.localVel.fwd, side: p.localVel.side, crouch: p.crouch, air: !p.grounded,
-      melee: w.melee, pistol: w.id === 'pistol', dead: p.dead, deadCrouch: p.crouch, vault: p.vault, pitch: p.dead ? 0 : (aimPose ? fix.pitch : p.pitch * .5) });
+      melee: w.melee, pistol: WEAPONS[w.id]?.kind === 'Pistola', dead: p.dead, deadCrouch: p.crouch, vault: p.vault, pitch: p.dead ? 0 : (aimPose ? fix.pitch : p.pitch * .5) });
     // arma na mão (some na troca de arma, no meio da animação de troca)
     const nadeEq = !!this.nades?.equipped;
     this.held.set(nadeEq || (w.state === 'switch' && w.pending) ? null : w.id);   // granada na mão: a arma some

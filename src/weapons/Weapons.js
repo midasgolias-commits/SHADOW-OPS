@@ -26,7 +26,7 @@ export const WEAPONS = {
     ads: { fov: 22, spreadMul: .4 }   // botão direito: mira pela própria arma (zoom ~2x; campo de visão VERTICAL em graus)
   },
   sniper: {
-    id: 'sniper', slot: 3, name: 'SNIPER', kind: 'Sniper', auto: false, rpm: 45,
+    id: 'sniper', slot: 3, name: 'L11', kind: 'Sniper', auto: false, rpm: 45,
     dmg: 115, head: 4, limb: 1, falloff: 1, range: 300, pellets: 1,
     mag: 5, reserve: 20, reload: 3.2,
     spread: .06, moveSpread: .06, airSpread: .1, burstSpread: 0, zoomSpread: .0002, zoomFov: 10,   // luneta: campo de visão VERTICAL (~4x)
@@ -34,7 +34,7 @@ export const WEAPONS = {
     recoil: { p: .05, y: .008, ramp: 0, cap: 1 }, speedMul: .85
   },
   shotgun: {
-    id: 'shotgun', slot: 4, name: 'SPAS-12', kind: 'Escopeta', auto: false, rpm: 70,
+    id: 'shotgun', slot: 4, name: 'SHORTY', kind: 'Escopeta', auto: false, rpm: 70,
     dmg: 12, head: 2, limb: .8, falloff: .86, range: 60, pellets: 9,
     mag: 8, reserve: 32, reload: .45, shell: true,   // reload = tempo por cartucho
     spread: .035, moveSpread: .004, botMoveSpread: .01, airSpread: .02, burstSpread: 0,
@@ -60,7 +60,15 @@ export const WEAPONS = {
 WEAPONS.aug = { ...WEAPONS.rifle, id: 'aug', slot: 7, name: 'AUG A3', kind: 'Fuzil', recoil: { ...WEAPONS.rifle.recoil }, ads: { ...WEAPONS.rifle.ads } };
 
 // Karambit: segunda faca (mesmo dano da faca; pegada invertida, lâmina curva saindo por baixo do mindinho)
-WEAPONS.karambit = { ...WEAPONS.knife, id: 'karambit', slot: 8, name: 'KARAMBIT', recoil: { ...WEAPONS.knife.recoil } };
+WEAPONS.karambit = { ...WEAPONS.knife, id: 'karambit', slot: 8, name: 'KARAMBIT', recoil: { ...WEAPONS.knife.recoil }, trocaFaca: true };
+WEAPONS.knife.trocaFaca = true;   // 1ª pessoa: animação da faca do pacote novo com a lâmina da própria arma
+// ---- 03/11: armas novas com pacote de 1ª pessoa próprio (braços do personagem pelo adaptador universal) ----
+WEAPONS.faca2 = { ...WEAPONS.knife, id: 'faca2', slot: 10, name: 'FACA TÁTICA', recoil: { ...WEAPONS.knife.recoil }, trocaFaca: false };
+WEAPONS.magnum = { ...WEAPONS.pistol, id: 'magnum', slot: 11, name: 'MAGNUM', kind: 'Pistola', dmg: 55, head: 3, rpm: 150, mag: 6, reserve: 30, reload: 3.0,
+  spread: .0035, burstSpread: .006, recoil: { p: .045, y: .008, ramp: .2, cap: 3 }, speedMul: 1 };
+WEAPONS.sniper2 = { ...WEAPONS.sniper, id: 'sniper2', slot: 12, name: 'SNIPER SD', dmg: 100, rpm: 50, reload: 2.9, recoil: { ...WEAPONS.sniper.recoil } };
+WEAPONS.smg2 = { ...WEAPONS.smg, id: 'smg2', slot: 13, name: 'SST-30', dmg: 22, rpm: 750, reload: 2.1, recoil: { ...WEAPONS.smg.recoil }, ads: null };
+WEAPONS.m4a1s = { ...WEAPONS.rifle, id: 'm4a1s', slot: 14, name: 'M4A1-S', dmg: 30, rpm: 650, mag: 25, reserve: 75, reload: 2.5, recoil: { p: .009, y: .004, ramp: .09, cap: 9 }, ads: null };
 // AK-74M (kit do LokitoBlu, CC BY 4.0): fuzil mais forte e com mais recuo que a VX-47; viewmodel próprio com os braços da Izzy
 WEAPONS.ak = { ...WEAPONS.rifle, id: 'ak', slot: 9, name: 'AK-74M', kind: 'Fuzil', dmg: 36, rpm: 600, reload: 2.6, burstSpread: .0016,
   recoil: { p: .014, y: .006, ramp: .12, cap: 10 }, ads: null };   // sem mirar pela arma por enquanto (o kit não tem animação de mira)
@@ -68,4 +76,4 @@ WEAPONS.ak = { ...WEAPONS.rifle, id: 'ak', slot: 9, name: 'AK-74M', kind: 'Fuzil
 export const isMelee = id => !!WEAPONS[id]?.melee;
 
 /** Ordem das teclas 1..6 (sem mochila) e da lista do Lab. A AUG fica no fim (tecla 7) para não mudar as outras. */
-export const ORDER = ['rifle', 'smg', 'sniper', 'shotgun', 'pistol', 'knife', 'aug', 'karambit', 'ak'];
+export const ORDER = ['rifle', 'smg', 'sniper', 'shotgun', 'pistol', 'knife', 'aug', 'karambit', 'ak', 'faca2', 'magnum', 'sniper2', 'smg2', 'm4a1s'];

@@ -10,9 +10,9 @@ export const SKINS = [
   { id: 'bot', name: 'AGENTE MASCARADO', desc: 'O uniforme dos bots.' }
 ];
 export const SLOTS = [
-  { k: 'primary', label: 'Principal', key: 1, ids: ['rifle', 'ak', 'aug', 'smg', 'sniper', 'shotgun'] },
-  { k: 'secondary', label: 'Secundária', key: 2, ids: ['pistol'] },
-  { k: 'melee', label: 'Arma branca', key: 3, ids: ['knife', 'karambit'] }
+  { k: 'primary', label: 'Principal', key: 1, ids: ['rifle', 'ak', 'm4a1s', 'aug', 'smg', 'smg2', 'sniper', 'sniper2', 'shotgun'] },
+  { k: 'secondary', label: 'Secundária', key: 2, ids: ['pistol', 'magnum'] },
+  { k: 'melee', label: 'Arma branca', key: 3, ids: ['knife', 'karambit', 'faca2'] }
 ];
 const LS = 'shadowops.loadout';
 const DEF = { skin: 'izzy', primary: 'rifle', secondary: 'pistol', melee: 'knife' };

@@ -10,6 +10,8 @@ import { MuzzleFlash } from './MuzzleFlash.js';
  */
 export const SHOT_KICK = {
   rifle: { back: .016, up: .004, pitch: 2.5, dur: .12 },
+  m4a1s: { back: .014, up: .004, pitch: 2, dur: .11 }, smg2: { back: .01, up: .003, pitch: 1.4, dur: .09 }, magnum: { back: .03, up: .01, pitch: 12, dur: .22 },
+  sniper2: { back: .035, up: .008, pitch: 7, dur: .3, bolt: { at: .38, len: .85, roll: 16, dip: .03, pitch: -6 } },
   ak: { back: .018, up: .005, pitch: 3, dur: .12 },
   aug: { back: .007, up: .0015, pitch: .9, dur: .1 },   // AUG: tranco leve (pedido: só um toque, sem inclinar)
   smg: { back: .011, up: .003, pitch: 1.6, dur: .09 },
@@ -38,8 +40,16 @@ export const WEAPON_MODELS = {
   // AK-74M: arma do kit do LokitoBlu (malha parada, exportada do .blend com _fonte/izzy_arms/world.py); texturas com relevo e metal/aspereza
   ak:      { file: W + 'ak_anim/ak_world.glb', len: .94, grip: .37, gripDown: .2, hand2: .3, tex: { '*': W + 'ak_anim/ak_color.jpg' }, pbr: { '*': W + 'ak_anim/ak' }, flipTex: true },
   smg:     { file: W + 'smg/vector.dae', len: .62, grip: .30, gripDown: .25, tex: { '*': W + 'smg/albedo.jpg' }, ads: { back: .14, up: -.018, dx: -.0055, dy: .0011 }, hand2: .2 },   // ads: câmera atrás da mira holográfica; dx/dy centralizam a janela do holográfico no ponto vermelho
-  sniper:  { file: W + 'sniper/sniper.fbx', hand2: .34, len: 1.15, grip: .33, gripDown: .2, tex: { '*': W + 'sniper/color.jpg' } },
-  shotgun: { file: W + 'shotgun/spas.dae', hand2: .34, len: 1.0, grip: .3, gripDown: .2, tex: { Parts1: W + 'shotgun/parts1.jpg', Parts2: W + 'shotgun/parts2.jpg' } },
+  // 03/11: L11 e SHORTY com o modelo novo do pacote (arma parada tirada do GLB do adaptador: _fonte/bracos/arma_parada.py). Antigos guardados abaixo.
+  // sniper:  { file: W + 'sniper/sniper.fbx', hand2: .34, len: 1.15, grip: .33, gripDown: .2, tex: { '*': W + 'sniper/color.jpg' } },
+  sniper:  { file: W + 'vm/l11_parada.glb', hand2: .34, len: 1.2, grip: .3, gripDown: .2, glass: /lens|vidro/i, tex: { '*': W + 'vm/l11_sniper_color.jpg' }, pbr: { '*': W + 'vm/l11_sniper' }, flipTex: true },
+  sniper2: { file: W + 'vm/sniper2_parada.glb', hand2: .34, len: 1.15, grip: .33, gripDown: .2, glass: /lens|vidro/i, tex: { '*': W + 'vm/sniper2_sniper_color.jpg' }, pbr: { '*': W + 'vm/sniper2_sniper' }, flipTex: true },
+  m4a1s:   { file: W + 'vm/m4a1s_parada.glb', len: 1.0, grip: .34, gripDown: .22, hand2: .3, tex: { '*': W + 'vm/m4a1s_corpo_color.jpg' }, pbr: { '*': W + 'vm/m4a1s_corpo' }, flipTex: true },
+  smg2:    { file: W + 'vm/smg2_parada.glb', len: .62, grip: .4, gripDown: -.17, hand2: .2, tex: { 'arma:Material_458': W + 'vm/smg2_guarda_color.jpg', '*': W + 'vm/smg2_corpo_color.jpg' }, pbr: { 'arma:Material_458': W + 'vm/smg2_guarda', '*': W + 'vm/smg2_corpo' }, flipTex: true },
+  magnum:  { file: W + 'vm/magnum_parada.glb', hand2: .04, hand2Down: .05, len: .3, grip: .25, gripDown: .45, tex: { '*': W + 'vm/magnum_arma_color.jpg' }, pbr: { '*': W + 'vm/magnum_arma' }, flipTex: true },
+  faca2:   { file: W + 'vm/faca_parada.glb', len: .3, grip: .16, gripDown: .5, tex: { '*': W + 'vm/faca_knife_color.jpg' }, pbr: { '*': W + 'vm/faca_knife' }, flipTex: true },
+  shotgun: { file: W + 'vm/shotgun2_parada.glb', hand2: .38, len: .8, grip: .28, gripDown: .2, tex: { '*': W + 'vm/shotgun2_boomstick_color.jpg' }, pbr: { '*': W + 'vm/shotgun2_boomstick' }, flipTex: true },
+  // SPAS-12 antiga (até 03/11): shotgun: { file: W + 'shotgun/spas.dae', hand2: .34, len: 1.0, grip: .3, gripDown: .2, tex: { Parts1: W + 'shotgun/parts1.jpg', Parts2: W + 'shotgun/parts2.jpg' } },
   // pistola: Glock do pacote "Pistol 43 Tactical" (desde 29/10; peças separadas: ferrolho, cano, carregador…). A P-19 (Magnum) antiga fica guardada abaixo.
   pistol:  { file: W + 'glock_fps/glock_world.fbx', hand2: .04, hand2Down: .05, len: .19, grip: .3, gripDown: .12, tex: { '*': W + 'glock_fps/glock_base.jpg' }, pbr: { '*': W + 'glock_fps/glock' } },
   // pistolOld: { file: W + 'pistol/magnum.fbx', hand2: .04, hand2Down: .05, cull: { axis: 'x', below: -50 }, len: .3, grip: .25, gripDown: .45, tex: { '*': W + 'pistol/color.jpg' } },
