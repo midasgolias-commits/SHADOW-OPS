@@ -124,6 +124,7 @@ export class Assets {
       const skin = n => this._charSkin(who, n);
       const shell = new THREE.MeshStandardMaterial({ name: 'cápsula', map: T('../pistol_anim/shell_color.jpg', true), roughness: .35, metalness: 1 });
       const rig = g.scene; rig.animations = g.animations;
+      for (const a of rig.animations) if (!(a.duration > 1e-3)) a.duration = 1 / 30;   // clipe de 1 quadro (ex.: parado da M4A1-S): sem isso o tempo vira NaN
       rig.traverse(o => {
         if (!o.isMesh) return; o.frustumCulled = false; o.castShadow = o.receiveShadow = false;
         const n = o.material?.name || '';
