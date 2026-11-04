@@ -11,8 +11,11 @@ const SAMPLES = ['rifle', 'aug', 'reload_aug', 'sniper', 'smg', 'pistol', 'shotg
  * AUG: se existir assets/sounds/aug.mp3 (e reload_aug.mp3), usa o arquivo dela; senão o do fuzil, um pouco mais agudo.
  */
 const ALIAS = { m4a1s: { src: 'rifle', rate: 1.25, gain: .55 }, reload_m4a1s: { src: 'reload_rifle' }, smg2: { src: 'smg', rate: .95, gain: 1 }, reload_smg2: { src: 'reload_smg' }, sniper2: { src: 'rifle', rate: .85, gain: .7 }, reload_sniper2: { src: 'reload_sniper' }, magnum: { src: 'pistol', rate: .78, gain: 1.4 }, reload_magnum: { src: 'reload_pistol' }, faca2: { src: 'knife' }, ak: { src: 'rifle', rate: .9, gain: 1.15 }, reload_ak: { src: 'reload_rifle' }, sniper: { src: 'rifle', rate: .72, gain: 1.35 }, aug: { src: 'rifle', rate: 1.07, gain: 1 }, reload_aug: { src: 'reload_rifle' } };
+/** Categoria de cada som (Configurações > Áudio): 'armas' = tiros, recargas, faca e granada; o resto é 'ambiente' (passos, pulo, dano, abate, locutor). */
+const ARMAS = /^(reload(_\w+)?|rifle|aug|sniper2?|smg2?|pistol|shotgun2?|knife|karambit|faca2|magnum|m4a1s|ak|explosion|beep)$/;
+export const categoria = n => ARMAS.test(n) ? 'armas' : 'ambiente';
 export class ProceduralAudio {
-  constructor() { this.ctx = null; this.volume = .6; this.raw = {}; this.buf = {}; this.loops = {}; this._preload(); }
+  constructor() { this.ctx = null; this.volume = .6; this.busVol = { armas: 1, ambiente: 1 }; this.bus = {}; this.raw = {}; this.buf = {}; this.loops = {}; this._preload(); }
 
   /** Baixa os arquivos já ao abrir a página (decodifica quando o áudio for liberado pelo clique). */
   _preload() {
@@ -33,13 +36,13 @@ export class ProceduralAudio {
   }
   has(n) { return !!(this.buf[n] || (ALIAS[n] && this.buf[ALIAS[n].src])); }
   /** Toca um som gravado (o arquivo próprio tem prioridade sobre o reaproveitado). Retorna false se não houver arquivo. */
-  _sample(name, gain, pan, dist, rate = 1) {
+  _sample(name, gain, pan, dist, rate = 1, cat = categoria(name)) {
     const own = !!this.buf[name], al = own ? null : ALIAS[name], key = al ? al.src : name, b = this.buf[key]; if (!b) return false;
     const t = this.ctx.currentTime, src = this.ctx.createBufferSource(); src.buffer = b;
     src.playbackRate.value = rate * (al?.rate ?? 1) * (1 + (Math.random() - .5) * .06);   // leve variação: tiros seguidos não soam idênticos
     let node = src;
     if (dist > 18) { const f = this.ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = Math.max(700, 6000 - dist * 70); src.connect(f); node = f; }
-    node.connect(this._out(gain * (al?.gain ?? 1) / (1 + dist * .07), pan)); src.start(t);
+    node.connect(this._out(gain * (al?.gain ?? 1) / (1 + dist * .07), pan, cat)); src.start(t);
     return true;
   }
   /** Som em laço (passos do jogador). on=false para; rate acelera (corrida). */
@@ -50,7 +53,7 @@ export class ProceduralAudio {
     if (!this.buf[name]) return false;
     if (!l) {
       const src = this.ctx.createBufferSource(); src.buffer = this.buf[name]; src.loop = true;
-      const g = this.ctx.createGain(); g.gain.value = 0; src.connect(g); g.connect(this.master);
+      const g = this.ctx.createGain(); g.gain.value = 0; src.connect(g); g.connect(this.bus[categoria(name)] || this.master);
       src.start(this.ctx.currentTime, Math.random() * this.buf[name].duration); l = this.loops[name] = { src, g };
     }
     l.src.playbackRate.setTargetAtTime(rate, this.ctx.currentTime, .08); l.g.gain.setTargetAtTime(gain, this.ctx.currentTime, .06);
@@ -66,6 +69,7 @@ export class ProceduralAudio {
         this.master = this.ctx.createGain(); this.master.gain.value = this.volume;
         const comp = this.ctx.createDynamicsCompressor();
         this.master.connect(comp); comp.connect(this.ctx.destination);
+        for (const c of ['armas', 'ambiente']) { const b = this.bus[c] = this.ctx.createGain(); b.gain.value = this.busVol[c]; b.connect(this.master); }
         const n = this.ctx.sampleRate;
         this.noiseBuf = this.ctx.createBuffer(1, n, n);
         const d = this.noiseBuf.getChannelData(0);
@@ -80,11 +84,16 @@ export class ProceduralAudio {
     this.volume = v;
     if (this.master) this.master.gain.setTargetAtTime(v, this.ctx.currentTime, .02);
   }
+  /** Volume de uma categoria ('armas' | 'ambiente'), de 0 a 1, multiplicado pelo volume geral. */
+  setCategoria(c, v) {
+    this.busVol[c] = v;
+    if (this.bus[c]) this.bus[c].gain.setTargetAtTime(v, this.ctx.currentTime, .02);
+  }
 
-  _out(gain, pan) {
-    const g = this.ctx.createGain(); g.gain.value = gain;
-    if (this.ctx.createStereoPanner) { const p = this.ctx.createStereoPanner(); p.pan.value = pan; g.connect(p); p.connect(this.master); }
-    else g.connect(this.master);
+  _out(gain, pan, cat = 'ambiente') {
+    const g = this.ctx.createGain(), dest = this.bus[cat] || this.master; g.gain.value = gain;
+    if (this.ctx.createStereoPanner) { const p = this.ctx.createStereoPanner(); p.pan.value = pan; g.connect(p); p.connect(dest); }
+    else g.connect(dest);
     return g;
   }
   _env(g, t, dur, peak, attack = .002) {
@@ -112,9 +121,10 @@ export class ProceduralAudio {
   /** name: rifle|smg|sniper|shotgun|pistol|knife|reload|step|land|ui|beep|hit|explosion */
   play(name, { gain = 1, pan = 0, dist = 0, rate = 1 } = {}) {
     if (!this.ctx) return;
-    if (this._sample(name, gain, pan, dist, rate)) return;
+    const cat = categoria(name);
+    if (this._sample(name, gain, pan, dist, rate, cat)) return;
     const t = this.ctx.currentTime, far = dist > 18;
-    const out = this._out(gain / (1 + dist * .07), pan);
+    const out = this._out(gain / (1 + dist * .07), pan, cat);
     const N = o => this._noise(out, t, far ? { ...o, f: o.f * .45 } : o);
     switch (name) {
       case 'rifle': N({ dur: .13, f: 3000, fEnd: 500, gain: 1 }); this._tone(out, t, { f: 150, fEnd: 50, dur: .11, gain: .9 }); N({ dur: .03, f: 5500, type: 'bandpass', gain: .5 }); break;

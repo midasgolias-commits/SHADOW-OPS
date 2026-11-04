@@ -28,11 +28,14 @@ export const SCHEMA = [
     { k: 'chDynamic', label: 'Abre ao atirar e andar (mostra a dispersão)', type: 'check' }
   ] },
   { tab: 'Áudio e vídeo', items: [
-    { k: 'volume', label: 'Volume', min: 0, max: 1, step: .01, fmt: pct },
+    { k: 'volume', label: 'Volume geral', min: 0, max: 1, step: .01, fmt: pct },
+    { k: 'volMusica', label: 'Música (sala e partida)', min: 0, max: 1, step: .01, fmt: pct },
+    { k: 'volAmbiente', label: 'Ambiente (passos, pulo, dano, abates, locutor e menu)', min: 0, max: 1, step: .01, fmt: pct },
+    { k: 'volArmas', label: 'Armas (tiros, recargas, faca e granada)', min: 0, max: 1, step: .01, fmt: pct },
     { k: 'quality', label: 'Qualidade gráfica', type: 'select', options: [['low', 'Baixa'], ['medium', 'Média'], ['high', 'Alta']] }
   ] }
 ];
-export const SETTINGS_DEFAULTS = { fullscreen: false, firstPerson: false, adsSens: 1, camDist: 2.05, camSide: .48, camHeight: .16,
+export const SETTINGS_DEFAULTS = { volMusica: 1, volAmbiente: 1, volArmas: 1, fullscreen: false, firstPerson: false, adsSens: 1, camDist: 2.05, camSide: .48, camHeight: .16,
   chStyle: 'dot', chColor: '#ffffff', chSize: 6, chLen: 8, chThick: 2, chGap: 5, chOutline: true, chOpacity: 1, chDynamic: false };
 
 /** Aplica a mira configurada num elemento .xhair (a mira do HUD ou a prévia). */

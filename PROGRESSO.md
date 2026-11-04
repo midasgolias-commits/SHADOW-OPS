@@ -300,3 +300,7 @@ WASD move · Shift corre · Ctrl/C agacha · Espaço pula · botão esquerdo ati
   (`this.assets` faltando no FirstPersonView); clipe faltando não quebra mais a arma.
 - Testado com fotos (1600×900): todas as armas novas parado/tiro ou golpe/recarga/andando; Glock e AK sem mudança; 3ª pessoa atirando.
 - Créditos dos 7 pacotes: A CONFIRMAR (CREDITOS.md).
+
+## 03/11 (noite) — Volumes separados
+- Configurações > Áudio e vídeo: Volume geral + Música + Ambiente (passos, pulo, dano, abates, locutor, menu) + Armas (tiros, recargas, faca, granada).
+- `ProceduralAudio`: canais 'armas' e 'ambiente' (`categoria(nome)`, `setCategoria`); Music e MenuFx multiplicam pelo volume da categoria. Salvo no navegador.

@@ -197,8 +197,8 @@ net.start().then(() => { net.pingAll(); onlinePanel.render(); });   // fica onli
     if (j.v && j.v !== mine && el) { el.textContent = 'Versão nova disponível (' + j.v + '): aperte Ctrl+Shift+R'; el.classList.add('old'); }
   }).catch(() => {});
 })();
-window.__menuFx = new MenuFx($('menu'), () => game.settings.volume);   // faíscas, luzes e som ao passar o mouse
-window.__music = new Music(() => game.settings.volume);   // música ambiente: sala e partida
+window.__menuFx = new MenuFx($('menu'), () => game.settings.volume * (game.settings.volAmbiente ?? 1));   // faíscas, luzes e som ao passar o mouse
+window.__music = new Music(() => game.settings.volume * (game.settings.volMusica ?? 1));   // música ambiente: sala e partida
 const lobby = new Lobby($('lobby'), {
   assets: game.assets,   // personagem em 3D na sala
   openInventory: () => openBag('lobby'),

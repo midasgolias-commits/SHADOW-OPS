@@ -32,6 +32,7 @@ export class Game {
     this.hooks = {}; this.mode = null; this.running = false; this.paused = false;
     this.settings = this._load();
     this.audio = new ProceduralAudio(); this.audio.setVolume(this.settings.volume);
+    this.audio.setCategoria('armas', this.settings.volArmas ?? 1); this.audio.setCategoria('ambiente', this.settings.volAmbiente ?? 1);
     this.announcer = new Announcer(this.audio);   // locutor (sons escolhidos na ferramenta de Sons do Lab)
     this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -64,6 +65,8 @@ export class Game {
     try { localStorage.setItem('shadowops.settings', JSON.stringify(this.settings)); } catch {}
     if (k === 'fov') { this.camera.fov = vfov(v, this.camera.aspect); this.camera.updateProjectionMatrix(); }
     if (k === 'volume') this.audio.setVolume(v);
+    if (k === 'volArmas') this.audio.setCategoria('armas', v);
+    if (k === 'volAmbiente') this.audio.setCategoria('ambiente', v);
     if (k === 'fullscreen' && !v) { navigator.keyboard?.unlock?.(); if (document.fullscreenElement) document.exitFullscreen?.().catch?.(() => {}); }
     if (k === 'quality') this._applyQuality();
     if (k === 'firstPerson' && this.player) { this.player.firstPerson = !!v && !this.player.dead; this.player.applyLook(); }
