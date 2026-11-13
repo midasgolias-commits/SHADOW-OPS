@@ -4,7 +4,8 @@ const TAGS = {
   concrete: { spark: 0xb9b2a4, decal: 0x15130f, n: 6, speed: [1.2, 3], life: [.25, .5] },
   wood:     { spark: 0x9a6b3a, decal: 0x120c06, n: 5, speed: [1.2, 3], life: [.25, .5] },
   metal:    { spark: 0xffb347, decal: 0x0a0a0a, n: 9, speed: [2, 5.5], life: [.15, .35] },
-  flesh:    { spark: 0xb01e1e, decal: 0x300606, n: 6, speed: [1, 3], life: [.2, .4] }
+  flesh:    { spark: 0xb01e1e, decal: 0x300606, n: 6, speed: [1, 3], life: [.2, .4] },
+  dirt:     { spark: 0x8a6a48, decal: 0x1a120a, n: 7, speed: [.8, 2.4], life: [.3, .6] }   // chão de terra (mapa FAVELA)
 };
 const _v = new THREE.Vector3(), _w = new THREE.Vector3();
 

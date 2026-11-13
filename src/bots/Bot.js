@@ -34,7 +34,7 @@ export class Bot {
   get speed() { return Math.hypot(this.vel.x, this.vel.z); }
 
   spawn(p, yaw) {
-    this.pos.set(p.x, 0, p.z); this.vel.set(0, 0, 0);
+    this.pos.set(p.x, p.y || 0, p.z); this.vel.set(0, 0, 0);   // y: piso do ponto nos mapas de morro
     this.yaw = yaw ?? rnd(-Math.PI, Math.PI); this.pitch = 0; this.wantYaw = this.yaw; this.wantPitch = 0;
     this.hp = 100; this.alive = true; this.deadT = 0; this.mag = this.w.mag; this.reloadT = 0; this.cool = rnd(0, .3);
     this.burstLeft = 0; this.burstPause = 0; this.burstN = 0; this.aimHead = false;

@@ -96,7 +96,7 @@ export class BotManager {
       p, s: (foes.length ? Math.min(...foes.map(f => Math.hypot(f.pos.x - p.x, f.pos.z - p.z))) : 50) + Math.random() * 8
     })).sort((x, y) => y.s - x.s);
     const c = ranked[Math.floor(Math.random() * Math.min(3, ranked.length))].p;
-    return { x: c.x, z: c.z, yaw: Math.random() * TAU - Math.PI };
+    return { x: c.x, y: c.y || 0, z: c.z, yaw: Math.random() * TAU - Math.PI };
   }
   spawnAll() { for (const b of this.bots) { const p = this.spawnPointFor(b); b.spawn(p, p.yaw); } }
   respawn(b) { const p = this.spawnPointFor(b); b.spawn(p, p.yaw); }

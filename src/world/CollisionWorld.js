@@ -6,13 +6,48 @@ const CELL = 2;          // tamanho da célula da grade (m)
 const BIG = 24;          // caixas maiores que isso (base, limites) ficam numa lista testada sempre
 
 export class CollisionWorld {
-  constructor() { this.boxes = []; this._grid = null; this._stamp = 0; }
+  constructor() { this.boxes = []; this._grid = null; this._stamp = 0; this.terrain = null; }
 
   addBox(min, max, tag = 'concrete') {
     const b = { min: { ...min }, max: { ...max }, tag, _s: 0 };
     this.boxes.push(b); this._grid = null; return b;
   }
-  clear() { this.boxes.length = 0; this._grid = null; }
+  clear() { this.boxes.length = 0; this._grid = null; this.terrain = null; }
+
+  /* ---------- terreno (mapa de alturas) ----------
+   * Mapas de morro (FAVELA): o chão é uma grade de alturas em vez de caixas (a ladeira viraria centenas de milhares delas).
+   * t = { minX, minZ, cell, nx, nz, h: Float32Array (m) }. Sem terreno, tudo funciona como antes (piso só de caixas). */
+  setTerrain(t) { this.terrain = t; }
+  /** Altura do terreno em (x,z), interpolada; -Infinity fora da grade ou sem terreno. */
+  groundAt(x, z) {
+    const t = this.terrain; if (!t) return -Infinity;
+    const fx = (x - t.minX) / t.cell, fz = (z - t.minZ) / t.cell;
+    if (fx < 0 || fz < 0 || fx > t.nx - 1 || fz > t.nz - 1) return -Infinity;
+    const i = Math.min(t.nx - 2, Math.floor(fx)), k = Math.min(t.nz - 2, Math.floor(fz)), u = fx - i, w = fz - k, h = t.h, n = t.nx;
+    return (h[k * n + i] * (1 - u) + h[k * n + i + 1] * u) * (1 - w) + (h[(k + 1) * n + i] * (1 - u) + h[(k + 1) * n + i + 1] * u) * w;
+  }
+  /** Raio contra o terreno por passos (0,4 m) + bisseção. Retorna a distância do primeiro contato ou Infinity. */
+  _terrainRay(o, d, max) {
+    if (!this.terrain) return Infinity;
+    const STEP = .4; let tPrev = 0, above = o.y - this.groundAt(o.x, o.z);
+    if (!(above > 0)) return Number.isFinite(above) ? 0 : Infinity;   // começou embaixo do chão: bate na hora
+    for (let t = STEP; t <= max + STEP; t += STEP) {
+      const tt = Math.min(t, max), a = o.y + d.y * tt - this.groundAt(o.x + d.x * tt, o.z + d.z * tt);
+      if (a <= 0) {
+        let lo = tPrev, hi = tt;
+        for (let it = 0; it < 7; it++) { const m = (lo + hi) / 2; if (o.y + d.y * m - this.groundAt(o.x + d.x * m, o.z + d.z * m) > 0) lo = m; else hi = m; }
+        return hi;
+      }
+      tPrev = tt; if (tt >= max) break;
+    }
+    return Infinity;
+  }
+  /** Normal do terreno em (x,z) pelas diferenças das alturas vizinhas. */
+  _terrainNormal(x, z) {
+    const e = .5, gx = this.groundAt(x + e, z) - this.groundAt(x - e, z), gz = this.groundAt(x, z + e) - this.groundAt(x, z - e);
+    const L = Math.hypot(gx, 2 * e, gz) || 1;
+    return { x: -gx / L, y: 2 * e / L, z: -gz / L };
+  }
 
   /* ---------- grade espacial ---------- */
   _build() {
@@ -45,6 +80,7 @@ export class CollisionWorld {
            z - r < b.max.z - EPS && z + r > b.min.z + EPS;
   }
   anyHit(x, y, z, r, h) {
+    if (this.terrain && y < this.groundAt(x, z) - .05) return true;
     for (const b of this._near(x - r, z - r, x + r, z + r, this._qa || (this._qa = []))) if (this._hit(x, y, z, r, h, b)) return true;
     return false;
   }
@@ -55,7 +91,16 @@ export class CollisionWorld {
     const list = this._near(p.x - reach, p.z - reach, p.x + reach, p.z + reach, this._qm || (this._qm = [])).slice();
     const any = (x, y, z) => { for (const b of list) if (this._hit(x, y, z, r, h, b)) return true; return false; };
     for (const ax of ['x', 'z']) {
+      const prev = p[ax];
       p[ax] += v[ax] * dt;
+      if (this.terrain) {   // ladeira: sobe junto; barranco (mais de ~58°) ou degrau de terra alto bloqueia
+        const g = this.groundAt(p.x, p.z), rise = g - p.y;
+        if (rise > EPS) {
+          const run = Math.abs(p[ax] - prev) || 1e-6;
+          if (rise <= stepH && (rise < .03 || rise / run < 1.6) && !any(p.x, g + .002, p.z)) p.y = g;
+          else { p[ax] = prev; v[ax] = 0; continue; }
+        }
+      }
       for (const b of list) {
         if (!this._hit(p.x, p.y, p.z, r, h, b)) continue;
         const rise = b.max.y - p.y;
@@ -87,6 +132,11 @@ export class CollisionWorld {
       } else { if (b.min.y < p.y + h - .5) continue; p.y = b.min.y - h - EPS; }
       v.y = 0;
     }
+    if (this.terrain) {   // chão de terra: apoia; na descida gruda (até 12 cm) para não sair "voando" ladeira abaixo
+      const g = this.groundAt(p.x, p.z);
+      if (p.y < g) { p.y = g; if (v.y < 0) v.y = 0; grounded = true; }
+      else if (!grounded && v.y <= 0 && p.y - g < .12 && fallY - g < .15) { p.y = g; v.y = 0; grounded = true; }
+    }
     if (!grounded && v.y <= 0) grounded = any(p.x, p.y - .03, p.z) || this.anyHit(p.x, p.y - .03, p.z, r, h * .5);
     return grounded;
   }
@@ -96,6 +146,7 @@ export class CollisionWorld {
     if (!this._grid) this._build();
     let best = null;
     const test = b => {
+      if (b.tag === 'blocker') return;   // grade invisível (beira do rio): segura o corpo, não o tiro
       let t0 = 0, t1 = best ? Math.min(max, best.dist) : max, nAx = null, nSign = 0;
       for (const a of AX) {
         if (Math.abs(d[a]) < 1e-9) { if (o[a] < b.min[a] || o[a] > b.max[a]) return; continue; }
@@ -125,6 +176,13 @@ export class CollisionWorld {
       if (ti < tk) { t = ti; ti += dti; i += si; } else { t = tk; tk += dtk; k += sk; }
       if (!isFinite(t)) break;
     }
+    if (this.terrain) {   // o chão de terra também segura tiro e visão
+      const tt = this._terrainRay(o, d, best ? Math.min(max, best.dist) : max);
+      if (tt < Infinity && (!best || tt < best.dist)) {
+        const pt = { x: o.x + d.x * tt, y: o.y + d.y * tt, z: o.z + d.z * tt };
+        best = { dist: tt, point: pt, normal: this._terrainNormal(pt.x, pt.z), tag: 'dirt' };
+      }
+    }
     return best;
   }
 
@@ -140,6 +198,7 @@ export class CollisionWorld {
       Math.max(o.x, o.x + d.x * max) + r + .05, Math.max(o.z, o.z + d.z * max) + r + .05, this._qs || (this._qs = []));
     let best = null;
     for (const b of list) {
+      if (b.tag === 'blocker') continue;
       const mn = { x: b.min.x - r, y: b.min.y - r, z: b.min.z - r }, mx = { x: b.max.x + r, y: b.max.y + r, z: b.max.z + r };
       if (o.x > mn.x && o.x < mx.x && o.y > mn.y && o.y < mx.y && o.z > mn.z && o.z < mx.z) {   // começou dentro: sai pelo lado mais raso
         let pen = Infinity, ax = 'y', sg = 1;
@@ -161,6 +220,13 @@ export class CollisionWorld {
       if (miss || !nAx) continue;
       const normal = { x: 0, y: 0, z: 0 }; normal[nAx] = nSign;
       best = { dist: t0, point: { x: o.x + d.x * t0, y: o.y + d.y * t0, z: o.z + d.z * t0 }, normal, tag: b.tag, inside: false };
+    }
+    if (this.terrain && !best?.inside) {   // esfera contra o chão de terra (granada quicando na ladeira)
+      const g0 = this.groundAt(o.x, o.z);
+      if (o.y - r < g0) return { dist: g0 + r - o.y, point: { ...o }, normal: this._terrainNormal(o.x, o.z), tag: 'dirt', inside: true };
+      const lim = best ? best.dist : max, sub = { x: o.x, y: o.y - r, z: o.z };
+      const tt = this._terrainRay(sub, d, lim);
+      if (tt < lim) best = { dist: tt, point: { x: o.x + d.x * tt, y: o.y + d.y * tt, z: o.z + d.z * tt }, normal: this._terrainNormal(o.x + d.x * tt, o.z + d.z * tt), tag: 'dirt', inside: false };
     }
     return best;
   }

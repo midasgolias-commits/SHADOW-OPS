@@ -1,7 +1,7 @@
 # SHADOW OPS: progresso do projeto
 
 Tiro tático em **terceira pessoa** no navegador (Three.js 0.160 via CDN, módulos ES, sem build).
-Última atualização: 12/11/2026 (novo mapa **CELEIRO**, escolhido na sala junto do WAREHOUSE).
+Última atualização: 13/11/2026 (mapa **FAVELA** e o competitivo virou **MODO FAVELA**: Polícia contra Bandido).
 
 ## Como rodar (Windows)
 Na pasta do jogo, dê dois cliques em **`JOGAR SHADOW OPS.bat`** — ou use o atalho **`SHADOW OPS - JOGAR`** na Área de Trabalho.
@@ -82,8 +82,14 @@ WASD move · Shift corre · Ctrl/C agacha · Espaço pula · botão esquerdo ati
 ## Contratos entre módulos
 - Eixos: x leste, z sul, y cima. **Piso do warehouse em y=0** (o GLB tem o piso em y=0,266 e é deslocado; o piso do arquivo está com as faces
   viradas para baixo, por isso os materiais do mapa usam DoubleSide). Yaw 0 olha para -z. Modelos Mixamo olham para +z (rotação yaw+π).
-- `buildMapData(id)` → `{ name, visual?, glb?, y0, navCell, navSeed, bounds, boxes[], sites[], labels[], zones[], spawns{attackers, defenders, dm} }`
-  (`id` = `warehouse` ou `celeiro`; a lista fica em `MAPS`, `MapData.js`). Mapas com `visual: 'celeiro'` não têm `glb`: o visual vem de `CeleiroMap.js`.
+- `buildMapData(id)` → `{ name, visual?, glb?, y0, navCell, navSeed, bounds, boxes[], sites[], labels[], zones[], spawns{attackers, defenders, dm}, terrain?, floorAt? }`
+  (`id` = `favela`, `warehouse` ou `celeiro`; a lista fica em `MAPS`, `MapData.js`). Mapas com `visual: 'celeiro'` não têm `glb`: o visual vem de `CeleiroMap.js`;
+  `visual: 'favela'` vem de `FavelaMap.js`.
+- **Mapas de morro (FAVELA): o piso NÃO fica em y=0.** Pontos de nascimento e sites trazem `y` (altura do piso); quem posiciona alguém usa `p.y || 0`.
+  `terrain` (grade de alturas) vai para `CollisionWorld.setTerrain`: o chão de terra entra no movimento, no raycast, na linha de visão e na granada.
+  `floorAt(x,z)` vai para a `Navigation` (2,5D: cada célula guarda o piso e só liga com vizinhas de até 0,6 m de desnível). Sem `terrain`, tudo é como antes.
+- Caixas com `tag: 'blocker'` (grade invisível na beira do rio da FAVELA) seguram o corpo, mas tiro, linha de visão e granada passam.
+- Times do competitivo (MODO FAVELA): `att` = **Polícia** (azul), `def` = **Bandido** (vermelho). O lado é escolhido na entrada (`TeamPicker` → `lobby.quickStart(..., { team })`).
 - Armas: `weapons.onAction(tipo, w, extra)` ('shot'|'melee'|'reload') e `weapons.muzzle()` são ligados pelo Game para a animação e o rastro.
 - `player.fp` (câmera nos olhos, luneta) e `player.aimTarget` (mira pela arma) são escritos pelo WeaponSystem.
 - Tudo carregado de arquivo fica em `game.assets`; objetos com `userData.asset`/`userData.instance` não são descartados no `Game.stop()`.
@@ -423,3 +429,29 @@ WASD move · Shift corre · Ctrl/C agacha · Espaço pula · botão esquerdo ati
   Sem Tailwind: CSS próprio em front.css; fontes Inter e JetBrains Mono.
 - Removido o som ao passar o mouse nos botões do menu (MenuFx); fica só o som do clique.
 - Marca nova no topo esquerdo do menu (arte do usuário): ícone de mira em losango (SVG) + SHADOW-OPS em Chakra Petch 700; substitui o logo.png.
+
+## 13/11 — Mapa FAVELA e MODO FAVELA (Polícia contra Bandido)
+- **O competitivo agora se chama MODO FAVELA.** Ao apertar JOGAR aparece a tela **Escolha o seu lado**: **Polícia** (time de ataque, azul) ou
+  **Bandido** (time de defesa, vermelho); as teclas 1 e 2 também escolhem e Esc volta. Código: `src/ui/TeamPicker.js`, `src/styles/teampick.css`.
+  Na sala os times aparecem como POLÍCIA / BANDIDO. As estatísticas continuam na mesma chave (`competitive`).
+- **Mapa FAVELA** (primeiro da lista, também vale no mata-mata): trecho do mapa **FavelaRJ** feito na Unreal pelo usuário (outro projeto,
+  `C:\Users\luiss\Downloads\FavelaRJ_UE`), da avenida do canal até o meio do morro: 143 × 230 m, com 15 a 40 m de desnível.
+  A Polícia nasce na avenida e atravessa a **ponte da Estrada** (a única passagem sobre o rio dentro da arena); o Bandido nasce entre os sites.
+  **Site A = praça**, **Site B = laje plana a oeste**. Rotas a pé: Polícia → A 123 m / → B 161 m; Bandido → A 88 m / → B 28 m.
+  Em volta da arena aparece o mapa inteiro (morro, bairros de fora, mata, rodovias) como cenário; o limite são paredes invisíveis.
+- **Visual** (`src/world/FavelaMap.js`, arquivos em `assets/maps/favela`, ~58 MB): malhas simplificadas da Unreal (43 → 6 milhões de triângulos,
+  meshopt), texturas de 512 px, parede de bloco e reboco e terreno em 5 camadas pela cor do vértice (mesma lógica dos materiais da Unreal),
+  árvores como cartão de longe e modelo cheio a menos de 120 m, casas de fora instanciadas. Carrega na **primeira partida no mapa**
+  (barra "Carregando a favela", ~7 s no PC do dono) e fica guardado entre partidas. Na FAVELA: câmera até 3 km, névoa longe, sol de fim de tarde
+  do noroeste com a caixa de sombra seguindo o jogador. No PC do dono: ~80 fps no chão (10,7 milhões de triângulos na tela).
+- **Colisão** (`src/world/FavelaData.js`, 2,1 MB, GERADO, não editar): 117 mil caixas das casas, vias e valão (voxels de 0,25 × 0,15 m a partir das
+  malhas de colisão da Unreal), terreno como grade de alturas de 0,5 m, piso de cada célula para os bots e 65 grades invisíveis na beira do rio.
+  Para refazer: no projeto FavelaRJ_UE, `cd Web\tools` e `node shadowops-favela.mjs C:\Users\luiss\Downloads\SHADOW-OPS` (6 s);
+  depois `node tools/check-favela-spawns.mjs` aqui (confere nascimentos, sites e a rota Polícia → Bandido; sugere pontos novos).
+  Para trocar o visual: `npm run tudo` em `FavelaRJ_UE\Web\tools` e copiar `Web\public\{glb,tex,inst,mats.json,inst.json,fora.json}` para `assets/maps/favela`.
+- **Motor:** `CollisionWorld` ganhou terreno (`setTerrain`, `groundAt`): anda ladeira acima (barranco de mais de ~58° bloqueia), gruda na descida,
+  tiro e granada batem no chão (faísca de terra, tag `dirt`). `Navigation` ganhou o modo 2,5D. O nascimento do jogador, dos bots e do online usa a altura do ponto.
+  O minimapa mede as caixas a partir do piso do lugar. WAREHOUSE e CELEIRO testados depois da mudança: iguais (sem terreno, tudo em y=0).
+- Testado no navegador (13/11): menu → MODO FAVELA → Polícia → carrega → partida; jogador e bots no piso certo; os bots atravessam a ponte, sobem o morro
+  e trocam tiro perto do Site A em ~25 s; o Bandido nasce no meio do morro. Falta olhar humano: ritmo da partida no mapa grande, bots em becos estreitos,
+  escadarias internas das casas (os bots andam por ruas, escadarias e térreos; lajes e andares de cima ficam para o jogador).

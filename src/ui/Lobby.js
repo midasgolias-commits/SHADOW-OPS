@@ -20,7 +20,7 @@ const DIFF = { k: 'diff', label: 'Dificuldade dos bots', v: 'normal', opts: [['e
 const MAP_CFG = { k: 'map', label: 'Mapa', v: 'warehouse', opts: MAPS.map(m => [m.id, m.name]) };
 const MODES = {
   competitive: {
-    title: 'COMPETITIVO', sub: 'Ataque contra defesa, 5v5, C4, 13 rodadas e prorrogação.', teams: { att: 5, def: 5 },
+    title: 'MODO FAVELA', sub: 'Polícia contra Bandido, 5v5, C4, 13 rodadas e prorrogação.', teams: { att: 5, def: 5 },   // att = Polícia, def = Bandido
     cfg: [MAP_CFG, DIFF, { k: 'round', label: 'Tempo da rodada', v: 100, opts: [[100, '1:40'], [120, '2:00']] },
       { k: 'ot', label: 'Prorrogação', v: 1, opts: [[1, 'Ativada'], [0, 'Desativada']] }]
   },
@@ -160,7 +160,7 @@ export class Lobby {
       case 'team': {   // competitivo: passa para o outro time (primeira vaga livre)
         const cur = s.teams.att.some(p => p?.me) ? 'att' : 'def', other = cur === 'att' ? 'def' : 'att', i = s.teams[other].findIndex(p => !p);
         if (i < 0) { this._log('O outro time está cheio.', 'warn'); break; }
-        s.teams[cur] = s.teams[cur].map(p => p?.me ? null : p); s.teams[other][i] = { me: true }; this._log(`${s.name || 'Jogador'} mudou para ${other === 'att' ? 'ATAQUE' : 'DEFESA'}`); this.hooks.beep?.(); break; }
+        s.teams[cur] = s.teams[cur].map(p => p?.me ? null : p); s.teams[other][i] = { me: true }; this._log(`${s.name || 'Jogador'} mudou para ${other === 'att' ? 'POLÍCIA' : 'DEFESA'}`); this.hooks.beep?.(); break; }
       case 'tab': this.tab = d.tab; this.hooks.beep?.(); break;
       case 'go': if (this.cd) { this._stop(); this._log('Início cancelado', 'warn'); } else this._countdown(); break;
     }
@@ -184,6 +184,12 @@ export class Lobby {
         teams[k][j] = { bot: true, name: n, agent: used.size % AGENTS.length }; put++;
       }
       this.s.teams = teams;
+    }
+    // MODO FAVELA: o lado escolhido na entrada (att = Polícia, def = Bandido). Bandido: troca de lugar com o 1º bot da defesa.
+    const T = this.s.teams;
+    if (opts.team === 'def' && T.att && T.def) {
+      const i = T.att.findIndex(p => p?.me);
+      if (i >= 0) { const b = T.def[0]; T.def[0] = T.att[i]; T.att[i] = b; }
     }
     this._start();
   }
@@ -276,7 +282,7 @@ export class Lobby {
         const me = p.id === on.myId, a = AGENTS[me ? s.agent : i % AGENTS.length];
         const look = this.insp ? this.insp.key === 'p' + p.id : me;
         return `<li class="${me ? 'me' : ''}${look ? ' look' : ''}" data-act="inspect" data-pid="${esc(p.id)}" title="Clique para ver o personagem">${rankIcon(me ? myRankCell() : (p.rank ?? 0), 28)}<span class="nm"><b>${esc(p.name)}</b><small>${p.id === on.hostId ? 'Dono da sala' : 'Amigo'}</small></span><span class="tag">${me ? 'VOCÊ' : 'AMIGO'}</span><span class="ok">PRONTO</span></li>`; }).join('')}</ul></div>`;
-    } else teams = comp ? team('att', 'ATAQUE', 'att') + team('def', 'DEFESA', 'def') : team('ffa', 'TODOS CONTRA TODOS', 'ffa');
+    } else teams = comp ? team('att', 'POLÍCIA', 'att') + team('def', 'BANDIDO', 'def') : team('ffa', 'TODOS CONTRA TODOS', 'ffa');
     const tw = R.querySelector('.lb3-teams'); tw.className = 'lb3-teams lb-teams' + (comp && !on ? ' two' : ''); tw.innerHTML = teams;
     R.querySelector('.lb3-mid').innerHTML = `
         <div class="lb-map"><canvas width="250" height="200"></canvas><b>${this.map.name}</b></div>

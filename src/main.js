@@ -1,4 +1,4 @@
-import { Game } from './core/Game.js';
+import { Game, getFavela } from './core/Game.js';
 import { Minimap } from './ui/Minimap.js';
 import { Lobby } from './ui/Lobby.js';
 import { WeaponSwitch } from './ui/WeaponSwitch.js';
@@ -18,6 +18,7 @@ import { Wardrobe } from './ui/Wardrobe.js';
 import { getProfile } from './ui/Avatars.js';
 import { Boot } from './ui/Boot.js';
 import { FrontMenu } from './ui/FrontMenu.js';
+import { TeamPicker } from './ui/TeamPicker.js';
 
 const $ = id => document.getElementById(id);
 const show = (id, on) => $(id).classList.toggle('hidden', !on);
@@ -62,7 +63,7 @@ const hideMenu = () => { show('menu', false); front?.hide(); };
 let settingsFrom = 'menu', minimap = null, slotsKey = '', hitTimer = 0;
 const wSwitch = new WeaponSwitch($('wswitch'));
 const killFeed = new KillFeed($('feed'), $('killbanner'), game.audio, game.announcer);
-const NAMES = { competitive: 'COMPETITIVO', deathmatch: 'MATA-MATA', training: 'TREINO' };
+const NAMES = { competitive: 'MODO FAVELA', deathmatch: 'MATA-MATA', training: 'TREINO' };
 
 game.hooks.onPause = () => { pausePanel.refresh(); $('restart').classList.toggle('hidden', !!game.online); show('pause', true); };   // online: sem 'Reiniciar' (só reiniciaria para você)
 game.hooks.onResume = () => show('pause', false);
@@ -277,13 +278,18 @@ front = new FrontMenu($('menu'), {
 });
 if (game.assets.ready) front.show();   // já carregou: entra no menu sem esperar
 
+const teamPicker = new TeamPicker();
+
 /** escolheu um modo no menu: treino começa na hora; online abre a sala em "Adicionar"; os outros abrem a sala. */
 function enterMode(m) {
   if (!game.assets.ready) return;
   if (m === 'custom') { customRoom.start(); return; }
   if (m === 'training') { startMode('training', { mode: 'training', title: 'TREINO', me: { name: net.name || 'Jogador' }, loadout: getLoadout() }); return; }
   // competitivo e mata-mata: entra direto no mapa escolhido no menu (sem sala)
-  lobby.quickStart(m, front?.mapId, net.name && net.name !== 'Jogador' ? net.name : null);
+  const nome = net.name && net.name !== 'Jogador' ? net.name : null;
+  // MODO FAVELA (competitivo): antes de entrar, escolhe o lado — Polícia (ataque) ou Bandido (defesa)
+  if (m === 'competitive') { teamPicker.open(team => lobby.quickStart(m, front?.mapId, nome, { team })); return; }
+  lobby.quickStart(m, front?.mapId, nome);
 }
 
 async function startMode(mode, cfg) {
@@ -294,6 +300,16 @@ async function startMode(mode, cfg) {
     catch (e) {
       boot.error('Falha ao carregar o stand de tiro: ' + (e?.message || e));
       report('Falha ao carregar o stand de tiro: ' + (e?.message || e));
+      setTimeout(() => { boot.hide(); showMenu(); }, 3200); return;
+    }
+    boot.done();
+  }
+  if (cfg?.mapId === 'favela' && !getFavela().ready) {   // FAVELA: o mapa (≈60 MB) carrega na primeira partida nele
+    hideMenu(); boot.show('Carregando a favela');
+    try { await getFavela().load((p, t) => boot.set(p, t || 'Carregando a favela')); }
+    catch (e) {
+      boot.error('Falha ao carregar a favela: ' + (e?.message || e));
+      report('Falha ao carregar a favela: ' + (e?.message || e));
       setTimeout(() => { boot.hide(); showMenu(); }, 3200); return;
     }
     boot.done();

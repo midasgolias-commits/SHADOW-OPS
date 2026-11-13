@@ -1,20 +1,29 @@
-/** Grade de navegação (1 m) sobre o CollisionWorld: alcance por flood-fill e caminhos A* (base para os bots). */
+/** Grade de navegação (1 m) sobre o CollisionWorld: alcance por flood-fill e caminhos A* (base para os bots).
+ *  Mapas de morro (FAVELA) passam floorAt(x,z): cada célula guarda a altura do piso e só liga com vizinhas de degrau pequeno (2,5D). */
 const DIRS = [[1, 0, 1], [-1, 0, 1], [0, 1, 1], [0, -1, 1], [1, 1, 1.4142], [1, -1, 1.4142], [-1, 1, 1.4142], [-1, -1, 1.4142]];
+const MAX_RISE = .6;   // degrau máximo entre células vizinhas (m); a colisão sobe .45 por passo e rampas dividem em vários
 
 export class Navigation {
-  constructor(world, bounds, seed, cell = 1) {
+  constructor(world, bounds, seed, cell = 1, floorAt = null) {
     this.world = world; this.b = bounds; this.cell = cell;
     this.nx = Math.ceil((bounds.maxX - bounds.minX) / cell);
     this.nz = Math.ceil((bounds.maxZ - bounds.minZ) / cell);
     this.walk = new Uint8Array(this.nx * this.nz);
+    this.fy = floorAt ? new Float32Array(this.nx * this.nz) : null;   // altura do piso por célula (só nos mapas de morro)
     for (let j = 0; j < this.nz; j++) for (let i = 0; i < this.nx; i++) {
-      const c = this.center(i, j);
-      // y=.5 ignora degraus baixos (<= .45 m), que o jogador sobe sozinho
-      this.walk[j * this.nx + i] = world.anyHit(c.x, .5, c.z, .4, 1.3) ? 0 : 1;
+      const c = this.center(i, j), k = j * this.nx + i;
+      let y = 0;
+      if (floorAt) { y = floorAt(c.x, c.z); if (!Number.isFinite(y)) { this.walk[k] = 0; continue; } this.fy[k] = y; }
+      // .5 acima do piso ignora degraus baixos (<= .45 m), que o jogador sobe sozinho
+      this.walk[k] = world.anyHit(c.x, y + .5, c.z, .4, 1.3) ? 0 : 1;
     }
     this.reach = new Uint8Array(this.walk.length);
     this._flood(seed);
   }
+  /** Dá para passar da célula k para a vizinha n (desnível pequeno)? */
+  _step(k, n) { return !this.fy || Math.abs(this.fy[n] - this.fy[k]) <= MAX_RISE; }
+  /** Altura do piso em (x,z) pela grade (0 nos mapas planos). */
+  floorY(x, z) { if (!this.fy) return 0; const k = this.index(x, z); return k >= 0 ? this.fy[k] : 0; }
 
   center(i, j) { return { x: this.b.minX + (i + .5) * this.cell, z: this.b.minZ + (j + .5) * this.cell }; }
   index(x, z) {
@@ -44,7 +53,7 @@ export class Navigation {
       for (const [di, dj] of DIRS) {
         const a = i + di, b = j + dj; if (a < 0 || b < 0 || a >= this.nx || b >= this.nz) continue;
         const n = b * this.nx + a;
-        if (!this.walk[n] || this.reach[n] || (di && dj && !(this.walk[j * this.nx + a] && this.walk[b * this.nx + i]))) continue;
+        if (!this.walk[n] || this.reach[n] || !this._step(k, n) || (di && dj && !(this.walk[j * this.nx + a] && this.walk[b * this.nx + i]))) continue;
         this.reach[n] = 1; q.push(n);
       }
     }
@@ -53,7 +62,7 @@ export class Navigation {
   randomPoint(rng = Math.random) {
     for (let t = 0; t < 200; t++) {
       const k = (rng() * this.walk.length) | 0;
-      if (this.reach[k]) return this.center(k % this.nx, (k / this.nx) | 0);
+      if (this.reach[k]) { const c = this.center(k % this.nx, (k / this.nx) | 0); c.y = this.fy ? this.fy[k] : 0; return c; }
     }
     return null;
   }
@@ -81,7 +90,7 @@ export class Navigation {
       for (const [di, dj, cost] of DIRS) {
         const a2 = i + di, b2 = j + dj; if (a2 < 0 || b2 < 0 || a2 >= nx || b2 >= this.nz) continue;
         const m = b2 * nx + a2;
-        if (!this.walk[m] || done[m] || (di && dj && !(this.walk[j * nx + a2] && this.walk[b2 * nx + i]))) continue;
+        if (!this.walk[m] || done[m] || !this._step(k, m) || (di && dj && !(this.walk[j * nx + a2] && this.walk[b2 * nx + i]))) continue;
         const ng = G[k] + cost; if (ng < G[m]) { G[m] = ng; prev[m] = k; push([ng + hf(m), m]); }
       }
     }
@@ -93,7 +102,13 @@ export class Navigation {
 
   _clear(p, q) {
     const L = Math.hypot(q.x - p.x, q.z - p.z), n = Math.ceil(L / .4);
-    for (let t = 1; t < n; t++) if (!this.walkable(p.x + (q.x - p.x) * t / n, p.z + (q.z - p.z) * t / n)) return false;
+    let last = this.index(p.x, p.z);
+    for (let t = 1; t < n; t++) {
+      const x = p.x + (q.x - p.x) * t / n, z = p.z + (q.z - p.z) * t / n, k = this.index(x, z);
+      if (k < 0 || !this.walk[k]) return false;
+      if (this.fy && last >= 0 && k !== last && !this._step(last, k)) return false;   // atalho não pula barranco nem muro de arrimo
+      last = k;
+    }
     return true;
   }
   _smooth(pts) {

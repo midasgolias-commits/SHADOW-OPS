@@ -1,0 +1,2434 @@
+{
+"mats": {
+"parede": {
+"side": 0,
+"kind": "parede",
+"tex": "tex/bloco_ceramico.jpg",
+"tile": [
+3.66,
+3.28
+],
+"tex2": "tex/painted_plaster_wall.jpg",
+"tile2": [
+2.3,
+2.3
+]
+},
+"concreto": {
+"side": 0,
+"kind": "pbr",
+"tex": "tex/concrete_layers_02.jpg",
+"tile": [
+2.0,
+2.0
+],
+"metal": 0.0,
+"rough": 0.8
+},
+"piso": {
+"side": 0,
+"kind": "pbr",
+"tex": "tex/granular_concrete.jpg",
+"tile": [
+3.5,
+3.5
+],
+"metal": 0.0,
+"rough": 0.8
+},
+"laje_baixo": {
+"side": 0,
+"kind": "pbr",
+"tex": "tex/proc_laje_lajota.jpg",
+"tile": [
+1.68,
+1.68
+],
+"metal": 0.0,
+"rough": 0.8
+},
+"zinco": {
+"side": 2,
+"kind": "pbr",
+"tex": "tex/rusty_corrugated_iron.jpg",
+"tile": [
+2.2,
+2.2
+],
+"metal": 0.25,
+"rough": 0.8
+},
+"zinco2": {
+"side": 2,
+"kind": "pbr",
+"tex": "tex/worn_corrugated_iron.jpg",
+"tile": [
+2.2,
+2.2
+],
+"metal": 0.45,
+"rough": 0.8
+},
+"fibro": {
+"side": 2,
+"kind": "pbr",
+"tex": "tex/proc_fibrocimento.jpg",
+"tile": [
+2.6,
+2.6
+],
+"metal": 0.0,
+"rough": 0.8
+},
+"lona": {
+"side": 2,
+"kind": "pbr",
+"tex": "tex/proc_lona.jpg",
+"tile": [
+1.4,
+1.4
+],
+"metal": 0.0,
+"rough": 0.8
+},
+"madeira": {
+"side": 2,
+"kind": "pbr",
+"tex": "tex/raw_plank_wall.jpg",
+"tile": [
+1.8,
+1.8
+],
+"metal": 0.0,
+"rough": 0.8
+},
+"enrolar": {
+"side": 2,
+"kind": "pbr",
+"tex": "tex/rusty_metal_shutter.jpg",
+"tile": [
+1.6,
+1.6
+],
+"metal": 0.3,
+"rough": 0.8
+},
+"areia": {
+"side": 0,
+"kind": "pbr",
+"tex": "tex/dirt.jpg",
+"tile": [
+1.6,
+1.6
+],
+"metal": 0.0,
+"rough": 0.8
+},
+"letreiro": {
+"side": 2,
+"kind": "pbr",
+"tex": "tex/proc_letreiros.jpg",
+"tile": [
+1.0,
+1.0
+],
+"metal": 0.0,
+"rough": 0.8
+},
+"azulejo": {
+"side": 0,
+"kind": "pbr",
+"tex": "tex/square_tiled_wall.jpg",
+"tile": [
+1.2,
+1.2
+],
+"metal": 0.0,
+"rough": 0.8
+},
+"piso_ceramica": {
+"side": 0,
+"kind": "pbr",
+"tex": "tex/worn_tile_floor.jpg",
+"tile": [
+2.4,
+2.4
+],
+"metal": 0.0,
+"rough": 0.8
+},
+"ferro": {
+"side": 0,
+"kind": "vc",
+"rough": 0.75,
+"metal": 0.25
+},
+"metal": {
+"side": 2,
+"kind": "vc",
+"rough": 0.55,
+"metal": 0.15
+},
+"plastico": {
+"side": 0,
+"kind": "vc",
+"rough": 0.42,
+"metal": 0.0
+},
+"borracha": {
+"side": 0,
+"kind": "vc",
+"rough": 0.85,
+"metal": 0.0
+},
+"pvc": {
+"side": 0,
+"kind": "vc",
+"rough": 0.45,
+"metal": 0.0
+},
+"cabo": {
+"side": 0,
+"kind": "vc",
+"rough": 0.6,
+"metal": 0.0
+},
+"pano": {
+"side": 2,
+"kind": "vc",
+"rough": 0.8,
+"metal": 0.0
+},
+"vazio": {
+"side": 0,
+"kind": "cor",
+"color": [
+0.008,
+0.007,
+0.006
+],
+"rough": 0.9
+},
+"vidro": {
+"side": 2,
+"kind": "vidro",
+"color": [
+0.03,
+0.045,
+0.05
+]
+},
+"vidro_longe": {
+"side": 0,
+"kind": "cor",
+"color": [
+0.025,
+0.036,
+0.042
+],
+"rough": 0.12
+},
+"lampada": {
+"side": 0,
+"kind": "emissivo",
+"color": [
+1.0,
+0.97,
+0.9
+]
+},
+"terreno": {
+"side": 0,
+"kind": "terreno",
+"texs": [
+"tex/red_dirt_mud_01.jpg",
+"tex/rock_face_03.jpg",
+"tex/aerial_grass_rock.jpg",
+"tex/forest_leaves_03.jpg",
+"tex/cracked_concrete.jpg"
+],
+"tiles": [
+5.0,
+11.0,
+9.0,
+4.5,
+4.0
+]
+},
+"Pintado": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": null,
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"PisoViela": {
+"kind": "unity",
+"color": [
+1.35,
+1.35,
+1.35
+],
+"tex": "tex/concrete_floor_worn_001.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+2.71,
+2.71
+]
+},
+"MetalEscuro": {
+"kind": "unity",
+"color": [
+0.075,
+0.075,
+0.08
+],
+"tex": null,
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Aluminio": {
+"kind": "unity",
+"color": [
+0.6,
+0.6,
+0.58
+],
+"tex": null,
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Tijolo8Furos": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/proc_bloco_ceramico.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"TijoloLado": {
+"kind": "unity",
+"color": [
+0.72,
+0.45,
+0.31
+],
+"tex": null,
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Concreto": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/concrete_layers_02.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+2.71,
+2.71
+]
+},
+"Plastico": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": null,
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Fio": {
+"kind": "unity",
+"color": [
+0.018,
+0.018,
+0.02
+],
+"tex": null,
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"MetalEnferrujado": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/rusty_metal_sheet.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+2.2,
+2.2
+]
+},
+"Borracha": {
+"kind": "unity",
+"color": [
+0.025,
+0.025,
+0.028
+],
+"tex": null,
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Asfalto": {
+"kind": "unity",
+"color": [
+1.2,
+1.2,
+1.2
+],
+"tex": "tex/asphalt_02.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+7.0,
+7.0
+]
+},
+"Marcas": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/Textures_AtlasMarcasV1.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"PisoRachado": {
+"kind": "unity",
+"color": [
+1.2,
+1.18,
+1.14
+],
+"tex": "tex/cracked_concrete.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+4.5,
+4.5
+]
+},
+"Bloco": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/proc_bloco_cimento.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+2.4,
+2.4
+]
+},
+"Chapisco": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/concrete_wall_008.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.23,
+1.23
+]
+},
+"FibraOrelhao": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": null,
+"cut": false,
+"side": 2,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Decal_Placa_Onibus": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/Art_Placa_Onibus.png",
+"cut": true,
+"side": 2,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Tijolo": {
+"kind": "unity",
+"color": [
+0.78,
+0.66,
+0.61
+],
+"tex": "tex/proc_bloco_ceramico.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+2.4,
+2.4
+]
+},
+"Decal_Cartaz_Curso": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/Art_Cartaz_Curso.png",
+"cut": true,
+"side": 2,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Decal_Cartaz_Forro": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/Art_Cartaz_Forro.png",
+"cut": true,
+"side": 2,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"SacoPreto": {
+"kind": "unity",
+"color": [
+0.018,
+0.018,
+0.02
+],
+"tex": null,
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"SacoAzul": {
+"kind": "unity",
+"color": [
+0.05,
+0.14,
+0.34
+],
+"tex": null,
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"VidroCarro": {
+"kind": "unity",
+"color": [
+0.03,
+0.04,
+0.05
+],
+"tex": null,
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Vergalhao": {
+"kind": "unity",
+"color": [
+0.3,
+0.17,
+0.1
+],
+"tex": null,
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Cimalha": {
+"kind": "unity",
+"color": [
+0.78,
+0.75,
+0.68
+],
+"tex": "tex/concrete_layers_02.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+2.71,
+2.71
+]
+},
+"PisoCimento": {
+"kind": "unity",
+"color": [
+1.625,
+1.6,
+1.55
+],
+"tex": "tex/concrete_floor_worn_001.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+3.0,
+3.0
+]
+},
+"ChaoLuz": {
+"kind": "unity",
+"color": [
+0.62,
+0.56,
+0.42
+],
+"tex": null,
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Chapa": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/painted_metal_shutter.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+2.0,
+2.0
+]
+},
+"ChapaGasta": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/worn_corrugated_iron.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.8,
+1.8
+]
+},
+"Madeira": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/raw_plank_wall.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.87,
+1.87
+]
+},
+"Longe": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/Textures_CopaLongeV2.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+420.0,
+420.0
+]
+},
+"Decal_Cartaz_Culto": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/Art_Cartaz_Culto.png",
+"cut": true,
+"side": 2,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Decal_Cartaz_Pagode": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/Art_Cartaz_Pagode.png",
+"cut": true,
+"side": 2,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"PlacaVia0": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/Placas_placa_0.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"PlacaVia1": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/Placas_placa_1.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Decal_Bandeira": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/Art_Bandeira.png",
+"cut": true,
+"side": 2,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Decal_Grafite_Paz": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/Art_Grafite_Paz.png",
+"cut": true,
+"side": 2,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Decal_Grafite_Rio": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/Art_Grafite_Rio.png",
+"cut": true,
+"side": 2,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Decal_Cartaz_Frete": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/Art_Cartaz_Frete.png",
+"cut": true,
+"side": 2,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Rio": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": null,
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Valao": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": null,
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Decal_Cartaz_Quarto": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/Art_Cartaz_Quarto.png",
+"cut": true,
+"side": 2,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"arv_ilha1_casca0": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/arv_ilha1_mat0_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"arv_ilha1_casca1": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/arv_ilha1_mat1_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"arv_ilha1_folhas": {
+"kind": "unity",
+"color": [
+0.72,
+0.92,
+0.6
+],
+"tex": "tex/arv_ilha1_folhas.png",
+"cut": true,
+"side": 2,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"arv_ilha1_longe": {
+"kind": "unity",
+"color": [
+0.7,
+0.82,
+0.58
+],
+"tex": "tex/arv_ilha1_longe.png",
+"cut": true,
+"side": 2,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"arv_jacaranda_casca0": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/arv_jacaranda_mat0_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"arv_jacaranda_casca1": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/arv_jacaranda_mat1_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"arv_jacaranda_folhas": {
+"kind": "unity",
+"color": [
+0.72,
+0.92,
+0.6
+],
+"tex": "tex/arv_jacaranda_folhas.png",
+"cut": true,
+"side": 2,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"arv_jacaranda_longe": {
+"kind": "unity",
+"color": [
+0.7,
+0.82,
+0.58
+],
+"tex": "tex/arv_jacaranda_longe.png",
+"cut": true,
+"side": 2,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"arv_ilha_casca0": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/arv_ilha_mat0_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"arv_ilha_casca1": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/arv_ilha_mat1_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"arv_ilha_folhas": {
+"kind": "unity",
+"color": [
+0.72,
+0.92,
+0.6
+],
+"tex": "tex/arv_ilha_folhas.png",
+"cut": true,
+"side": 2,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"arv_ilha_longe": {
+"kind": "unity",
+"color": [
+0.7,
+0.82,
+0.58
+],
+"tex": "tex/arv_ilha_longe.png",
+"cut": true,
+"side": 2,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"arv_pequena_casca0": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/arv_pequena_mat0_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"arv_pequena_casca1": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/arv_pequena_mat1_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"arv_pequena_folhas": {
+"kind": "unity",
+"color": [
+0.72,
+0.92,
+0.6
+],
+"tex": "tex/arv_pequena_folhas.png",
+"cut": true,
+"side": 2,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"arv_pequena_longe": {
+"kind": "unity",
+"color": [
+0.7,
+0.82,
+0.58
+],
+"tex": "tex/arv_pequena_longe.png",
+"cut": true,
+"side": 2,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"arv_ilha3_casca0": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/arv_ilha3_mat0_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"arv_ilha3_casca1": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/arv_ilha3_mat1_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"arv_ilha3_folhas": {
+"kind": "unity",
+"color": [
+0.72,
+0.92,
+0.6
+],
+"tex": "tex/arv_ilha3_folhas.png",
+"cut": true,
+"side": 2,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"arv_ilha3_longe": {
+"kind": "unity",
+"color": [
+0.7,
+0.82,
+0.58
+],
+"tex": "tex/arv_ilha3_longe.png",
+"cut": true,
+"side": 2,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"arv_bananeira_casca0": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/arv_bananeira_mat0_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"arv_bananeira_casca1": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/arv_bananeira_mat1_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"arv_bananeira_folha2": {
+"kind": "unity",
+"color": [
+0.72,
+0.92,
+0.6
+],
+"tex": "tex/arv_bananeira_mat2_diff.png",
+"cut": true,
+"side": 2,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"arv_bananeira_longe": {
+"kind": "unity",
+"color": [
+0.7,
+0.82,
+0.58
+],
+"tex": "tex/arv_bananeira_longe.png",
+"cut": true,
+"side": 2,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"arv_bananeira2_casca0": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/arv_bananeira2_mat0_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"arv_bananeira2_folha1": {
+"kind": "unity",
+"color": [
+0.72,
+0.92,
+0.6
+],
+"tex": "tex/arv_bananeira2_mat1_diff.png",
+"cut": true,
+"side": 2,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"arv_bananeira2_longe": {
+"kind": "unity",
+"color": [
+0.7,
+0.82,
+0.58
+],
+"tex": "tex/arv_bananeira2_longe.png",
+"cut": true,
+"side": 2,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"arv_imperial_casca0": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/arv_imperial_mat0_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"arv_imperial_casca1": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/arv_imperial_mat1_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"arv_imperial_casca2": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/arv_imperial_mat2_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"arv_imperial_folha3": {
+"kind": "unity",
+"color": [
+0.72,
+0.92,
+0.6
+],
+"tex": "tex/arv_imperial_mat3_diff.png",
+"cut": true,
+"side": 2,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"arv_imperial_longe": {
+"kind": "unity",
+"color": [
+0.7,
+0.82,
+0.58
+],
+"tex": "tex/arv_imperial_longe.png",
+"cut": true,
+"side": 2,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"arv_coqueiro_casca0": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/arv_coqueiro_mat0_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"arv_coqueiro_casca1": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/arv_coqueiro_mat1_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"arv_coqueiro_folha2": {
+"kind": "unity",
+"color": [
+0.72,
+0.92,
+0.6
+],
+"tex": "tex/arv_coqueiro_mat2_diff.png",
+"cut": true,
+"side": 2,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"arv_coqueiro_longe": {
+"kind": "unity",
+"color": [
+0.7,
+0.82,
+0.58
+],
+"tex": "tex/arv_coqueiro_longe.png",
+"cut": true,
+"side": 2,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Planta_fern_02": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/Textures_Planta_fern_02.png",
+"cut": true,
+"side": 2,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Planta_shrub_sorrel_01": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/Textures_Planta_shrub_sorrel_01.png",
+"cut": true,
+"side": 2,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Planta_shrub_03": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/Textures_Planta_shrub_03.png",
+"cut": true,
+"side": 2,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Planta_weed_plant_02": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/Textures_Planta_weed_plant_02.png",
+"cut": true,
+"side": 2,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Capim": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/Textures_CapimReal_A.png",
+"cut": true,
+"side": 2,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"CapimSeco": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/Textures_CapimReal_BV2.png",
+"cut": true,
+"side": 2,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"CapimAlto": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/Textures_CapimReal_C.png",
+"cut": true,
+"side": 2,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_plastic_monobloc_chair_01": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/plastic_monobloc_chair_01_plastic_monobloc_chair_01_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_propane_tank": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/propane_tank_propane_tank_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_plastic_crate_01": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/plastic_crate_01_plastic_crate_01_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_plastic_crate_02": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/plastic_crate_02_plastic_crate_02_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_old_tyre": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/old_tyre_old_tyre_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_car_gol": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/car_gol_car_gol_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"CarroLonge": {
+"kind": "unity",
+"color": [
+0.62,
+0.62,
+0.63
+],
+"tex": null,
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_car_uno": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/car_uno_car_uno_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_car_pickup": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/car_pickup_car_pickup_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_car_pickup_ruina": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/car_pickup_ruina_car_pickup_ruina_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_car_sedan": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/car_sedan_car_sedan_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_car_kombi": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/car_kombi_car_kombi_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_car_caminhao": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/car_caminhao_car_caminhao_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_car_onibus": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/car_onibus_car_onibus_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_boulder_01": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/boulder_01_boulder_01_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_namaqualand_boulder_02": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/namaqualand_boulder_02_namaqualand_boulder_02_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_namaqualand_boulder_04": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/namaqualand_boulder_04_namaqualand_boulder_04_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_rock_07": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/rock_07_rock_07_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_cement_bag": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/cement_bag_cement_bag_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_trashbag": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/trashbag_trashbag_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_plastic_jerrycan": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/plastic_jerrycan_plastic_jerrycan_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_potted_plant_04": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/potted_plant_04_potted_plant_04_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_barrel_03": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/barrel_03_barrel_03_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_wooden_crate_01": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/wooden_crate_01_wooden_crate_01_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_plastic_container": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/plastic_container_plastic_container_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_metal_trash_can": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/metal_trash_can_metal_trash_can_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_cardboard_box_01": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/cardboard_box_01_cardboard_box_01_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_compost_bag_02": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/compost_bag_02_compost_bag_02_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_barrel_stove": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/barrel_stove_barrel_stove_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_Barrel_02": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/Barrel_02_Barrel_02_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_covered_car": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/covered_car_covered_car_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_concrete_road_barrier": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/concrete_road_barrier_concrete_road_barrier_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_br_moto": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/br_moto_br_moto_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_br_bicicleta": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/br_bicicleta_br_bicicleta_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_br_churrasqueira": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/br_churrasqueira_br_churrasqueira_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_br_tanque_roupa": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/br_tanque_roupa_br_tanque_roupa_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_br_carrinho_mao": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/br_carrinho_mao_br_carrinho_mao_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_br_geladeira": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/br_geladeira_br_geladeira_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_br_sofa": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/br_sofa_br_sofa_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_br_mesa_bar": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/br_mesa_bar_br_mesa_bar_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_br_cesto_lixo": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/br_cesto_lixo_br_cesto_lixo_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_br_pneus": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/br_pneus_br_pneus_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_br_pilha_tijolo": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/br_pilha_tijolo_br_pilha_tijolo_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_props1": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/zf_atlas_powercables_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_props3": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/zf_atlas_powercables_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"Objeto_powercables": {
+"kind": "unity",
+"color": [
+1.0,
+1.0,
+1.0
+],
+"tex": "tex/zf_atlas_powercables_diff.jpg",
+"cut": false,
+"side": 0,
+"rough": 0.85,
+"tile": [
+1.0,
+1.0
+]
+},
+"concreto_valao": {
+"kind": "pbr",
+"tex": "tex/concrete_wall_006.jpg",
+"tile": [
+2.5,
+2.5
+],
+"rough": 0.9,
+"side": 0,
+"tint": [
+0.72,
+0.72,
+0.68
+]
+},
+"bope_placas": {
+"kind": "unity",
+"tex": "tex/bope_placas.jpg",
+"color": [
+1,
+1,
+1
+],
+"side": 0,
+"rough": 0.6
+},
+"agua_corrente": {
+"kind": "agua",
+"color": [
+0.2,
+0.22,
+0.16
+],
+"opacity": 0.82
+},
+"agua_queda": {
+"kind": "agua",
+"color": [
+0.55,
+0.57,
+0.52
+],
+"opacity": 0.7
+},
+"espuma": {
+"kind": "agua",
+"color": [
+0.85,
+0.85,
+0.8
+],
+"opacity": 0.6
+},
+"rio": {
+"kind": "agua",
+"color": [
+0.17,
+0.2,
+0.14
+],
+"opacity": 0.92
+}
+},
+"mascara": "tex/mascara.jpg"
+}

@@ -19,7 +19,7 @@ export class MapBuilder {
     }
     for (const s of map.sites) {
       const m = new THREE.Mesh(new THREE.PlaneGeometry(s.w, s.d), PM.siteMark(s.id));
-      m.rotation.x = -Math.PI / 2; m.position.set(s.x, .02, s.z); this.group.add(m);
+      m.rotation.x = -Math.PI / 2; m.position.set(s.x, (s.y || 0) + .04, s.z); this.group.add(m);
     }
     for (const l of map.labels) {
       const m = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 2.4), PM.label(l.text));

@@ -1,10 +1,11 @@
 # SHADOW OPS: guia para continuar em outra conversa
 
-Leia isto primeiro, depois o `PROGRESSO.md`. Atualizado em 12/11/2026 (mapa CELEIRO).
+Leia isto primeiro, depois o `PROGRESSO.md`. Atualizado em 13/11/2026 (mapa FAVELA e MODO FAVELA).
 
 ## 1. O projeto em uma frase
 Tiro tático em **3ª pessoa** no navegador (Three.js 0.160 por CDN, módulos ES, sem build). Jogador = **Izzy**; bots = guarda de máscara;
-mapas = **WAREHOUSE** (GLB) e **CELEIRO** (visual montado em código + GLBs soltos). Modos: Competitivo 5v5, Mata-mata e Treino,
+mapas = **FAVELA** (morro, do projeto FavelaRJ da Unreal), **WAREHOUSE** (GLB) e **CELEIRO** (visual montado em código + GLBs soltos).
+Modos: **MODO FAVELA** (o competitivo 5v5: Polícia contra Bandido, o lado é escolhido ao entrar), Mata-mata e Treino,
 sempre contra bots. Multiplayer online não existe.
 
 ## 2. Estado atual
@@ -12,6 +13,7 @@ sempre contra bots. Multiplayer online não existe.
 - [x] Integração TPS: câmera, Izzy animada, bots com modelo e animações, warehouse com colisão/navegação, armas 3D, luneta, mira da Vector
 - [x] Segundo mapa **CELEIRO** (12/11): visual em `CeleiroMap.js`, colisão gerada, spawns/sites verificados, campo "Mapa" na sala
 - [x] HUD: inventário na troca de arma, feed de abates estilizado, selo de abate
+- [x] Mapa **FAVELA** (13/11): morro com terreno como grade de alturas, bots em 2,5D, ponte, sites na praça e na laje; competitivo renomeado para **MODO FAVELA** com escolha Polícia/Bandido
 - [ ] Parte 5: regras do competitivo (rodadas, C4, economia)
 - [ ] Parte 6: placar/fim do mata-mata, alvos do treino
 - [ ] Parte 7: acabamento, balanceamento, otimização
@@ -26,7 +28,7 @@ dá para testar no navegador do app em `http://127.0.0.1:8000` (o servidor preci
 - Ao copiar arquivos para o PC do usuário, use sempre um caminho de origem novo (uma cópia repetida do mesmo caminho pode não ser regravada).
 
 ## 4. Contratos que não podem quebrar
-Ver "Contratos entre módulos" no `PROGRESSO.md`. Principais: piso em y=0; yaw 0 olha para -z; modelos Mixamo giram yaw+π;
+Ver "Contratos entre módulos" no `PROGRESSO.md`. Principais: piso em y=0 nos galpões (na FAVELA não: nascimentos e sites trazem `y` e o terreno é `CollisionWorld.setTerrain`); yaw 0 olha para -z; modelos Mixamo giram yaw+π;
 `WarehouseData.js` é gerado (não editar à mão); objetos de `game.assets` não são descartados entre partidas.
 
 ## 5. Como foi gerada a colisão do warehouse
@@ -42,7 +44,15 @@ mude `CeleiroMap.js` e rode o gerador. Depois rode `node tools/check-celeiro-spa
 (andável, alcançável do centro e folga ≥ 2 m) e cole os valores em `MapData.js`.
 Obs.: o Gerador lê o Three.js de `C:\Users\Coutinho\Desktop\mapa vagao\three\build\three.module.js` (ajuste `THREE_URL` se mover a pasta).
 
+## 5.2 Como foi gerada a colisão da FAVELA
+`src/world/FavelaData.js` é gerado pelo projeto FavelaRJ (`C:\Users\luiss\Downloads\FavelaRJ_UE\Web\tools\shadowops-favela.mjs`) a partir das
+malhas de colisão exportadas para a Unreal (`ImportMapa/saida/colisao`, `colvias`, `colvalao`, `colterreno`): casas, vias e valão viram caixas
+(voxels 0,25 × 0,15 m + junção gulosa), o terreno vira grade de alturas de 0,5 m e cada célula ganha o piso onde um bot fica de pé
+(a superfície da via mais próxima: tabuleiro da ponte, degrau da escadaria; sem via, o térreo). Abaixo da água do rio (3,6 m) não há piso, e a
+beira do rio ganha grades invisíveis. **Nunca edite à mão**: rode o gerador e depois `node tools/check-favela-spawns.mjs`.
+
 ## 6. Pontos que precisam de olhar humano
+- FAVELA: ritmo da partida (mapa 143 × 230 m, uma só ponte), bots em becos estreitos, desempenho em PCs mais fracos (10 milhões de triângulos na tela).
 - Posição da faca na mão e aparência das armas em movimento (corrida/recarga).
 - Balanceamento dos bots no mapa novo (em Node: jogador parado a 20 m morre em ~2,7 s no normal).
 - Ritmo da câmera e sensibilidade em 3ª pessoa.

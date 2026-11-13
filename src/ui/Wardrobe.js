@@ -15,7 +15,7 @@ const CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 16.2 5.
 const TABS = [['char', 'Personagem', 'visual do operador'], ['weapons', 'Armas', 'skins das armas'], ['profile', 'Perfil', 'nome e avatar'], ['career', 'Carreira', 'estatísticas e KDA']];
 const KINDS = [['Fuzil', 'Fuzis'], ['Submetralhadora', 'Submetralhadoras'], ['Sniper', 'Snipers'], ['Escopeta', 'Escopetas'], ['Pistola', 'Pistolas'], ['Corpo a corpo', 'Facas']];
 const KNIVES = new Set(['knife', 'karambit', 'faca2']);
-const MODE_NAME = { competitive: 'Competitivo', deathmatch: 'Mata-mata' };
+const MODE_NAME = { competitive: 'Modo Favela', deathmatch: 'Mata-mata' };
 const MAP_NAME = { warehouse: 'Warehouse', celeiro: 'Celeiro' };
 const rar = id => RARITY[id] || RARITY.comum;
 const fmtMin = m => { m = Math.round(m || 0); return m < 60 ? `${m} min` : `${Math.floor(m / 60)} h ${m % 60} min`; };
@@ -198,14 +198,14 @@ export class Wardrobe {
     this.panel.querySelector('.wr-count').textContent = `${T.matches} partida${T.matches === 1 ? '' : 's'}`;
     const card = (v, l, big) => `<div class="wr-stat${big ? ' big' : ''}"><b>${v}</b><small>${l}</small></div>`;
     const row = (n, S) => `<tr><th>${n}</th><td>${S.matches}</td><td>${S.wins}</td><td>${S.kills}</td><td>${S.deaths}</td><td>${kda(S).toFixed(2)}</td><td>${hsRate(S)}%</td></tr>`;
-    if (!T.matches) return `<div class="wr-empty"><b>Nenhuma partida ainda</b><p>Jogue Competitivo ou Mata-mata (offline ou online) e suas estatísticas aparecem aqui: abates, mortes, KDA, headshots e vitórias. O Treino não conta.</p></div>`;
+    if (!T.matches) return `<div class="wr-empty"><b>Nenhuma partida ainda</b><p>Jogue o Modo Favela ou Mata-mata (offline ou online) e suas estatísticas aparecem aqui: abates, mortes, KDA, headshots e vitórias. O Treino não conta.</p></div>`;
     return `<div class="wr-career">
       <div class="wr-stats">${card(kda(T).toFixed(2), 'KDA', true)}${card(T.kills, 'Abates')}${card(T.deaths, 'Mortes')}${card(T.assists, 'Assistências')}
         ${card(T.matches, 'Partidas')}${card(T.wins, 'Vitórias')}${card(T.matches ? Math.round(T.wins / T.matches * 100) + '%' : '0%', 'Taxa de vitória')}${card(hsRate(T) + '%', 'Headshots')}
         ${card(Math.round(T.damage), 'Dano total')}${card(T.bestKills, 'Mais abates numa partida')}${card(fmtMin(T.minutes), 'Tempo jogado')}${card(T.matches ? (T.kills / T.matches).toFixed(1) : '0', 'Abates por partida')}</div>
       <h5>Por modo</h5>
       <table class="wr-table"><thead><tr><th>Modo</th><th>Partidas</th><th>Vitórias</th><th>Abates</th><th>Mortes</th><th>KDA</th><th>HS</th></tr></thead>
-        <tbody>${row('Competitivo', st.byMode.competitive)}${row('Mata-mata', st.byMode.deathmatch)}</tbody></table>
+        <tbody>${row('Modo Favela', st.byMode.competitive)}${row('Mata-mata', st.byMode.deathmatch)}</tbody></table>
       <h5>Últimas partidas</h5>
       <ul class="wr-recent">${st.recent.slice(0, 10).map(m => `<li class="${m.won === true ? 'win' : m.won === false ? 'loss' : ''}"><i></i>
         <div><b>${MODE_NAME[m.mode] || m.mode} · ${MAP_NAME[m.map] || m.map || ''}${m.online ? ' · online' : ''}</b><small>${when(m.t)} · ${fmtMin(m.minutes)}</small></div>

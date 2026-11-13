@@ -220,7 +220,7 @@ export class Net {
 }
 
 /** junta no cfg da sala só os campos válidos do patch (a senha vai para net._roomPass, nunca para o cfg) */
-const MODES = ['competitive', 'deathmatch', 'training'], MAPS = ['warehouse', 'celeiro'], DIFFS = ['easy', 'normal', 'hard'];
+const MODES = ['competitive', 'deathmatch', 'training'], MAPS = ['favela', 'warehouse', 'celeiro'], DIFFS = ['easy', 'normal', 'hard'];
 function roomCfg(c, p, count, net) {
   const int = (v, a, b) => { const n = Math.round(Number(v)); return Number.isFinite(n) ? Math.max(a, Math.min(b, n)) : undefined; };
   if (MODES.includes(p.mode)) c.mode = p.mode;

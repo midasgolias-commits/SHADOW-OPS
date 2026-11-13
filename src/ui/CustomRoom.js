@@ -5,7 +5,7 @@ import { getLoadout } from './Loadout.js';
 /**
  * Aba CUSTOM do menu iniciar (no lugar do antigo "Online"): janela de vidro à esquerda, o personagem 3D continua no lugar.
  * Abas internas:
- *  - PARTIDA: modo (Competitivo / Mata-mata / Treino), mapa, quantidade de bots, dificuldade e regra (tempo da rodada ou limite de abates);
+ *  - PARTIDA: modo (Modo Favela / Mata-mata / Treino), mapa, quantidade de bots, dificuldade e regra (tempo da rodada ou limite de abates);
  *  - SALA: máximo de pessoas, sala fechada (ninguém novo entra), senha, encerrar a sala;
  *  - AMIGOS: seu ID, adicionar amigo pelo ID, convidar / entrar, e quem está na sala (o anfitrião pode remover).
  * Sozinho na sala: a partida roda no seu PC com bots (qualquer modo). Com amigos na sala: partida online (Net.js / OnlineMatch.js),
@@ -13,7 +13,7 @@ import { getLoadout } from './Loadout.js';
  */
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const LS = 'shadowops.custom';
-const MODES = [['competitive', 'Competitivo'], ['deathmatch', 'Mata-mata'], ['training', 'Treino']];
+const MODES = [['competitive', 'Modo Favela'], ['deathmatch', 'Mata-mata'], ['training', 'Treino']];
 const DIFFS = [['easy', 'Fácil'], ['normal', 'Normal'], ['hard', 'Difícil']];
 const SLOTS_OF = { competitive: 10, deathmatch: 8, training: 1 };   // vagas da partida (pessoas + bots)
 const DEF = { mode: 'deathmatch', map: 'warehouse', bots: 7, diff: 'normal', round: 100, kills: 30, max: 8, locked: false };

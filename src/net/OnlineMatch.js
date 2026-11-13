@@ -85,7 +85,7 @@ export class OnlineMatch {
     const dm = this.game.mapData.spawns.dm, foes = [...this.remotes.values()].filter(r => r.alive && r.seen);
     const ranked = dm.map(p => ({ p, s: (foes.length ? Math.min(...foes.map(f => Math.hypot(f.pos.x - p.x, f.pos.z - p.z))) : 50) + Math.random() * 6 })).sort((a, b) => b.s - a.s);
     const c = ranked[Math.floor(Math.random() * Math.min(3, ranked.length))].p;
-    return { x: c.x, z: c.z, yaw: Math.random() * TAU - Math.PI };
+    return { x: c.x, y: c.y || 0, z: c.z, yaw: Math.random() * TAU - Math.PI };
   }
 
   update(dt) {

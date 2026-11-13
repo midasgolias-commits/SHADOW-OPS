@@ -6,7 +6,7 @@ export const DIFFS = {
 };
 
 export const AGENT_COLOR = { viper: 0xd9482b, ghost: 0x3d8bd9, rook: 0xc9b458, nova: 0x53d36e };
-export const TEAM_COLOR = { att: 0xc2452a, def: 0x3d7fc9 };
+export const TEAM_COLOR = { att: 0x3d7fc9, def: 0xc2452a };   // MODO FAVELA: ataque = Polícia (azul), defesa = Bandido (vermelho)
 
 /** Distância em que cada arma rende mais (o bot tenta ficar por aí). */
 export const IDEAL = { m4a1s: 24, smg2: 13, sniper2: 48, magnum: 17, ak: 24, aug: 24, rifle: 24, smg: 13, sniper: 48, shotgun: 7, pistol: 17 };

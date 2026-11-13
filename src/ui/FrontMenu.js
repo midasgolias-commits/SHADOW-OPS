@@ -20,17 +20,18 @@ const TIPS = [
   'A luneta da sniper abre em tela cheia; fora dela a arma espalha muito.',
   'Cada arma tem recuo próprio: puxe a mira para baixo nos tiros seguidos.',
   'A faca tem o maior dano por golpe. Ataque pelas costas sempre que puder.',
-  'Na sala você escolhe o mapa: WAREHOUSE ou CELEIRO.',
+  'No Modo Favela você escolhe o lado: Polícia sobe da avenida, Bandido segura o morro.',
+  'Na sala você escolhe o mapa: FAVELA, WAREHOUSE ou CELEIRO.',
   'A dificuldade dos bots vale para a partida inteira.',
   'Mochila: escolha a principal, a secundária e a arma branca antes de jogar.'
 ];
 
 const MODES = {
   competitive: {
-    name: 'COMPETITIVO', tag: '5v5',
-    desc: 'Ataque contra defesa contra bots. Na sala você escolhe o mapa, a dificuldade e o tempo da rodada.',
-    facts: ['2 times de 5 jogadores', 'Sites A e B em cada mapa', 'Warehouse e Celeiro'],
-    play: 'JOGAR', hint: '5 contra 5 com bots. Entra direto no mapa escolhido.', map: true
+    name: 'MODO FAVELA', tag: '5v5',
+    desc: 'Polícia contra Bandido, 5 contra 5 com bots. A Polícia sobe da avenida do canal; o Bandido segura o morro. Ao entrar você escolhe o lado.',
+    facts: ['Polícia ou Bandido: você escolhe', 'Sites A e B em cada mapa', 'Favela, Warehouse e Celeiro'],
+    play: 'JOGAR', hint: 'Escolha o lado e entre direto no mapa escolhido.', map: true
   },
   deathmatch: {
     name: 'MATA-MATA', tag: 'LIVRE',
