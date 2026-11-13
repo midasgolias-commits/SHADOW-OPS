@@ -5,7 +5,9 @@ const NO_KEYS = Object.freeze({});
 const approach = (v, target, step) => v < target ? Math.min(v + step, target) : Math.max(v - step, target);
 
 /** Câmera em 3ª pessoa: atrás do ombro direito. aim (0..1) aproxima a câmera ao mirar. */
-const TPS = { dist: 2.05, shoulder: .48, up: .16, aimDist: .55, aimShoulder: .3, aimUp: .08 };
+// 3ª pessoa no enquadramento do PUBG (medido em vídeo): personagem à esquerda do centro (~40%), cabeça logo abaixo do meio,
+// pernas cortadas embaixo; câmera mais longe e acima da cabeça, com FOV 80°. aim* = mirando pela arma (chega perto do ombro).
+const TPS = { dist: 2.9, shoulder: .48, up: .29, aimDist: .55, aimShoulder: .3, aimUp: .08 };
 
 export class PlayerController {
   constructor(camera, world, settings, audio) {

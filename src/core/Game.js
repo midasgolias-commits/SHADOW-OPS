@@ -28,7 +28,7 @@ import { recordMatch } from './Stats.js';
 
 const DEATH_DELAY = 3.2; // segundos até o jogador reaparecer (o competitivo passa a usar rodadas na Parte 5)
 
-const DEFAULTS = { sens: 1, fov: 90, volume: .6, quality: 'high', ...SETTINGS_DEFAULTS };
+const DEFAULTS = { sens: 1, fov: 80, volume: .6, quality: 'high', ...SETTINGS_DEFAULTS };
 const STEP = 1 / 120; // passo fixo de física
 
 /** CELEIRO: o visual é montado em tempo de execução (geometria própria + 6 GLBs + texturas).
@@ -74,7 +74,12 @@ export class Game {
     });
   }
 
-  _load() { try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem('shadowops.settings') || '{}') }; } catch { return { ...DEFAULTS }; } }
+  _load() {
+    let s; try { s = { ...DEFAULTS, ...JSON.parse(localStorage.getItem('shadowops.settings') || '{}') }; } catch { s = { ...DEFAULTS }; }
+    // câmera nova (enquadramento do PUBG): quem tinha a câmera antiga salva recebe o padrão novo uma vez; depois pode ajustar à vontade
+    if (s.camVer !== 2) { Object.assign(s, { camDist: DEFAULTS.camDist, camSide: DEFAULTS.camSide, camHeight: DEFAULTS.camHeight, fov: DEFAULTS.fov, camVer: 2 }); try { localStorage.setItem('shadowops.settings', JSON.stringify(s)); } catch {} }
+    return s;
+  }
   setSetting(k, v) {
     this.settings[k] = v;
     try { localStorage.setItem('shadowops.settings', JSON.stringify(this.settings)); } catch {}

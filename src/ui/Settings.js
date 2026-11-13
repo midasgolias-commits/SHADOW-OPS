@@ -35,7 +35,7 @@ export const SCHEMA = [
     { k: 'quality', label: 'Qualidade gráfica', type: 'select', options: [['low', 'Baixa'], ['medium', 'Média'], ['high', 'Alta']] }
   ] }
 ];
-export const SETTINGS_DEFAULTS = { volMusica: 1, volAmbiente: 1, volArmas: 1, fullscreen: false, firstPerson: false, adsSens: 1, camDist: 2.05, camSide: .48, camHeight: .16,
+export const SETTINGS_DEFAULTS = { volMusica: 1, volAmbiente: 1, volArmas: 1, fullscreen: false, firstPerson: false, adsSens: 1, camDist: 2.9, camSide: .48, camHeight: .29,
   chStyle: 'dot', chColor: '#ffffff', chSize: 6, chLen: 8, chThick: 2, chGap: 5, chOutline: true, chOpacity: 1, chDynamic: false };
 
 /** Aplica a mira configurada num elemento .xhair (a mira do HUD ou a prévia). */
@@ -63,7 +63,7 @@ export class SettingsPanel {
       if (b.dataset.reset) {
         const keys = Object.keys(SETTINGS_DEFAULTS).filter(k => b.dataset.reset === 'ch' ? k.startsWith('ch') : k.startsWith('cam'));
         if (b.dataset.reset === 'cam') keys.push('fov');
-        for (const k of keys) this._set(k, k === 'fov' ? 90 : SETTINGS_DEFAULTS[k]);
+        for (const k of keys) this._set(k, k === 'fov' ? 80 : SETTINGS_DEFAULTS[k]);
         this.refresh();
       }
     });

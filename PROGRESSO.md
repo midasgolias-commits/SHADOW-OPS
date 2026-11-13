@@ -461,3 +461,9 @@ WASD move · Shift corre · Ctrl/C agacha · Espaço pula · botão esquerdo ati
   confere version.json ao abrir e a cada 5 min e, se houver versão nova e a pessoa não estiver em partida nem em grupo com amigos, recarrega sozinho
   (uma vez por versão, sem loop). Em partida/grupo: aviso no menu e no sino.
 - Atalho JOGAR (PC do dono): antes de abrir, faz git pull --ff-only do GitHub (traz melhorias feitas por outra IA/PC; não mexe se houver mudanças locais).
+
+## 13/11 — Câmera de 3ª pessoa no enquadramento do PUBG
+- Medido no vídeo de PUBG (Sanhok, 0:00–1:15): personagem a ~40% da largura, cabeça logo abaixo do meio (~54%), pernas cortadas no joelho, FOV 80°.
+- PlayerController TPS: dist 2.05→2.9 m, up .16→.29 (ombro .48 igual); Settings padrão camDist 2.9, camHeight .29; FOV padrão 90→80.
+- Game._load: camVer 2 — quem tinha a câmera antiga salva recebe o padrão novo uma vez (depois ajusta em Configurações → Câmera).
+- Conferido em 1280x720: cabeça 0.54, joelho 1.00, pés 1.18, x 0.40 (fração da tela).
