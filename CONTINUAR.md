@@ -17,8 +17,9 @@ sempre contra bots. Multiplayer online não existe.
 - [ ] Parte 7: acabamento, balanceamento, otimização
 
 ## 3. Como o usuário roda e testa
-`GAME 1V1\1 - INICIAR SERVIDOR.bat` e `2 - ABRIR JOGO NO NAVEGADOR.bat`. Se o Claude estiver ligado ao computador do usuário,
-dá para testar no navegador do app em `http://localhost:8000` (o servidor precisa estar aberto). Dicas de teste automatizado no navegador:
+Dois cliques em `JOGAR SHADOW OPS.bat` (ou no atalho `SHADOW OPS - JOGAR` da Área de Trabalho). Ele liga o `tools/server.py` (sem cache)
+e abre o navegador sozinho em `http://127.0.0.1:8000`. Se o Claude estiver ligado ao computador do usuário,
+dá para testar no navegador do app em `http://127.0.0.1:8000` (o servidor precisa estar aberto). Dicas de teste automatizado no navegador:
 - O jogo pausa sem pointer lock: em teste, `__game.pause=()=>{}; __game.paused=false;` e `__game.weapons.active=()=>true`.
 - O botão "Iniciar partida" da sala tem contagem regressiva: espere `__game.running`.
 - Ao trocar arquivos, o navegador guarda módulos em cache: `fetch(arquivo,{cache:'reload'})` antes de recarregar.

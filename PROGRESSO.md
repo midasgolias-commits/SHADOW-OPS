@@ -4,9 +4,10 @@ Tiro tático em **terceira pessoa** no navegador (Three.js 0.160 via CDN, módul
 Última atualização: 12/11/2026 (novo mapa **CELEIRO**, escolhido na sala junto do WAREHOUSE).
 
 ## Como rodar (Windows)
-Na pasta `GAME 1V1`: clique em **`1 - INICIAR SERVIDOR.bat`** (deixe a janela aberta) e depois em **`2 - ABRIR JOGO NO NAVEGADOR.bat`**.
-O servidor agora é `tools/server.py` (**sem cache**: o navegador sempre pega a versão nova; antes o navegador podia mostrar código antigo).
-Manual: na pasta que tem o `index.html`, `py tools/server.py 8000` e abrir `http://localhost:8000`.
+Na pasta do jogo, dê dois cliques em **`JOGAR SHADOW OPS.bat`** — ou use o atalho **`SHADOW OPS - JOGAR`** na Área de Trabalho.
+Ele fecha um servidor antigo, abre o servidor e o jogo no navegador sozinho. Deixe a janela preta aberta enquanto joga.
+O servidor é `tools/server.py` (**sem cache**: o navegador sempre pega a versão nova).
+Manual: na pasta que tem o `index.html`, `py tools/server.py 8000` e abrir `http://127.0.0.1:8000`.
 Ao abrir, o menu mostra "Carregando… %" (mapa, personagens, 31 animações e 6 armas, ~50 MB, só na 1ª vez por aba).
 
 Testes sem navegador (Node, precisam de `npm i three@0.160.0`):
@@ -46,6 +47,7 @@ WASD move · Shift corre · Ctrl/C agacha · Espaço pula · botão esquerdo ati
 
 ## Estrutura
     index.html                      importmap: three + three/addons
+    JOGAR SHADOW OPS.bat            liga o servidor (tools/server.py) e abre o jogo no navegador
     assets/maps/warehouse.glb       mapa (texturas recomprimidas, 14,6 MB)
     assets/maps/celeiro/            mapa CELEIRO: models/*.glb, textures/, CREDITOS.md
     assets/characters/izzy.fbx      jogador (com skin, textura embutida)
