@@ -49,7 +49,7 @@ export class FavelaMap {
 
   async _load(onP) {
     const j = u => fetch(this.base + u).then(r => { if (!r.ok) throw new Error(`${u}: ${r.status}`); return r.json(); });
-    const [mj, man, inst, fora] = await Promise.all([j('mats.json'), j('glb/manifest.json'), j('inst.json'), j('fora.json')]);
+    const [mj, man, inst, fora, cena] = await Promise.all([j('mats.json'), j('glb/manifest.json'), j('inst.json'), j('fora.json'), j('cena.json')]);
     this.mats = mj.mats; this.uMascara.value = this.tex(mj.mascara, false);
     const total = ORDEM.reduce((s, k) => s + (PESO[k] || 1), 0) + 4; let feito = 0;
     const passo = (k, n, i) => onP(Math.min(.99, (feito + (PESO[k] || 1) * (i / Math.max(1, n))) / total), 'Carregando a favela');
@@ -61,9 +61,10 @@ export class FavelaMap {
       feito += PESO[k] || 1;
     }
     for (const f of man.raiz || []) { const s = await this._glb(`glb/${f}`); this._aplica(s, false); this.group.add(s); }   // água do valão
-    // rio: plano grande no nível do gerador (3,6 m)
-    const rio = new THREE.Mesh(new THREE.PlaneGeometry(16000, 3000).rotateX(-Math.PI / 2), this.material('rio', true, false, false));
-    rio.position.set(0, 3.6, 222); rio.receiveShadow = true; this.group.add(rio);
+    // rio: plano no nível do gerador, só na região do mapa recortado (cena.json)
+    const R = cena.rio || { x: 0, z: 222, w: 16000, d: 3000 };
+    const rio = new THREE.Mesh(new THREE.PlaneGeometry(R.w, R.d).rotateX(-Math.PI / 2), this.material('rio', true, false, false));
+    rio.position.set(R.x, cena.nivel_rio ?? 3.6, R.z); rio.receiveShadow = true; this.group.add(rio);
     onP(.9, 'Plantando as árvores');
     await this._fora(fora);
     await this._instancias(inst);

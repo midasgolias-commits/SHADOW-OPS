@@ -52,7 +52,7 @@ malhas de colisão exportadas para a Unreal (`ImportMapa/saida/colisao`, `colvia
 beira do rio ganha grades invisíveis. **Nunca edite à mão**: rode o gerador e depois `node tools/check-favela-spawns.mjs`.
 
 ## 6. Pontos que precisam de olhar humano
-- FAVELA: ritmo da partida (mapa 143 × 230 m, uma só ponte), bots em becos estreitos, desempenho em PCs mais fracos (10 milhões de triângulos na tela).
+- FAVELA: ritmo da partida (arena 143 × 230 m, uma só ponte), bots em becos estreitos. Mapa recortado em 13/11 (só a área marcada, 26 MB, ~2,7 mi de triângulos na tela); o mapa inteiro antigo está em `_to_delete/` para o dono apagar.
 - Posição da faca na mão e aparência das armas em movimento (corrida/recarga).
 - Balanceamento dos bots no mapa novo (em Node: jogador parado a 20 m morre em ~2,7 s no normal).
 - Ritmo da câmera e sensibilidade em 3ª pessoa.

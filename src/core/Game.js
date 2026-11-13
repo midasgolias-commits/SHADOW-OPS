@@ -38,7 +38,7 @@ function getCeleiro() {
   if (!_celeiro) _celeiro = buildCeleiro(THREE, { basePath: 'assets/maps/celeiro/', GLTFLoader });
   return _celeiro;
 }
-/** FAVELA: o visual (≈60 MB de malhas e texturas) carrega uma vez, antes da primeira partida no mapa (main.js mostra a barra). */
+/** FAVELA: o visual (≈26 MB de malhas e texturas, mapa recortado) carrega uma vez, antes da primeira partida no mapa (main.js mostra a barra). */
 let _favela = null;
 export function getFavela() { return _favela || (_favela = new FavelaMap('assets/maps/favela/')); }
 

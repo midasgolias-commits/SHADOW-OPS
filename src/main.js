@@ -317,7 +317,7 @@ async function startMode(mode, cfg) {
     }
     boot.done();
   }
-  if (cfg?.mapId === 'favela' && !getFavela().ready) {   // FAVELA: o mapa (≈60 MB) carrega na primeira partida nele
+  if (cfg?.mapId === 'favela' && !getFavela().ready) {   // FAVELA: o mapa (≈26 MB) carrega na primeira partida nele
     hideMenu(); boot.show('Carregando a favela');
     try { await getFavela().load((p, t) => boot.set(p, t || 'Carregando a favela')); }
     catch (e) {

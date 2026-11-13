@@ -471,3 +471,15 @@ WASD move · Shift corre · Ctrl/C agacha · Espaço pula · botão esquerdo ati
 ## 13/11 — Música removida
 - Sem música no menu nem na partida (pedido do usuário). Music.js e assets/music (sala.mp3, partida.mp3, 8,6 MB) foram para _to_delete/musica;
   saiu o controle "Música" das Configurações. Efeitos sonoros (tiros, passos, locutor) continuam.
+## 13/11 (tarde) — FAVELA recortada e BOPE ao lado do bairro
+- O mapa estava grande e pesado: **só ficou a área que o usuário marcou** (cerca de 1 km²): a arena (parte de baixo da favela, rio, asfalto),
+  a rodovia e o bairro redondo do meio. Saíram o alto da favela, os outros bairros, a serra distante e as árvores de fora.
+  Em volta fica só um anel de chão bem simplificado (sem casas, árvores nem estradas), para a borda não virar um precipício.
+- **BOPE** saiu do platô isolado na montanha e foi para o lado do bairro redondo (centro x 183, z 1061, pátio a 150,7 m, 43 m mais baixo),
+  com o terreno do pátio copiado do platô antigo (o pátio de trás continua um andar abaixo) e uma **estrada nova** até a rua do bairro.
+  O lugar foi escolhido pelo agente level-designer do Game Studios (terreno menos inclinado perto da marca do usuário, sem tirar casa).
+- Resultado (PC do dono): arquivos da favela de 58 MB / 592 para **26 MB / 401**; na partida **151 fps, 2,7 milhões de triângulos, 700 chamadas**
+  (antes 82 fps, 10,7 mi, 1.773); carrega em ~6 s. A arena, a colisão e os nascimentos não mudaram (estão todos dentro da área).
+- O mapa antigo foi para `_to_delete/favela-mapa-inteiro-13-11` (não vai para o GitHub): **apague essa pasta quando quiser**.
+- Para refazer/ajustar: no projeto FavelaRJ_UE, `Web\tools\recorte.json` (polígono da área e BOPE) e `Web\tools\bope-lugar.json` (encaixe e estrada);
+  `npm run tudo` em `Web\tools` e copiar `Web\public\{glb,tex,inst,mats.json,inst.json,fora.json,cena.json}` para `assets/maps/favela` (o que saiu é apagado lá).

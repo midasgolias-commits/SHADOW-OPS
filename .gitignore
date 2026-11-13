@@ -1,2 +1,6 @@
 # arquivos velhos esperando o dono apagar (não vão para o GitHub)
 _to_delete/
+
+# Registros de sessao dos hooks do Claude Code Game Studios (locais, nao vao para o GitHub)
+production/session-logs/
+production/session-state/
