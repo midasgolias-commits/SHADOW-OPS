@@ -17,7 +17,7 @@ if not defined PY goto sempython
 
 echo ==========================================================
 echo   SHADOW OPS - servidor rodando em http://127.0.0.1:8000
-echo   Mapas: WAREHOUSE e CELEIRO (escolha no campo "Mapa" da sala)
+echo   Mapas: WAREHOUSE e CELEIRO (escolha no menu iniciar)
 echo   Sem cache: o navegador sempre pega a versao nova.
 echo   O jogo vai abrir sozinho no navegador.
 echo   Deixe esta janela ABERTA enquanto joga.
