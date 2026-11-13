@@ -422,3 +422,4 @@ WASD move · Shift corre · Ctrl/C agacha · Espaço pula · botão esquerdo ati
   A barra segue o carregamento real (Boot.js anima o número até o valor real; etapas automáticas por porcentagem; PRONTO com ponto verde).
   Sem Tailwind: CSS próprio em front.css; fontes Inter e JetBrains Mono.
 - Removido o som ao passar o mouse nos botões do menu (MenuFx); fica só o som do clique.
+- Marca nova no topo esquerdo do menu (arte do usuário): ícone de mira em losango (SVG) + SHADOW-OPS em Chakra Petch 700; substitui o logo.png.
