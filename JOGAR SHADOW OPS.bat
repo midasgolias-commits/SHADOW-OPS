@@ -5,6 +5,13 @@ rem Atalho do jogo que esta nesta pasta. Funciona de qualquer lugar: entra sozin
 cd /d "%~dp0"
 if not exist index.html goto semjogo
 
+rem 0) Atualiza o jogo com a versao mais nova do GitHub (melhorias feitas em outro PC / por outra IA).
+rem    So avanca se for seguro (--ff-only): se houver mudancas locais sem enviar, nao mexe em nada e o jogo abre como esta.
+where git >nul 2>nul && if exist .git (
+  echo Procurando atualizacoes no GitHub...
+  git pull --ff-only --quiet origin main >nul 2>nul && (echo Jogo atualizado com a versao mais nova.) || (echo Nao deu para atualizar agora [sem internet ou mudancas locais]. Abrindo a versao deste PC.)
+)
+
 rem 1) Fecha um servidor antigo (Python) que ainda esteja na porta 8000
 echo Verificando se ha um servidor antigo aberto na porta 8000...
 powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort 8000 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { $p = Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue; if ($p -and $p.ProcessName -match '^(py|python|pythonw)$') { Stop-Process -Id $p.Id -Force; Write-Host 'Servidor antigo fechado.' } }"

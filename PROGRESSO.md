@@ -455,3 +455,9 @@ WASD move · Shift corre · Ctrl/C agacha · Espaço pula · botão esquerdo ati
 - Testado no navegador (13/11): menu → MODO FAVELA → Polícia → carrega → partida; jogador e bots no piso certo; os bots atravessam a ponte, sobem o morro
   e trocam tiro perto do Site A em ~25 s; o Bandido nasce no meio do morro. Falta olhar humano: ritmo da partida no mapa grande, bots em becos estreitos,
   escadarias internas das casas (os bots andam por ruas, escadarias e térreos; lajes e andares de cima ficam para o jogador).
+
+## 13/11 — Atualização automática (app dos amigos e atalho do dono)
+- App instalado pelo site (botão "Ícone na área de trabalho", PWA): o sw.js já busca HTML/JS/CSS sempre novos; agora o main.js também
+  confere version.json ao abrir e a cada 5 min e, se houver versão nova e a pessoa não estiver em partida nem em grupo com amigos, recarrega sozinho
+  (uma vez por versão, sem loop). Em partida/grupo: aviso no menu e no sino.
+- Atalho JOGAR (PC do dono): antes de abrir, faz git pull --ff-only do GitHub (traz melhorias feitas por outra IA/PC; não mexe se houver mudanças locais).

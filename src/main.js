@@ -204,9 +204,23 @@ net.start().then(() => { net.pingAll(); onlinePanel.render(); });   // fica onli
   const mine = document.querySelector('meta[name="build"]')?.content || 'dev', el = document.querySelector('.mm-ver');
   if (el) el.textContent = mine === 'dev' ? 'versão local (PC do dono)' : 'versão ' + mine;
   if (mine === 'dev') return;
-  fetch('version.json?x=' + Date.now(), { cache: 'no-store' }).then(r => r.json()).then(j => {
-    if (j.v && j.v !== mine && el) { el.textContent = 'Versão nova disponível (' + j.v + '): aperte Ctrl+Shift+R'; el.classList.add('old'); notify.push({ kind: 'game', text: 'Versão nova do jogo disponível (' + j.v + '). Aperte Ctrl+Shift+R para atualizar.' }); }
+  // ATUALIZAÇÃO AUTOMÁTICA (app instalado na área de trabalho dos amigos): se o site tem versão nova e a pessoa não está jogando
+  // nem num grupo com amigos, recarrega sozinho (uma vez por versão, para nunca entrar em loop). Senão, avisa no menu e no sino.
+  let warned = '';
+  const check = startup => fetch('version.json?x=' + Date.now(), { cache: 'no-store' }).then(r => r.json()).then(j => {
+    if (!j.v || j.v === mine) return;
+    const busy = game.running || (net.room && net.room.players.length > 1);
+    let tried = ''; try { tried = sessionStorage.getItem('shadowops.upd') || ''; } catch {}
+    if (!busy && tried !== j.v) {
+      try { sessionStorage.setItem('shadowops.upd', j.v); } catch {}
+      if (el) el.textContent = 'Atualizando para a versão ' + j.v + '…';
+      setTimeout(() => location.reload(), startup ? 200 : 1500); return;
+    }
+    if (el) { el.textContent = 'Versão nova (' + j.v + '): feche e abra o jogo para atualizar'; el.classList.add('old'); }
+    if (warned !== j.v) { warned = j.v; notify.push({ kind: 'game', text: 'Versão nova do jogo (' + j.v + '). Feche e abra o jogo para atualizar.' }); }
   }).catch(() => {});
+  check(true);
+  setInterval(() => { if (!document.hidden) check(false); }, 5 * 60e3);   // a cada 5 min (jogo aberto por muito tempo)
 })();
 window.__menuFx = new MenuFx($('menu'), () => game.settings.volume * (game.settings.volAmbiente ?? 1));   // faíscas, luzes e som ao passar o mouse
 window.__music = new Music(() => game.settings.volume * (game.settings.volMusica ?? 1));   // música ambiente: sala e partida
