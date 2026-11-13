@@ -1,9 +1,9 @@
 /** MODO FAVELA: ao entrar, o jogador escolhe o lado. Polícia = time de ataque ('att'), Bandido = time de defesa ('def').
  *  open(onPick) mostra a tela; onPick('att' | 'def') é chamado no clique (ou teclas 1 / 2). Esc ou "Voltar" fecha sem escolher. */
 const SIDES = [
-  { team: 'att', name: 'POLÍCIA', key: '1', desc: 'Sobe da avenida do canal, atravessa a ponte e ataca os sites A e B.',
+  { team: 'att', name: 'POLÍCIA', key: '1', desc: 'Lado do ataque: invade o mapa e toma os sites A e B.',
     icon: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 3 41 9.5V22c0 11.5-7.4 19.6-17 23C14.4 41.6 7 33.5 7 22V9.5z" fill="currentColor"/><path d="m24 13.5 3.2 6.5 7.1 1-5.15 5 1.2 7.1L24 29.8l-6.35 3.3 1.2-7.1-5.15-5 7.1-1z" fill="#081426"/></svg>' },
-  { team: 'def', name: 'BANDIDO', key: '2', desc: 'Nasce no meio do morro e segura a praça e a laje contra a invasão.',
+  { team: 'def', name: 'BANDIDO', key: '2', desc: 'Lado da defesa: nasce perto dos sites e segura A e B contra a invasão.',
     icon: '<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="19" r="13" fill="currentColor"/><path d="M9.5 22.5c5 3.4 24 3.4 29 0L35.6 37c-3.8 5.4-19.4 5.4-23.2 0z" fill="#26090a"/><circle cx="19" cy="17" r="2.3" fill="#26090a"/><circle cx="29" cy="17" r="2.3" fill="#26090a"/></svg>' }
 ];
 

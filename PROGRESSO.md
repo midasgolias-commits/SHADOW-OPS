@@ -483,3 +483,9 @@ WASD move · Shift corre · Ctrl/C agacha · Espaço pula · botão esquerdo ati
 - O mapa antigo foi para `_to_delete/favela-mapa-inteiro-13-11` (não vai para o GitHub): **apague essa pasta quando quiser**.
 - Para refazer/ajustar: no projeto FavelaRJ_UE, `Web\tools\recorte.json` (polígono da área e BOPE) e `Web\tools\bope-lugar.json` (encaixe e estrada);
   `npm run tudo` em `Web\tools` e copiar `Web\public\{glb,tex,inst,mats.json,inst.json,fora.json,cena.json}` para `assets/maps/favela` (o que saiu é apagado lá).
+
+## 13/11 — Mapa FAVELA apagado (Modo Favela continua)
+- A pedido do dono o mapa FAVELA saiu do jogo: FavelaMap.js, FavelaData.js, assets/maps/favela (26 MB) e tools/check-favela-spawns.mjs apagados;
+  sem opção FAVELA no menu, na aba CUSTOM e no online. Game.js/main.js/MapData.js sem o código do mapa.
+- MODO FAVELA (Polícia x Bandido com escolha de lado) continua e foi testado em WAREHOUSE e CELEIRO (menu e CUSTOM); textos da escolha de lado
+  agora genéricos. O motor de terreno/navegação 2,5D ficou (serve para mapas futuros). Recuperável pelo git (79a429d, daa5232).

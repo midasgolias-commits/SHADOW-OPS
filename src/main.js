@@ -1,4 +1,4 @@
-import { Game, getFavela } from './core/Game.js';
+import { Game } from './core/Game.js';
 import { Minimap } from './ui/Minimap.js';
 import { Lobby } from './ui/Lobby.js';
 import { WeaponSwitch } from './ui/WeaponSwitch.js';
@@ -313,16 +313,6 @@ async function startMode(mode, cfg) {
     catch (e) {
       boot.error('Falha ao carregar o stand de tiro: ' + (e?.message || e));
       report('Falha ao carregar o stand de tiro: ' + (e?.message || e));
-      setTimeout(() => { boot.hide(); showMenu(); }, 3200); return;
-    }
-    boot.done();
-  }
-  if (cfg?.mapId === 'favela' && !getFavela().ready) {   // FAVELA: o mapa (≈26 MB) carrega na primeira partida nele
-    hideMenu(); boot.show('Carregando a favela');
-    try { await getFavela().load((p, t) => boot.set(p, t || 'Carregando a favela')); }
-    catch (e) {
-      boot.error('Falha ao carregar a favela: ' + (e?.message || e));
-      report('Falha ao carregar a favela: ' + (e?.message || e));
       setTimeout(() => { boot.hide(); showMenu(); }, 3200); return;
     }
     boot.done();

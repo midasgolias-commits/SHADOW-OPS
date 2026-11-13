@@ -1,0 +1,6 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "shadow-ops", "runtimeExecutable": "python", "runtimeArgs": ["tools/server.py", "8000"], "port": 8000 }
+  ]
+}

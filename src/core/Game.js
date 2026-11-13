@@ -7,7 +7,6 @@ import { PlayerController } from '../player/PlayerController.js';
 import { PM } from '../utils/ProceduralMaterials.js';
 import { buildMapData, buildRangeData } from '../world/MapData.js';
 import { buildCeleiro } from '../world/CeleiroMap.js';
-import { FavelaMap } from '../world/FavelaMap.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RangeTraining } from '../modes/RangeTraining.js';
 import { OnlineMatch } from '../net/OnlineMatch.js';
@@ -38,9 +37,6 @@ function getCeleiro() {
   if (!_celeiro) _celeiro = buildCeleiro(THREE, { basePath: 'assets/maps/celeiro/', GLTFLoader });
   return _celeiro;
 }
-/** FAVELA: o visual (≈26 MB de malhas e texturas, mapa recortado) carrega uma vez, antes da primeira partida no mapa (main.js mostra a barra). */
-let _favela = null;
-export function getFavela() { return _favela || (_favela = new FavelaMap('assets/maps/favela/')); }
 
 export class Game {
   constructor(host) {
@@ -122,7 +118,7 @@ export class Game {
       : mode === 'training' ? { ...sp.dm[0] }   // treino: dentro da baia, olhando para os alvos
       : config?.online ? { ...sp.dm[(config.online.slot ?? 0) * 3 % sp.dm.length], yaw: Math.random() * Math.PI * 2 }   // online: cada um num ponto diferente
       : { ...sp.dm[Math.floor(Math.random() * sp.dm.length)], yaw: Math.random() * Math.PI * 2 };
-    this.player.respawn(new THREE.Vector3(pt.x, pt.y || 0, pt.z), pt.yaw);   // y: piso do ponto nos mapas de morro (FAVELA)
+    this.player.respawn(new THREE.Vector3(pt.x, pt.y || 0, pt.z), pt.yaw);   // y: piso do ponto (mapas com altura)
     this.player.vaultCurve = this.assets.clips.knife_vault?.userData?.root || null;   // caminho do Big Jump (salto por cima)
     this.camera.fov = vfov(this.settings.fov, this.camera.aspect); this.camera.updateProjectionMatrix();
     // Parte 3: todas as armas liberadas em todos os modos (a economia do competitivo restringe isso na Parte 5)
@@ -266,10 +262,9 @@ export class Game {
 
   _buildMap() {
     const s = this.scene;
-    this.camera.near = .05; this.camera.far = 300;   // galpões e treino: perto e curto (a FAVELA muda isso)
+    this.camera.near = .05; this.camera.far = 300;   // galpões e treino: perto e curto
     if (this.mode === 'training') return this._buildRange();
     const mapId = this.config?.mapId || 'warehouse';
-    if (mapId === 'favela') return this._buildFavela();
     const celeiro = mapId === 'celeiro';
     const sky = celeiro ? 0x9fb8c9 : 0x8fa3b2;
     s.background = new THREE.Color(sky); s.fog = new THREE.Fog(sky, celeiro ? 70 : 60, celeiro ? 190 : 160);
@@ -285,37 +280,6 @@ export class Game {
     this.mapBuilder = new MapBuilder(s); this.mapBuilder.build(this.mapData, this.world);
     this.nav = new Navigation(this.world, this.mapData.bounds, this.mapData.navSeed || this.mapData.spawns.attackers[0], this.mapData.navCell || 1);
     this._addMapModel();
-  }
-
-  /** FAVELA: morro a céu aberto. Céu e névoa longe (dá para ver o morro todo), sol de fim de tarde vindo do noroeste
-   *  (o mesmo da Unreal) com a sombra acompanhando o jogador, terreno como mapa de alturas e navegação em 2,5D. */
-  _buildFavela() {
-    const s = this.scene, sky = 0xb9c6cf;
-    this.camera.near = .1; this.camera.far = 3000;   // vê o morro inteiro; .1 perto mantém a precisão da profundidade ao longe
-    s.background = new THREE.Color(0x9fb4c4); s.fog = new THREE.Fog(sky, 180, 2600);
-    s.add(new THREE.HemisphereLight(0xbfd4e6, 0x6b5a45, 1.3));
-    s.add(new THREE.AmbientLight(0xffffff, .25));
-    const sun = this.sun = new THREE.DirectionalLight(0xfff0dc, 2.6);
-    this._sunDir = new THREE.Vector3(-0.513, 0.743, -0.430).normalize();
-    sun.castShadow = true;
-    Object.assign(sun.shadow.camera, { left: -70, right: 70, top: 70, bottom: -70, near: 10, far: 900 });
-    sun.shadow.camera.updateProjectionMatrix();
-    sun.shadow.bias = -.0004; sun.shadow.normalBias = .4; s.add(sun, sun.target); this._applyQuality();
-    this.mapData = buildMapData('favela');
-    this.mapBuilder = new MapBuilder(s); this.mapBuilder.build(this.mapData, this.world);
-    this.world.setTerrain(this.mapData.terrain);
-    this.nav = new Navigation(this.world, this.mapData.bounds, this.mapData.navSeed, this.mapData.navCell, this.mapData.floorAt);
-    const fav = getFavela();
-    if (fav.ready) s.add(fav.group);
-    else console.error('FAVELA: o visual ainda não carregou (main.js carrega antes da partida).');
-  }
-  /** FAVELA, a cada quadro: a caixa de sombra do sol segue o jogador (em passos de texel, sem tremer) e as árvores perto viram modelo cheio. */
-  _favelaFrame() {
-    const p = this.player?.pos, sun = this.sun; if (!p || !sun) return;
-    const S = sun.shadow.camera.right, tx = (2 * S) / sun.shadow.mapSize.x;
-    const fx = Math.round(p.x / tx) * tx, fz = Math.round(p.z / tx) * tx;
-    sun.target.position.set(fx, p.y, fz); sun.position.set(fx, p.y, fz).addScaledVector(this._sunDir, 450);
-    getFavela().update(this.camera.position);
   }
 
   /** Treino: stand de tiro fechado (FBX). Luz de dentro da sala (o teto tapa qualquer "sol" de fora). */
@@ -453,7 +417,6 @@ export class Game {
     }
     if (this.player) this.player.firstPerson = !!this.settings.firstPerson && !this.player.dead;
     this.nades?.applyShake(this.camera);
-    if (this.mapData?.visual === 'favela') this._favelaFrame();
     ensureWeaponEnv(this.renderer);
     this.renderer.render(this.scene, this.camera);
     if (this.showVM && this.player?.firstPerson) this.fpv.render(this.renderer, this.camera.aspect, this.camera.fov);   // braços e arma por cima
