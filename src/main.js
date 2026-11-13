@@ -46,7 +46,7 @@ if (new URLSearchParams(location.search).has('autoshot')) import('../tools/fpche
 const boot = new Boot($('boot'));
 const loadInfo = $('loadInfo');
 let front = null;   // menu principal novo (criado mais abaixo, depois da sala)
-const TITLE_LOAD = 'Carregando mapa, personagens e animações';
+const TITLE_LOAD = '';   // tela de carregamento: sem texto fixo, usa as etapas automáticas do Boot.js
 boot.show(TITLE_LOAD);
 game.assets.load(p => boot.set(p, TITLE_LOAD))
   .then(() => { boot.done(); loadInfo.textContent = ''; loadInfo.classList.add('ok');

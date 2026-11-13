@@ -1,61 +1,67 @@
 /**
- * Tela de carregamento (abre antes do menu): logo, barra de progresso, porcentagem e dicas que trocam sozinhas.
- * Fica na frente de tudo até os modelos terminarem; depois desaparece com um fade e o menu entra.
- * Também é usada quando o stand de tiro precisa carregar (primeira vez que o treino abre).
+ * Tela de carregamento (design novo do usuário, minimalista/tático): emblema, SHADOW-OPS, barra fina com porcentagem e etapa.
+ * A barra segue o carregamento DE VERDADE (modelos, animações, armas, mapa); o número anda suave até o valor real.
+ * Em cima: versão (build) e onde o jogo está rodando. Também é usada quando o stand de tiro carrega pela primeira vez.
  */
-const TIPS = [
-  'Botão direito mira pela arma (VX-47, AUG, Vector e sniper).',
-  'V alterna entre 1ª e 3ª pessoa durante a partida.',
-  'Ctrl ou C agacha: você fica menor e mais difícil de acertar.',
-  'Q volta para a arma anterior sem passar pelas outras.',
-  'Esc pausa e abre as configurações sem sair da partida.',
-  'No CELEIRO, os vagões e os containers servem de cobertura.',
-  'A faca corre mais rápido. Corre e aperta Espaço duas vezes para saltar por cima.',
-  'Mire na cabeça: o dano é maior e o selo de abate muda.',
-  'Cada mapa tem sites A e B. No competitivo, os times nascem em lados opostos.',
-  'A mochila define sua arma principal, a secundária e a arma branca.'
+const STAGES = [   // etapa mostrada conforme a porcentagem (o carregamento real acontece em paralelo)
+  [0, 'INICIALIZANDO SISTEMAS...'],
+  [12, 'VERIFICANDO ARQUIVOS...'],
+  [28, 'CARREGANDO OPERADORES...'],
+  [45, 'CARREGANDO ANIMAÇÕES...'],
+  [62, 'CARREGANDO ARMAMENTO...'],
+  [80, 'CARREGANDO MAPA...'],
+  [93, 'COMPILANDO SHADERS...']
 ];
 
 export class Boot {
   constructor(root) {
     this.root = root;
     this.bar = root.querySelector('.boot-bar i');
+    this.track = root.querySelector('.boot-bar');
     this.pctEl = root.querySelector('.boot-pct');
     this.stateEl = root.querySelector('.boot-state');
-    this.tipEl = root.querySelector('.boot-tip');
-    this.i = Math.floor(Math.random() * TIPS.length);
-    this.label = 'Carregando';
-    this.p = 0;
-    if (this.tipEl) this.tipEl.textContent = TIPS[this.i];
-    this.timer = setInterval(() => this._tip(), 4200);
+    this.msgEl = root.querySelector('.boot-msg');
+    this.label = null; this.target = 0; this.shown = 0; this.raf = 0;
+    const build = document.querySelector('meta[name="build"]')?.content || 'dev';
+    const local = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+    const b = root.querySelector('.boot-build'); if (b) b.textContent = `BUILD ${build === 'dev' ? 'LOCAL' : build} // WEBGL`;
+    const sv = root.querySelector('.boot-sv'); if (sv) sv.textContent = local ? 'SV: LOCAL' : 'SV: ONLINE';
   }
-  _tip() {
-    if (!this.tipEl || this.root.classList.contains('hidden')) return;
-    this.i = (this.i + 1) % TIPS.length;
-    this.tipEl.classList.remove('on');
-    setTimeout(() => { this.tipEl.textContent = TIPS[this.i]; this.tipEl.classList.add('on'); }, 220);
-  }
-  /** volta para a tela de carregamento (ex.: antes de carregar o stand de tiro) */
-  show(label = 'Carregando') {
+  /** volta para a tela de carregamento (label = etapa fixa, ex.: stand de tiro; sem label usa as etapas automáticas) */
+  show(label) {
     clearTimeout(this._end);
-    this.root.classList.remove('hidden', 'out', 'err');
-    this.label = label;
-    if (this.stateEl) this.stateEl.textContent = label + '…';
-    this.set(0, label);
+    this.root.classList.remove('hidden', 'out', 'err', 'ready');
+    this.label = label && !/^carregando$/i.test(label) && !/carregando o jogo/i.test(label) ? label : null;
+    if (this.msgEl) this.msgEl.textContent = '';
+    this.target = 0; this.shown = 0; this._draw();
   }
-  set(p, label) {
-    if (label) { this.label = label; if (this.stateEl) this.stateEl.textContent = label + '…'; }
-    this.p = Math.max(0, Math.min(1, p || 0));
-    const pc = Math.round(this.p * 100);
+  /** p = 0..1 (progresso real) */
+  set(p) {
+    this.target = Math.max(this.target, Math.max(0, Math.min(1, p || 0)));   // nunca volta para trás
+    if (!this.raf) this.raf = requestAnimationFrame(this._tick);
+  }
+  _tick = () => {   // o número anda suave até o valor real (sem saltos secos)
+    this.raf = 0;
+    const d = this.target - this.shown;
+    this.shown = Math.abs(d) < .002 ? this.target : this.shown + d * .18;
+    this._draw();
+    if (this.shown !== this.target) this.raf = requestAnimationFrame(this._tick);
+  };
+  _draw() {
+    const pc = Math.round(this.shown * 100);
     if (this.bar) this.bar.style.width = pc + '%';
-    if (this.pctEl) this.pctEl.textContent = pc + '%';
+    if (this.track) this.track.setAttribute('aria-valuenow', pc);
+    if (this.pctEl) this.pctEl.firstChild.textContent = pc;
+    if (this.stateEl && !this.root.classList.contains('err') && !this.root.classList.contains('ready')) {
+      const t = this.label ? this.label.toUpperCase() + '...' : STAGES.filter(s => pc >= s[0]).pop()[1];
+      if (this.stateEl.textContent !== t) this.stateEl.textContent = t;
+    }
   }
-  /** carregou tudo: completa a barra e sai de cena */
+  /** carregou tudo: completa a barra, mostra PRONTO (ponto verde) e sai de cena */
   done() {
-    this.set(1, 'Pronto');
-    if (this.stateEl) this.stateEl.textContent = 'PRONTO';
-    this.root.classList.add('out');
-    this._end = setTimeout(() => this.root.classList.add('hidden'), 600);
+    this.target = this.shown = 1; this._draw();
+    this.root.classList.add('ready'); if (this.stateEl) this.stateEl.textContent = 'PRONTO';
+    this._end = setTimeout(() => { this.root.classList.add('out'); this._end = setTimeout(() => this.root.classList.add('hidden'), 600); }, 350);
   }
   /** esconde na hora (ex.: depois de mostrar um erro) */
   hide() { clearTimeout(this._end); this.root.classList.add('hidden'); }
@@ -63,8 +69,8 @@ export class Boot {
   error(msg) {
     this.root.classList.add('err');
     if (this.stateEl) this.stateEl.textContent = 'FALHA AO CARREGAR';
-    if (this.tipEl) { this.tipEl.textContent = msg; this.tipEl.classList.add('on'); }
+    if (this.msgEl) this.msgEl.textContent = msg;
     if (this.bar) this.bar.style.width = '100%';
-    if (this.pctEl) this.pctEl.textContent = '!';
+    if (this.pctEl) this.pctEl.firstChild.textContent = '!';
   }
 }

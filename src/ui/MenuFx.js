@@ -1,7 +1,7 @@
 /**
  * Efeitos do menu inicial:
  * - faíscas laranja subindo e apagando (fade), poeira flutuando na luz e brilho das lâmpadas tremendo de leve (como luz real);
- * - som curto ao passar o mouse nos cartões (Competitivo / Mata-mata / Treino); o cartão inteiro é clicável.
+ * - o cartão inteiro é clicável (som só no clique, não ao passar o mouse).
  * Coordenadas das lâmpadas medidas na arte de fundo (1672x941); o fundo usa "cover", então converto do mesmo jeito.
  */
 const ART_W = 1672, ART_H = 941;
@@ -17,9 +17,7 @@ export class MenuFx {
     this.menu = menu; this.getVolume = getVolume; this.cv = menu.querySelector('.mm-fx'); this.ctx = this.cv.getContext('2d');
     this.parts = []; this.dust = []; this.t = 0; this.last = performance.now(); this.ac = null;
     for (let i = 0; i < 70; i++) this.dust.push(this._mote(true));
-    menu.addEventListener('mouseover', e => {   // delegação: vale também para botões criados depois (ex.: personagens do Customizar)
-      const c = e.target.closest('.mm-card, .fm-hover'); if (c && !c.disabled && !c.contains(e.relatedTarget)) this.hover();
-    });
+    // (som ao passar o mouse removido a pedido do usuário: fica só o som do clique)
     menu.querySelectorAll('.mm-card').forEach(c => c.addEventListener('click', e => { if (!e.target.closest('button')) c.querySelector('button').click(); }));
     const unlock = () => { this._audio(); };
     addEventListener('pointerdown', unlock, true); addEventListener('keydown', unlock, true);

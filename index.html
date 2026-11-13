@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="build" content="13/11 01:17">
+<meta name="build" content="13/11 01:27">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SHADOW OPS — Tático em 3ª pessoa</title>
 <link rel="manifest" href="manifest.webmanifest">
@@ -20,7 +20,7 @@
 <link rel="stylesheet" href="src/styles/lobby3.css">
 <link rel="stylesheet" href="src/styles/ranks.css">
 <link rel="stylesheet" href="src/styles/front.css">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&family=Barlow:wght@500&display=swap">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&family=Barlow:wght@500&family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <script type="importmap">
 { "imports": {
   "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
@@ -32,15 +32,18 @@
 <div id="view"></div>
 
 <!-- tela de carregamento: fica na frente até os modelos carregarem (src/ui/Boot.js) -->
-<section id="boot" class="boot">
-  <div class="boot-bg" aria-hidden="true"></div>
-  <div class="boot-box">
-    <img class="boot-logo" src="assets/ui/menu/logo.png" alt="SHADOW OPS">
-    <p class="boot-state">Carregando…</p>
-    <div class="boot-bar"><i></i></div>
-    <div class="boot-row"><b class="boot-pct">0%</b><p class="boot-tip"></p></div>
-  </div>
-  <p class="boot-foot">SHADOW OPS · tático em 3ª pessoa</p>
+<section id="boot" class="boot" aria-live="polite">
+  <header class="boot-top"><span class="boot-build">BUILD</span><span class="boot-sv"></span></header>
+  <main class="boot-mid">
+    <svg class="boot-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 2L28 9V23L16 30L4 23V9L16 2Z" stroke="currentColor" stroke-width="1.2"/><path d="M16 8L22 11.5V18.5L16 22L10 18.5V11.5L16 8Z" stroke="currentColor" stroke-width="1" stroke-opacity=".5"/><circle cx="16" cy="15" r="1.5" fill="currentColor"/></svg>
+    <h1 class="boot-title">SHADOW-OPS</h1>
+    <div class="boot-rule"></div>
+  </main>
+  <footer class="boot-foot">
+    <div class="boot-row"><div class="boot-status"><span class="boot-dot"></span><p class="boot-state">INICIALIZANDO SISTEMAS...</p></div><b class="boot-pct">0<small>%</small></b></div>
+    <div class="boot-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i></i></div>
+    <p class="boot-msg"></p>
+  </footer>
 </section>
 
 <section id="menu" class="screen mm front hidden">

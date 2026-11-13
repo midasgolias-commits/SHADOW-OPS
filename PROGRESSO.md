@@ -416,3 +416,9 @@ WASD move · Shift corre · Ctrl/C agacha · Espaço pula · botão esquerdo ati
   (`Net.js` manda `avatar` junto dos dados públicos).
 - Testado no navegador: trocar skin de arma (Ouro/Tigre na arma do personagem 3D), salvar nome+avatar (topo e grupo atualizam),
   partida de mata-mata registrada na Carreira. Os dados de teste foram apagados depois.
+
+## 13/11 — Tela de carregamento nova e sem som ao passar o mouse
+- Tela de carregamento com o design do usuário (minimalista: emblema, SHADOW-OPS, barra fina, etapa e %; build e SV no topo).
+  A barra segue o carregamento real (Boot.js anima o número até o valor real; etapas automáticas por porcentagem; PRONTO com ponto verde).
+  Sem Tailwind: CSS próprio em front.css; fontes Inter e JetBrains Mono.
+- Removido o som ao passar o mouse nos botões do menu (MenuFx); fica só o som do clique.
