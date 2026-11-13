@@ -8,7 +8,6 @@ import { getLoadout } from './ui/Loadout.js';
 import { net } from './net/Net.js';
 import { OnlinePanel } from './ui/OnlinePanel.js';
 import { setupInstall } from './ui/Install.js';
-import { Music } from './ui/Music.js';
 import { MenuFx } from './ui/MenuFx.js';
 import { setPlayerId, addXp, myRankCell } from './ui/Ranks.js';
 import { CustomRoom } from './ui/CustomRoom.js';
@@ -223,7 +222,7 @@ net.start().then(() => { net.pingAll(); onlinePanel.render(); });   // fica onli
   setInterval(() => { if (!document.hidden) check(false); }, 5 * 60e3);   // a cada 5 min (jogo aberto por muito tempo)
 })();
 window.__menuFx = new MenuFx($('menu'), () => game.settings.volume * (game.settings.volAmbiente ?? 1));   // faíscas, luzes e som ao passar o mouse
-window.__music = new Music(() => game.settings.volume * (game.settings.volMusica ?? 1));   // música ambiente: sala e partida
+// (música do jogo removida a pedido do usuário: Music.js e assets/music foram para _to_delete)
 const lobby = new Lobby($('lobby'), {
   assets: game.assets,   // personagem em 3D na sala
   onStart: cfg => { if (net.isHost() && net.room.players.length >= 2) { net.setName(cfg.me?.name || net.name); net.startMatch({}); } else startMode(cfg.mode, cfg); },

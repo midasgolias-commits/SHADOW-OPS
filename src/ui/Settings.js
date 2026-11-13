@@ -29,7 +29,6 @@ export const SCHEMA = [
   ] },
   { tab: 'Áudio e vídeo', items: [
     { k: 'volume', label: 'Volume geral', min: 0, max: 1, step: .01, fmt: pct },
-    { k: 'volMusica', label: 'Música (sala e partida)', min: 0, max: 1, step: .01, fmt: pct },
     { k: 'volAmbiente', label: 'Ambiente (passos, pulo, dano, abates, locutor e menu)', min: 0, max: 1, step: .01, fmt: pct },
     { k: 'volArmas', label: 'Armas (tiros, recargas, faca e granada)', min: 0, max: 1, step: .01, fmt: pct },
     { k: 'quality', label: 'Qualidade gráfica', type: 'select', options: [['low', 'Baixa'], ['medium', 'Média'], ['high', 'Alta']] }

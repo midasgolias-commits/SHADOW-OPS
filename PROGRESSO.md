@@ -467,3 +467,7 @@ WASD move · Shift corre · Ctrl/C agacha · Espaço pula · botão esquerdo ati
 - PlayerController TPS: dist 2.05→2.9 m, up .16→.29 (ombro .48 igual); Settings padrão camDist 2.9, camHeight .29; FOV padrão 90→80.
 - Game._load: camVer 2 — quem tinha a câmera antiga salva recebe o padrão novo uma vez (depois ajusta em Configurações → Câmera).
 - Conferido em 1280x720: cabeça 0.54, joelho 1.00, pés 1.18, x 0.40 (fração da tela).
+
+## 13/11 — Música removida
+- Sem música no menu nem na partida (pedido do usuário). Music.js e assets/music (sala.mp3, partida.mp3, 8,6 MB) foram para _to_delete/musica;
+  saiu o controle "Música" das Configurações. Efeitos sonoros (tiros, passos, locutor) continuam.
