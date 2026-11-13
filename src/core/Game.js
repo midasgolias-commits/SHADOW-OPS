@@ -6,6 +6,8 @@ import { CollisionWorld } from '../world/CollisionWorld.js';
 import { PlayerController } from '../player/PlayerController.js';
 import { PM } from '../utils/ProceduralMaterials.js';
 import { buildMapData, buildRangeData } from '../world/MapData.js';
+import { buildCeleiro } from '../world/CeleiroMap.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RangeTraining } from '../modes/RangeTraining.js';
 import { OnlineMatch } from '../net/OnlineMatch.js';
 import { MapBuilder } from '../world/MapBuilder.js';
@@ -26,6 +28,14 @@ const DEATH_DELAY = 3.2; // segundos até o jogador reaparecer (o competitivo pa
 
 const DEFAULTS = { sens: 1, fov: 90, volume: .6, quality: 'high', ...SETTINGS_DEFAULTS };
 const STEP = 1 / 120; // passo fixo de física
+
+/** CELEIRO: o visual é montado em tempo de execução (geometria própria + 6 GLBs + texturas).
+ *  Monta uma vez e reaproveita entre partidas (o grupo é preservado no stop(), como os modelos de assets). */
+let _celeiro = null;
+function getCeleiro() {
+  if (!_celeiro) _celeiro = buildCeleiro(THREE, { basePath: 'assets/maps/celeiro/', GLTFLoader });
+  return _celeiro;
+}
 
 export class Game {
   constructor(host) {
@@ -213,14 +223,19 @@ export class Game {
   _buildMap() {
     const s = this.scene;
     if (this.mode === 'training') return this._buildRange();
-    s.background = new THREE.Color(0x8fa3b2); s.fog = new THREE.Fog(0x8fa3b2, 60, 160);
+    const mapId = this.config?.mapId || 'warehouse';
+    const celeiro = mapId === 'celeiro';
+    const sky = celeiro ? 0x9fb8c9 : 0x8fa3b2;
+    s.background = new THREE.Color(sky); s.fog = new THREE.Fog(sky, celeiro ? 70 : 60, celeiro ? 190 : 160);
     s.add(new THREE.HemisphereLight(0xdfe8f0, 0x5a5248, 1.5));
     s.add(new THREE.AmbientLight(0xffffff, .35));
     const sun = this.sun = new THREE.DirectionalLight(0xfff1d6, 1.6);
     sun.position.set(30, 60, 20); sun.castShadow = true;
-    Object.assign(sun.shadow.camera, { left: -48, right: 48, top: 36, bottom: -36, near: 1, far: 140 });
+    Object.assign(sun.shadow.camera, celeiro
+      ? { left: -50, right: 50, top: 50, bottom: -50, near: 1, far: 170 }   // mapa maior: 50 x 86 m
+      : { left: -48, right: 48, top: 36, bottom: -36, near: 1, far: 140 });
     sun.shadow.bias = -.0005; sun.shadow.normalBias = .03; s.add(sun); this._applyQuality();
-    this.mapData = buildMapData();
+    this.mapData = buildMapData(mapId);
     this.mapBuilder = new MapBuilder(s); this.mapBuilder.build(this.mapData, this.world);
     this.nav = new Navigation(this.world, this.mapData.bounds, this.mapData.navSeed || this.mapData.spawns.attackers[0], this.mapData.navCell || 1);
     this._addMapModel();
@@ -245,6 +260,12 @@ export class Game {
 
   /** Modelo 3D do mapa (GLB). O piso real do arquivo fica em y0; desloca para o piso ficar em y=0. */
   _addMapModel() {
+    if (this.mapData.visual === 'celeiro') {   // CELEIRO: visual montado por CeleiroMap.js (geometria própria + GLBs)
+      const cel = getCeleiro();
+      cel.group.userData.asset = true;   // o grupo é preservado no stop(), como os modelos de assets
+      this.scene.add(cel.group);
+      return;
+    }
     const m = this.assets.map; if (!m || !this.mapData.glb) return;
     m.position.set(0, -(this.mapData.y0 || 0), 0);
     if (!m.userData.prepared) {

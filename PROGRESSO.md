@@ -1,7 +1,7 @@
 # SHADOW OPS: progresso do projeto
 
 Tiro tático em **terceira pessoa** no navegador (Three.js 0.160 via CDN, módulos ES, sem build).
-Última atualização: 27/10/2026 (ajustes: FOV horizontal, arma presa na mão, ponto vermelho, sons gravados, faca de energia, rampas).
+Última atualização: 12/11/2026 (novo mapa **CELEIRO**, escolhido na sala junto do WAREHOUSE).
 
 ## Como rodar (Windows)
 Na pasta `GAME 1V1`: clique em **`1 - INICIAR SERVIDOR.bat`** (deixe a janela aberta) e depois em **`2 - ABRIR JOGO NO NAVEGADOR.bat`**.
@@ -33,6 +33,10 @@ WASD move · Shift corre · Ctrl/C agacha · Espaço pula · botão esquerdo ati
 - **Sniper:** botão direito vai para 1ª pessoa com a luneta (`assets/ui/sniper_scope.png`, altura da tela, laterais pretas; zoom ~6x, `zoomFov: 10` vertical; tiro exatamente no centro).
 - **Mapa WAREHOUSE** (`assets/maps/warehouse.glb`): colisão gerada por voxelização (5.267 caixas), navegação dos bots em grade de 0,5 m,
   20 spawns de mata-mata, spawns de ataque/defesa e sites A/B para o competitivo, minimapa gerado das caixas.
+- **Mapa CELEIRO** (`assets/maps/celeiro/`): pátio com galpão de madeira, containers, vagões, toras, caixotes, paletes, torres e muro com grade.
+  O visual é montado em tempo de execução por `src/world/CeleiroMap.js` (geometria própria + 6 GLBs + texturas); a colisão vem de
+  `src/world/CeleiroData.js` (376 caixas, geradas de `CeleiroMap.js`). Tem spawns 5x5, 12 pontos de mata-mata e sites A/B.
+  Na sala, o campo **Mapa** troca entre WAREHOUSE e CELEIRO (o minimapa, os sites e o nome da sala mudam junto).
 - **Bots** com o modelo de máscara (`assets/characters/bot.fbx`), arma na mão, animações e a mesma correção de mira.
 - HUD: troca de arma estilo inventário (atual em destaque, anterior e faca visíveis, resto some em degradê), feed de abates com ícones,
   selo central de abate (ABATE / TIRO NA CABEÇA / FACADA / DUPLO / TRIPLO…).
@@ -43,6 +47,7 @@ WASD move · Shift corre · Ctrl/C agacha · Espaço pula · botão esquerdo ati
 ## Estrutura
     index.html                      importmap: three + three/addons
     assets/maps/warehouse.glb       mapa (texturas recomprimidas, 14,6 MB)
+    assets/maps/celeiro/            mapa CELEIRO: models/*.glb, textures/, CREDITOS.md
     assets/characters/izzy.fbx      jogador (com skin, textura embutida)
     assets/characters/bot.fbx       bot (malha única, máscara simplificada, rig Mixamo 41 ossos)
     assets/anims/<pasta>/<nome>.fbx animações Mixamo sem skin (with gun / crouch with rifle / with knife)
@@ -61,7 +66,11 @@ WASD move · Shift corre · Ctrl/C agacha · Espaço pula · botão esquerdo ati
     src/weapons/Effects.js          faíscas, marcas, rastros
     src/bots/                       Bot, BotManager, BotBody (hitbox; boneco de caixas só nos testes), BotConfig
     src/world/WarehouseData.js      colisão/spawns gerados do GLB (não editar à mão)
-    src/world/MapData.js            dados do mapa (warehouse)
+    src/world/CeleiroMap.js         construtor do visual do CELEIRO (geometria + GLBs); também define os colisores
+    src/world/CeleiroData.js        colisão do CELEIRO gerada de CeleiroMap.js (não editar à mão)
+    src/world/MapData.js            registro de mapas (WAREHOUSE / CELEIRO) e dados de cada um
+    tools/gen-celeiro-data.mjs      regera CeleiroData.js (rode após mudar CeleiroMap.js)
+    tools/check-celeiro-spawns.mjs  confere spawns/sites do CELEIRO (andável, alcançável, folga ≥ 2 m)
     src/world/CollisionWorld.js     colisão por caixas com grade espacial
     src/world/Navigation.js         grade + A*
     src/ui/                         Lobby, Minimap, WeaponSwitch, KillFeed, WeaponIcons
@@ -71,7 +80,8 @@ WASD move · Shift corre · Ctrl/C agacha · Espaço pula · botão esquerdo ati
 ## Contratos entre módulos
 - Eixos: x leste, z sul, y cima. **Piso do warehouse em y=0** (o GLB tem o piso em y=0,266 e é deslocado; o piso do arquivo está com as faces
   viradas para baixo, por isso os materiais do mapa usam DoubleSide). Yaw 0 olha para -z. Modelos Mixamo olham para +z (rotação yaw+π).
-- `buildMapData()` → `{ name, glb, y0, navCell, navSeed, bounds, boxes[], sites[], labels[], zones[], spawns{attackers, defenders, dm} }`.
+- `buildMapData(id)` → `{ name, visual?, glb?, y0, navCell, navSeed, bounds, boxes[], sites[], labels[], zones[], spawns{attackers, defenders, dm} }`
+  (`id` = `warehouse` ou `celeiro`; a lista fica em `MAPS`, `MapData.js`). Mapas com `visual: 'celeiro'` não têm `glb`: o visual vem de `CeleiroMap.js`.
 - Armas: `weapons.onAction(tipo, w, extra)` ('shot'|'melee'|'reload') e `weapons.muzzle()` são ligados pelo Game para a animação e o rastro.
 - `player.fp` (câmera nos olhos, luneta) e `player.aimTarget` (mira pela arma) são escritos pelo WeaponSystem.
 - Tudo carregado de arquivo fica em `game.assets`; objetos com `userData.asset`/`userData.instance` não são descartados no `Game.stop()`.
@@ -304,3 +314,18 @@ WASD move · Shift corre · Ctrl/C agacha · Espaço pula · botão esquerdo ati
 ## 03/11 (noite) — Volumes separados
 - Configurações > Áudio e vídeo: Volume geral + Música + Ambiente (passos, pulo, dano, abates, locutor, menu) + Armas (tiros, recargas, faca, granada).
 - `ProceduralAudio`: canais 'armas' e 'ambiente' (`categoria(nome)`, `setCategoria`); Music e MenuFx multiplicam pelo volume da categoria. Salvo no navegador.
+
+## 12/11 — Mapa CELEIRO (segundo mapa jogável)
+- Veio do projeto standalone "mapa vagão" (`Desktop\mapa vagao`). No jogo o nome é **CELEIRO** (nunca "vagão"/"galpão" na interface).
+- `src/world/CeleiroMap.js`: construtor do visual (galpão de madeira, containers, vagões, toras, caixotes, paletes, torres, muro com grade,
+  cerca, rampas, piso). Usa 6 GLBs e 13 conjuntos de texturas de `assets/maps/celeiro/`; devolve `group`, `colliders` e `ready`.
+- `src/world/CeleiroData.js`: 376 caixas de colisão geradas por `tools/gen-celeiro-data.mjs` (371 do mapa + base do piso + 4 paredes de limite).
+  Bounds x −25,83…24,95 e z −44,17…42,1. Rode o gerador sempre que mudar `CeleiroMap.js`.
+- `src/world/MapData.js`: agora tem `MAPS` e `buildMapData(id)`. CELEIRO usa `visual: 'celeiro'` (sem GLB único) e tem 5 spawns de ataque
+  (sul, z ≈ +32), 5 de defesa (norte, z ≈ −34), 12 de mata-mata, sites A (5,92; −13,92) e B (−3,08; 13,58) de 6×4 m e zonas de base.
+  Todos os pontos foram conferidos por `tools/check-celeiro-spawns.mjs` (andável, alcançável a partir do centro e folga ≥ 2 m).
+- `src/core/Game.js`: `getCeleiro()` monta o mapa uma vez e reaproveita entre partidas (grupo com `userData.asset`, preservado no `stop()`);
+  céu, neblina e câmera de sombra são ajustados para o tamanho do CELEIRO.
+- `src/ui/Lobby.js`: novo campo **Mapa** (WAREHOUSE / CELEIRO) nos dois modos; trocar o mapa refaz os dados, o minimapa e o nome na sala.
+- Testado no navegador: partida competitiva no CELEIRO sem erros no console, mapa/minimapa/sites corretos, bots e spawns funcionando.
+- Créditos dos modelos e texturas: `assets/maps/celeiro/CREDITOS.md` (6 modelos CC-BY 4.0 + texturas CC0).

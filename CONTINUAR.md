@@ -1,14 +1,16 @@
 # SHADOW OPS: guia para continuar em outra conversa
 
-Leia isto primeiro, depois o `PROGRESSO.md`. Atualizado em 27/10/2026, após a integração em 3ª pessoa.
+Leia isto primeiro, depois o `PROGRESSO.md`. Atualizado em 12/11/2026 (mapa CELEIRO).
 
 ## 1. O projeto em uma frase
 Tiro tático em **3ª pessoa** no navegador (Three.js 0.160 por CDN, módulos ES, sem build). Jogador = **Izzy**; bots = guarda de máscara;
-mapa = **WAREHOUSE** (GLB). Modos: Competitivo 5v5, Mata-mata e Treino, sempre contra bots. Multiplayer online não existe.
+mapas = **WAREHOUSE** (GLB) e **CELEIRO** (visual montado em código + GLBs soltos). Modos: Competitivo 5v5, Mata-mata e Treino,
+sempre contra bots. Multiplayer online não existe.
 
 ## 2. Estado atual
 - [x] Partes 1–4 (motor, armas, bots) — base original
 - [x] Integração TPS: câmera, Izzy animada, bots com modelo e animações, warehouse com colisão/navegação, armas 3D, luneta, mira da Vector
+- [x] Segundo mapa **CELEIRO** (12/11): visual em `CeleiroMap.js`, colisão gerada, spawns/sites verificados, campo "Mapa" na sala
 - [x] HUD: inventário na troca de arma, feed de abates estilizado, selo de abate
 - [ ] Parte 5: regras do competitivo (rodadas, C4, economia)
 - [ ] Parte 6: placar/fim do mata-mata, alvos do treino
@@ -31,10 +33,21 @@ Voxelização do GLB (0,2 m na horizontal, 0,1 m na vertical, só de y=0 a 7,5 m
 base sólida sob o piso + 4 paredes invisíveis no limite do piso (x −39,8…39,9; z −27,57…27,53). Spawns escolhidos com folga ≥ 2 m
 das paredes, espalhados por amostragem do ponto mais distante. Se o mapa mudar, refazer esse processo.
 
+## 5.1 Como foi gerada a colisão do CELEIRO
+O mapa do CELEIRO não é um GLB único: `src/world/CeleiroMap.js` monta a geometria em código e registra os colisores AABB.
+`node tools/gen-celeiro-data.mjs` roda esse construtor sem texturas/modelos (Three.js r180 que veio junto do projeto original)
+e grava `src/world/CeleiroData.js` com 371 caixas + base do piso + 4 paredes de limite. **Nunca edite `CeleiroData.js` à mão**:
+mude `CeleiroMap.js` e rode o gerador. Depois rode `node tools/check-celeiro-spawns.mjs` para conferir spawns e sites
+(andável, alcançável do centro e folga ≥ 2 m) e cole os valores em `MapData.js`.
+Obs.: o Gerador lê o Three.js de `C:\Users\Coutinho\Desktop\mapa vagao\three\build\three.module.js` (ajuste `THREE_URL` se mover a pasta).
+
 ## 6. Pontos que precisam de olhar humano
 - Posição da faca na mão e aparência das armas em movimento (corrida/recarga).
 - Balanceamento dos bots no mapa novo (em Node: jogador parado a 20 m morre em ~2,7 s no normal).
 - Ritmo da câmera e sensibilidade em 3ª pessoa.
+- CELEIRO: as texturas somam ~48 MB de download e ~490 MB de VRAM. Há um plano medido para reencodar (≈3,8 MB e ~80 MB de VRAM,
+  −92%) em `tools/estimate-celeiro-resize.ps1`; falta decidir e aplicar. `concrete_wall/`, `barn_trim/`, `painted_metal/rough.jpg`
+  e `bark/rough.jpg` não são usadas (4,6 MB) — remover só com o "ok" do usuário.
 
 ## 7. Estilo de trabalho combinado
 - Português do Brasil, explicações simples (o usuário não é programador, usa Windows).

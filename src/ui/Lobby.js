@@ -1,4 +1,4 @@
-import { buildMapData } from '../world/MapData.js';
+import { buildMapData, MAPS } from '../world/MapData.js';
 import { Minimap } from './Minimap.js';
 import { WEAPONS } from '../weapons/Weapons.js';
 import { SKINS, SLOTS, getLoadout, setLoadout } from './Loadout.js';
@@ -17,15 +17,16 @@ const AGENTS = [
 ];
 const BOT_NAMES = ['Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo', 'Foxtrot', 'Golf', 'Hotel', 'Indigo', 'Juliet', 'Kilo', 'Lima', 'Mike', 'Nash', 'Oscar'];
 const DIFF = { k: 'diff', label: 'Dificuldade dos bots', v: 'normal', opts: [['easy', 'Fácil'], ['normal', 'Normal'], ['hard', 'Difícil']] };
+const MAP_CFG = { k: 'map', label: 'Mapa', v: 'warehouse', opts: MAPS.map(m => [m.id, m.name]) };
 const MODES = {
   competitive: {
     title: 'COMPETITIVO', sub: 'Ataque contra defesa, 5v5, C4, 13 rodadas e prorrogação.', teams: { att: 5, def: 5 },
-    cfg: [DIFF, { k: 'round', label: 'Tempo da rodada', v: 100, opts: [[100, '1:40'], [120, '2:00']] },
+    cfg: [MAP_CFG, DIFF, { k: 'round', label: 'Tempo da rodada', v: 100, opts: [[100, '1:40'], [120, '2:00']] },
       { k: 'ot', label: 'Prorrogação', v: 1, opts: [[1, 'Ativada'], [0, 'Desativada']] }]
   },
   deathmatch: {
     title: 'MATA-MATA', sub: 'Todos contra todos, com respawn contínuo.', teams: { ffa: 8 },
-    cfg: [DIFF, { k: 'kills', label: 'Limite de abates', v: 30, opts: [[20, '20'], [30, '30'], [50, '50']] },
+    cfg: [MAP_CFG, DIFF, { k: 'kills', label: 'Limite de abates', v: 30, opts: [[20, '20'], [30, '30'], [50, '50']] },
       { k: 'minutes', label: 'Duração', v: 10, opts: [[5, '5 min'], [10, '10 min']] }]
   }
 };
@@ -35,13 +36,19 @@ const badge = a => `<svg viewBox="0 0 84 96" aria-hidden="true"><path d="M42 4 8
 export class Lobby {
   constructor(root, hooks) {
     this.root = root; this.hooks = hooks; this.s = null; this.cd = 0; this.timer = null; this.logs = []; this.chat = []; this.tab = 'info'; this.preview = null;
-    this.map = buildMapData();
+    this.mapId = 'warehouse';
+    this.map = buildMapData(this.mapId);
     root.addEventListener('click', e => { const b = e.target.closest('[data-act]'); if (b && !b.disabled) this._act(b.dataset); });
     root.addEventListener('input', e => { if (e.target.id === 'lbName') { this.s.name = e.target.value; this.hooks.onName?.(e.target.value); const b = this.root.querySelector('.lb3-me b'); if (b) b.textContent = e.target.value.trim() || 'Jogador'; } });
     root.addEventListener('change', e => {
       const k = e.target.dataset.k; if (!k) return;
       const o = MODES[this.s.mode].cfg.find(c => c.k === k).opts.find(o => String(o[0]) === e.target.value);
       this.s.cfg[k] = o[0];
+      if (k === 'map') {   // troca o mapa: refaz os dados (o minimapa e o nome da sala mudam junto)
+        this.mapId = o[0]; this.map = buildMapData(o[0]);
+        this._log(`Mapa: ${this.map.name}`, 'ok');
+        this._render();
+      }
     });
   }
 
@@ -124,6 +131,7 @@ export class Lobby {
     const teams = {}; let first = true;
     for (const [k, n] of Object.entries(M.teams)) teams[k] = Array.from({ length: n }, () => { if (first) { first = false; return { me: true }; } return bot(); });
     this.s = { mode, name: 'Jogador', agent: 0, teams, cfg: Object.fromEntries(M.cfg.map(c => [c.k, c.v])) };
+    this.mapId = this.s.cfg.map || 'warehouse'; this.map = buildMapData(this.mapId);
     this.logs = []; this.chat = [];
     this._log(`Sala criada: ${M.title}`, 'ok'); this._log(`Mapa: ${this.map.name}`);
   }
@@ -189,7 +197,7 @@ export class Lobby {
       const a = AGENTS[p.me ? s.agent : p.agent];
       players.push({ team, slot, me: !!p.me, bot: !!p.bot, name: p.me ? (s.name.trim() || 'Jogador') : p.name, agent: a.id });
     });
-    this.hooks.onStart?.({ mode: s.mode, title: M.title + (s.mode === 'competitive' ? ' 5v5' : ''), map: this.map.name,
+    this.hooks.onStart?.({ mode: s.mode, title: M.title + (s.mode === 'competitive' ? ' 5v5' : ''), map: this.map.name, mapId: this.mapId,
       me: players.find(p => p.me), players, bots: players.filter(p => p.bot), loadout: getLoadout(), ...s.cfg });
   }
 
