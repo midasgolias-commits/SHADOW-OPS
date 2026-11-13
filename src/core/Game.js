@@ -23,6 +23,7 @@ import { loadGrips, vmFor, VM_KIT } from '../weapons/Grips.js';
 import { SETTINGS_DEFAULTS } from '../ui/Settings.js';
 import { getLoadout, loadoutWeapons } from '../ui/Loadout.js';
 import { GrenadeSystem } from '../weapons/Grenades.js';
+import { recordMatch } from './Stats.js';
 
 const DEATH_DELAY = 3.2; // segundos até o jogador reaparecer (o competitivo passa a usar rodadas na Parte 5)
 
@@ -100,6 +101,7 @@ export class Game {
 
   start(mode, config = null) {
     this.stop(); this.mode = mode; this.config = config; this.audio.init(); this.audio.play('ui'); this._t0 = performance.now(); this.finished = false;
+    this.matchWon = null; this._ms = { hs: 0, dmg: 0, assists: 0, hit: new Set() };   // carreira (Stats.js): o fim da partida põe finished/matchWon
     this.announcer.reset(); this.announcer.say('inicio', 250);
     this._refreshGrips();
     this._buildMap();
@@ -121,6 +123,9 @@ export class Game {
       loadout: loadoutWeapons(this.loadout = config?.loadout || getLoadout()),   // só as 3 armas da mochila (1 principal, 2 secundária, 3 faca)
       infiniteAmmo: mode === 'training'   // treino: munição infinita
     });
+    // carreira: todo alvo (bots, amigos online) entra por addHitTester; o dano que EU causo passa por _dealt
+    const addT = this.weapons.addHitTester.bind(this.weapons);
+    this.weapons.addHitTester = fn => addT((o, d, max) => { const r = fn(o, d, max); if (r?.damage) { const dmg = r.damage; r.damage = (n, info) => this._dealt(r.who, n, info?.zone, () => dmg(n, info)); } return r; });
     this._makeAvatar();
     // Parte 4: bots (só quando a sala tem bots; o treino ainda não tem)
     this.deadT = 0; this.bots = null;
@@ -130,9 +135,16 @@ export class Game {
         onPlayerDeath: src => this._playerDied(src) });
       this.weapons.onShot = w => this.bots.playerShot(w);
       this.bots.spawnAll();
+      // assistência: bot que eu acertei e outro matou
+      const bk = this.bots.botKilled.bind(this.bots), meA = this.bots.me;
+      this.bots.botKilled = (b, src) => { const ms = this._ms; if (ms?.hit.delete(b) && src?.from !== meA) ms.assists++; return bk(b, src); };
     }
     this.range = mode === 'training' ? new RangeTraining(this) : null;   // treino: bots-alvo, botão do menu (E), todas as armas
     this.online = config?.online ? new OnlineMatch(this, config.online) : null;   // online: os amigos (Net.js / OnlineMatch.js)
+    if (this.online) {   // online: quem morre avisa se foi na cabeça (meu tiro só manda o dano, não sabe se matou)
+      const om = this.online, msg = om._msg.bind(om);
+      om._msg = m => { if (m?.t === 'ev' && m.e === 'death' && m.killer === om.me && m.victim !== om.me && m.head && this._ms) this._ms.hs++; return msg(m); };
+    }
     this._makeGrenades(mode);
     this.hooks.onStart?.(this.mapData);
     this.time = 0; this.running = true; this.paused = false; this.clock.getDelta();
@@ -147,11 +159,11 @@ export class Game {
     const me = this.player;
     if (mode !== 'training') N.addAreaTarget(() => [{ key: 'me', name: 'você', pos: me.pos, alive: !me.dead, hurt: n => this._selfBlast(n) }]);
     if (this.bots) N.addAreaTarget(() => this.bots.bots.filter(b => b.alive && this.bots.isEnemy(this.bots.me, b)).map(b => ({ key: b, name: b.name, pos: b.pos, alive: true,
-      hurt: n => b.takeDamage(n, { from: this.bots.me, zone: 'body', weapon: 'grenade', dist: 0 }) })));
+      hurt: n => this._dealt(b, n, 'body', () => b.takeDamage(n, { from: this.bots.me, zone: 'body', weapon: 'grenade', dist: 0 })) })));
     if (this.range) N.addAreaTarget(() => this.range.dummies.filter(b => b.on).map(b => ({ key: b, name: b.name, pos: b.pos, alive: true,
       hurt: n => { b.hit(n, 'body'); this.hooks.onRangeHit?.({ bot: b.name, damage: n, zone: 'body', total: b.total, hits: b.hits }); } })));
     if (this.online) N.addAreaTarget(() => [...this.online.remotes.values()].filter(r => r.alive && r.seen).map(r => ({ key: r, name: r.name, pos: r.pos, alive: true,
-      hurt: n => this.online.net.sendGame({ t: 'ev', e: 'hit', to: r.id, dmg: n, zone: 'body', w: 'grenade' }) })));
+      hurt: n => this._dealt(r, n, 'body', () => this.online.net.sendGame({ t: 'ev', e: 'hit', to: r.id, dmg: n, zone: 'body', w: 'grenade' })) })));
   }
   /** Dano da minha própria granada (sem ponto de abate para mim). */
   _selfBlast(n) {
@@ -190,7 +202,30 @@ export class Game {
     const xp = sc.kills * 100 + Math.floor(min) * 30 + (this.finished ? 150 : 0);
     return { xp, kills: sc.kills, minutes: Math.floor(min), finished: !!this.finished };
   }
+  /** Carreira: dano que eu causei (sem passar da vida que o alvo tinha), abate na cabeça e quem eu acertei (para assistência). */
+  _dealt(who, n, zone, fn) {
+    const hp = typeof who?.hp === 'number' ? Math.max(0, who.hp) : n, res = fn(), ms = this._ms;
+    if (ms) { ms.dmg += Math.min(n, hp); if (who) ms.hit.add(who); if (res?.kill && zone === 'head') ms.hs++; }
+    return res;
+  }
+  /** Carreira (Stats.js): grava a partida uma vez, no stop() (fim ou saída no meio). O treino não conta (Stats.js também ignora). */
+  _recordStats() {
+    if (!this.running || !this._t0 || (this.mode !== 'competitive' && this.mode !== 'deathmatch')) return;
+    const sc = this.bots?.scores.player || this.online?.myScore || { kills: 0, deaths: 0 }, ms = this._ms || {};
+    try { recordMatch({ mode: this.mode, map: this.config?.mapId || 'warehouse', kills: sc.kills, deaths: sc.deaths, assists: ms.assists || 0,
+      headshots: ms.hs || 0, damage: ms.dmg || 0, won: this._won(sc), minutes: (performance.now() - this._t0) / 60000, online: !!this.online }); } catch {}
+    this._ms = null;
+  }
+  /** Venceu? Só com a partida terminada (this.finished). matchWon (o fim da partida põe) manda; sem ele, no mata-mata vale o maior placar. */
+  _won(sc) {
+    if (!this.finished) return null;   // saiu no meio: não sabe
+    if (typeof this.matchWon === 'boolean') return this.matchWon;
+    if (this.mode !== 'deathmatch') return null;   // competitivo: precisa do resultado das rodadas (Parte 5)
+    const all = Object.values(this.bots?.scores || this.online?.scores || {}), top = Math.max(0, ...all.map(s => s.kills || 0));
+    return sc.kills > 0 && sc.kills >= top;
+  }
   stop() {
+    this._recordStats();
     const xp = this._matchXp(); this._t0 = 0; if (xp && xp.xp > 0) try { this.onXp?.(xp); } catch {}
     this.running = false; cancelAnimationFrame(this._raf);
     if (document.pointerLockElement) document.exitPointerLock();
@@ -296,7 +331,7 @@ export class Game {
       else if (type === 'reload') this.anim.reload(extra, this.player.crouch);
       this.online?.localAction(type, w, extra);   // online: os amigos veem a animação e ouvem o som
     };
-    this.held = new HeldWeapon(obj, this.assets.weapons, skin, { flashLight: true }); this.held.attachTo(this.scene);
+    this.held = new HeldWeapon(obj, this.assets.weapons, skin, { flashLight: true, skins: true }); this.held.attachTo(this.scene);
     this.anim.withPose('fire', () => this.held.calibrate());   // mede a pegada da arma na pose de mira
     this._head = null; obj.traverse(n => { if (n.isBone && /Head$/.test(n.name)) this._head = n; });
     // 1ª pessoa (tecla V): braços e arma do Lab desenhados por cima do mapa

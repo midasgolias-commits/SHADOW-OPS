@@ -17,10 +17,10 @@ export class MenuFx {
     this.menu = menu; this.getVolume = getVolume; this.cv = menu.querySelector('.mm-fx'); this.ctx = this.cv.getContext('2d');
     this.parts = []; this.dust = []; this.t = 0; this.last = performance.now(); this.ac = null;
     for (let i = 0; i < 70; i++) this.dust.push(this._mote(true));
-    menu.querySelectorAll('.mm-card').forEach(c => {
-      c.addEventListener('mouseenter', () => this.hover());
-      c.addEventListener('click', e => { if (!e.target.closest('button')) c.querySelector('button').click(); });
+    menu.addEventListener('mouseover', e => {   // delegação: vale também para botões criados depois (ex.: personagens do Customizar)
+      const c = e.target.closest('.mm-card, .fm-hover'); if (c && !c.disabled && !c.contains(e.relatedTarget)) this.hover();
     });
+    menu.querySelectorAll('.mm-card').forEach(c => c.addEventListener('click', e => { if (!e.target.closest('button')) c.querySelector('button').click(); }));
     const unlock = () => { this._audio(); };
     addEventListener('pointerdown', unlock, true); addEventListener('keydown', unlock, true);
     requestAnimationFrame(this._loop);
@@ -55,7 +55,12 @@ export class MenuFx {
     if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
     const c = this.ctx; c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, W, H);
     const s = Math.max(W / ART_W, H / ART_H), ox = (W - ART_W * s) / 2, oy = (H - ART_H * s) / 2;   // mesmo encaixe do fundo (cover)
+    // menu novo (cenário 3D): sem feixe de luz, sem brilhos/faíscas subindo e sem poeira (pedido do usuário); fica só o som de passar o mouse
+    if (this.menu.classList.contains('front')) return;
     c.globalCompositeOperation = 'lighter';
+    const cena3d = false;
+    let lx = W / 2, ly = H * .12;   // ponto da luz (a poeira brilha mais perto dele)
+    if (!cena3d) {
     // luzes: brilho suave que "respira" e às vezes tremula (lâmpada velha)
     LAMPS.forEach((L, i) => {
       const flick = .82 + .12 * Math.sin(this.t * (1.3 + i * .7) + i * 2) + .06 * Math.sin(this.t * 17 + i * 5) - (Math.random() < .004 ? .35 : 0);
@@ -64,9 +69,10 @@ export class MenuFx {
       c.fillStyle = g; c.fillRect(x - r, y - r, r * 2, r * 2);
     });
     // cone de luz do teto, bem leve
-    const lx = ox + 572 * s, ly = oy + 85 * s, cg = c.createLinearGradient(0, ly, 0, ly + 620 * s);
+    lx = ox + 572 * s; ly = oy + 85 * s; const cg = c.createLinearGradient(0, ly, 0, ly + 620 * s);
     cg.addColorStop(0, 'rgba(170,200,240,.10)'); cg.addColorStop(1, 'rgba(170,200,240,0)');
     c.fillStyle = cg; c.beginPath(); c.moveTo(lx - 30 * s, ly); c.lineTo(lx + 30 * s, ly); c.lineTo(lx + 260 * s, ly + 620 * s); c.lineTo(lx - 200 * s, ly + 620 * s); c.closePath(); c.fill();
+    }
     // poeira flutuando (mais visível perto da luz)
     for (const m of this.dust) {
       m.x += m.vx * dt * 6 + Math.sin(this.t * .7 + m.a) * .0004; m.y += m.vy * dt * 6; if (m.y < -.05 || m.x < -.05 || m.x > 1.05) Object.assign(m, this._mote(false), { x: Math.random() });

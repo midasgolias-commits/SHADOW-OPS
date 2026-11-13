@@ -3,11 +3,11 @@ import { WEAPONS } from '../weapons/Weapons.js';
 /**
  * Mochila: o que o jogador leva para a partida (salvo no navegador).
  * Na partida só existem 3 armas: principal (tecla 1), secundária (2) e arma branca (3).
- * Trocar o que está equipado só fora da partida (sala → Mochila).
+ * As armas são escolhidas dentro da partida; no menu (Customizar) só se troca o personagem.
  */
 export const SKINS = [
-  { id: 'izzy', name: 'IZZY', desc: 'Operadora de assalto. Sua personagem.' },
-  { id: 'bot', name: 'AGENTE MASCARADO', desc: 'O uniforme dos bots.' }
+  { id: 'izzy', name: 'IZZY', desc: 'Operadora de assalto. Sua personagem.', role: 'Assalto', rarity: 'lendario' },
+  { id: 'bot', name: 'AGENTE MASCARADO', desc: 'O uniforme dos bots.', role: 'Infiltração', rarity: 'raro' }
 ];
 export const SLOTS = [
   { k: 'primary', label: 'Principal', key: 1, ids: ['rifle', 'ak', 'm4a1s', 'aug', 'smg', 'smg2', 'sniper', 'sniper2', 'shotgun'] },

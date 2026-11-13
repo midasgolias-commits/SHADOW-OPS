@@ -5,14 +5,19 @@ import { WeaponSwitch } from './ui/WeaponSwitch.js';
 import { KillFeed } from './ui/KillFeed.js';
 import { SettingsPanel, applyCrosshair } from './ui/Settings.js';
 import { getLoadout } from './ui/Loadout.js';
-import { Inventory } from './ui/Inventory.js';
 import { net } from './net/Net.js';
 import { OnlinePanel } from './ui/OnlinePanel.js';
 import { setupInstall } from './ui/Install.js';
 import { Music } from './ui/Music.js';
 import { MenuFx } from './ui/MenuFx.js';
 import { setPlayerId, addXp, myRankCell } from './ui/Ranks.js';
-import { RanksPanel } from './ui/RanksPanel.js';
+import { CustomRoom } from './ui/CustomRoom.js';
+import { PartyBar } from './ui/PartyBar.js';
+import { NotifyCenter } from './ui/NotifyCenter.js';
+import { Wardrobe } from './ui/Wardrobe.js';
+import { getProfile } from './ui/Avatars.js';
+import { Boot } from './ui/Boot.js';
+import { FrontMenu } from './ui/FrontMenu.js';
 
 const $ = id => document.getElementById(id);
 const show = (id, on) => $(id).classList.toggle('hidden', !on);
@@ -36,13 +41,24 @@ if (new URLSearchParams(location.search).has('autoshot')) import('../tools/fpche
   r.quando = new Date().toISOString();
   fetch('api/test-report', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(r) }).catch(() => {});
 });
-// modelos (mapa, Izzy, bot, animações) carregam uma vez ao abrir a página
+// modelos (mapa, Izzy, bot, animações) carregam uma vez ao abrir a página.
+// A tela de carregamento fica na frente até tudo chegar; só depois o menu principal aparece.
+const boot = new Boot($('boot'));
 const loadInfo = $('loadInfo');
-game.assets.load(p => { loadInfo.textContent = 'Carregando mapa, personagens e animações… ' + Math.round(p * 100) + '%'; })
-  .then(() => { loadInfo.textContent = 'Pronto para jogar.'; loadInfo.classList.add('ok');
+let front = null;   // menu principal novo (criado mais abaixo, depois da sala)
+const TITLE_LOAD = 'Carregando mapa, personagens e animações';
+boot.show(TITLE_LOAD);
+game.assets.load(p => boot.set(p, TITLE_LOAD))
+  .then(() => { boot.done(); loadInfo.textContent = ''; loadInfo.classList.add('ok');
+    front?.show();
     // já baixa em segundo plano os braços+arma de 1ª pessoa do personagem escolhido (pistola e AK): na partida eles já estão prontos
     const sk = getLoadout().skin; game.assets.loadKit?.('p9', sk).catch(() => {}); game.assets.loadKit?.('ak', sk).catch(() => {}); })
-  .catch(e => { loadInfo.textContent = 'Falha ao carregar os modelos.'; report('Falha ao carregar modelos: ' + (e?.message || e) + ' (confira a pasta assets e se o servidor foi aberto na pasta do jogo)'); });
+  .catch(e => { loadInfo.textContent = 'Falha ao carregar os modelos.';
+    boot.error('Falha ao carregar os modelos: ' + (e?.message || e) + ' — confira a pasta assets e se o servidor foi aberto na pasta do jogo.');
+    report('Falha ao carregar modelos: ' + (e?.message || e) + ' (confira a pasta assets e se o servidor foi aberto na pasta do jogo)'); });
+// ir e voltar do menu principal (liga/desliga o personagem 3D junto)
+const showMenu = () => { show('menu', true); front?.show(); };
+const hideMenu = () => { show('menu', false); front?.hide(); };
 let settingsFrom = 'menu', minimap = null, slotsKey = '', hitTimer = 0;
 const wSwitch = new WeaponSwitch($('wswitch'));
 const killFeed = new KillFeed($('feed'), $('killbanner'), game.audio, game.announcer);
@@ -136,22 +152,14 @@ function drawWeapon(w) {
 }
 
 function openSettings(from) { settingsFrom = from; menuPanel.refresh(); show(from, false); show('settings', true); }
-// mochila / inventário (tela cheia): abre pela sala (aba Mochila) e pelo menu principal
-let bagFrom = null;
-const inventory = new Inventory($('inventory'), {
-  assets: game.assets, beep: () => { game.audio.init(); game.audio.play('beep'); },
-  onEquip: (L, name) => { if (bagFrom === 'lobby') lobby.logEquip(name); },
-  onClose: () => { if (bagFrom === 'lobby') { lobby.afterBag(); pushMe(); } else show('menu', true); bagFrom = null; }
-});
-function openBag(from) { bagFrom = from; if (from === 'menu') show('menu', false); inventory.open(); }
-$('openBag').onclick = () => openBag('menu');
 setupInstall($('installBtn'), t => { const el = $('loadInfo'); el.textContent = t; });
 
 /* ---------- ONLINE (amigos pela internet, grátis: src/net/Net.js) ---------- */
 window.__net = net;
 // ONLINE: fica dentro da sala, na aba "Adicionar" (ID, amigos, convites). O anfitrião aperta JOGAR para jogar com os amigos.
 const addEl = document.createElement('div');
-const openRoomLobby = () => { ['menu', 'online', 'pause', 'hud', 'dead', 'settings'].forEach(id => show(id, false)); lobby.open('deathmatch', 'add'); show('lobby', true); };
+// ONLINE agora fica na aba CUSTOM do menu iniciar (CustomRoom.js): volta para o menu com a aba CUSTOM aberta
+const openRoomLobby = () => { ['lobby', 'online', 'pause', 'hud', 'dead', 'settings'].forEach(id => show(id, false)); showMenu(); front?.goCustom(); };
 const onlinePanel = new OnlinePanel(addEl, $('onToast'), net, {
   beep: () => { game.audio.init(); game.audio.play('beep'); },
   onShow: () => { if (!game.running) openRoomLobby(); },   // aceitou um convite: vai para a sala, aba Adicionar
@@ -160,7 +168,7 @@ const onlinePanel = new OnlinePanel(addEl, $('onToast'), net, {
     lobby.close(); show('lobby', false);
     const slot = Math.max(0, (cfg.roster || []).findIndex(p => p.id === net.id));
     startMode('deathmatch', { mode: 'deathmatch', title: 'ONLINE · MATA-MATA', me: { name: net.name, team: 'ffa' }, loadout: getLoadout(), players: [],
-      online: { net, roster: cfg.roster || [], slot } });
+      mapId: cfg.map || 'warehouse', map: cfg.map || 'warehouse', kills: cfg.kills || 30, online: { net, roster: cfg.roster || [], slot } });
   },
   onLost: why => { if (game.running && game.online) { game.stop(); openRoomLobby(); } onlinePanel.say(why, 'warn'); }
 }, { compact: true });
@@ -168,9 +176,9 @@ onlinePanel.isOpen = true; onlinePanel.render(); setInterval(() => { if (!game.r
 net.on('end', () => { if (game.running && game.online) { game.stop(); openRoomLobby(); onlinePanel.say('A partida online terminou.', 'warn'); } });
 // PATENTES: conta do criador (ID do dono) tem todas; XP entra ao sair de cada partida
 setPlayerId(net.id);
-const pushMe = () => { const L = getLoadout(); net.updateMe({ skin: L.skin, primary: L.primary, secondary: L.secondary, melee: L.melee, rank: myRankCell() }); };
-const ranksPanel = new RanksPanel($('ranks'), { beep: () => { game.audio.init(); game.audio.play('beep'); }, onPick: () => { lobby.refresh(); pushMe(); } });
+const pushMe = () => { const L = getLoadout(); net.updateMe({ skin: L.skin, primary: L.primary, secondary: L.secondary, melee: L.melee, rank: myRankCell(), avatar: getProfile().avatar }); };
 game.onXp = r => {
+  notify.push({ kind: 'game', text: `Partida encerrada: ${r.kills} abate${r.kills === 1 ? '' : 's'} em ${r.minutes} min.` });
   const ups = addXp(r.xp);
   setTimeout(() => {   // aparece no chat da sala ao voltar
     lobby.note(`+${r.xp} XP (${r.kills} abate${r.kills === 1 ? '' : 's'}, ${r.minutes} min).`, 'ok');
@@ -178,13 +186,15 @@ game.onXp = r => {
     if (ups.length) { lobby.refresh(); pushMe(); }
   }, 300);
 };
-let roomIds = [];
-net.on('room', r => {   // avisos no chat da sala: quem entrou / saiu
+let roomIds = [], roomHost = null;
+net.on('room', r => {
+  const same = r && r.host === roomHost;   // mesmo grupo de antes (se mudou de grupo, ninguém "entrou" no seu)   // avisos no chat da sala: quem entrou / saiu
   const ids = r ? r.players.map(p => p.id) : [];
-  if (r) { r.players.filter(p => !roomIds.includes(p.id) && p.id !== net.id).forEach(p => lobby.note(`${p.name} entrou na sala.`, 'ok')); }
-  roomIds.filter(id => !ids.includes(id) && id !== net.id).forEach(() => lobby.note('Um jogador saiu da sala.'));
+  if (r) { r.players.filter(p => !roomIds.includes(p.id) && p.id !== net.id).forEach(p => { lobby.note(`${p.name} entrou na sala.`, 'ok'); if (same) notify.push({ kind: 'group', text: `${p.name} entrou no seu grupo.` }); }); }
+  if (r && !same && r.host !== net.id) notify.push({ kind: 'group', text: `Você entrou no grupo de ${r.hostName || 'um amigo'}.` });
+  roomIds.filter(id => !ids.includes(id) && id !== net.id).forEach(id => { lobby.note('Um jogador saiu da sala.'); if (same) notify.push({ kind: 'group', text: `${net.friends.find(f => f.id === id)?.name || 'Um amigo'} saiu do grupo.` }); });
   if (!r && roomIds.length) lobby.note('Sala online fechada.');
-  roomIds = ids; lobby.refresh();
+  roomIds = ids; roomHost = r?.host ?? null; lobby.refresh();
 });
 net.on('chat', m => lobby.addChat(m.name || 'Amigo', m.text, m.from === net.id || !m.from));
 net.start().then(() => { net.pingAll(); onlinePanel.render(); });   // fica online já ao abrir o jogo (para receber convites)
@@ -194,58 +204,118 @@ net.start().then(() => { net.pingAll(); onlinePanel.render(); });   // fica onli
   if (el) el.textContent = mine === 'dev' ? 'versão local (PC do dono)' : 'versão ' + mine;
   if (mine === 'dev') return;
   fetch('version.json?x=' + Date.now(), { cache: 'no-store' }).then(r => r.json()).then(j => {
-    if (j.v && j.v !== mine && el) { el.textContent = 'Versão nova disponível (' + j.v + '): aperte Ctrl+Shift+R'; el.classList.add('old'); }
+    if (j.v && j.v !== mine && el) { el.textContent = 'Versão nova disponível (' + j.v + '): aperte Ctrl+Shift+R'; el.classList.add('old'); notify.push({ kind: 'game', text: 'Versão nova do jogo disponível (' + j.v + '). Aperte Ctrl+Shift+R para atualizar.' }); }
   }).catch(() => {});
 })();
 window.__menuFx = new MenuFx($('menu'), () => game.settings.volume * (game.settings.volAmbiente ?? 1));   // faíscas, luzes e som ao passar o mouse
 window.__music = new Music(() => game.settings.volume * (game.settings.volMusica ?? 1));   // música ambiente: sala e partida
 const lobby = new Lobby($('lobby'), {
   assets: game.assets,   // personagem em 3D na sala
-  openInventory: () => openBag('lobby'),
-  onStart: cfg => { if (net.isHost() && net.room.players.length >= 2) { net.setName(cfg.me?.name || net.name); net.startMatch({ mode: 'deathmatch' }); } else startMode(cfg.mode, cfg); },
-  onExit: () => { if (net.room) net.leaveRoom(); show('lobby', false); show('menu', true); },
+  onStart: cfg => { if (net.isHost() && net.room.players.length >= 2) { net.setName(cfg.me?.name || net.name); net.startMatch({}); } else startMode(cfg.mode, cfg); },
+  onExit: () => { if (net.room) net.leaveRoom(); show('lobby', false); showMenu(); },
   onSettings: () => openSettings('lobby'),
   beep: () => { game.audio.init(); game.audio.play('beep'); },
   addPanel: () => addEl,
   getName: () => net.name !== 'Jogador' ? net.name : null,
   onName: v => { net.setName(v); clearTimeout(window.__nmT); window.__nmT = setTimeout(pushMe, 600); },
-  openRanks: () => ranksPanel.open(),
   online: () => net.room ? { host: net.isHost(), hostName: net.room.hostName, count: net.room.players.length, players: net.room.players, myId: net.id, hostId: net.room.host } : null,
   sendChat: (who, t) => net.room ? net.sendChat(who, t) : false
 });
 
+// aba CUSTOM: sala com modo, mapa, bots, pessoas, senha e amigos
+const customRoom = new CustomRoom(document.querySelector('#menu .cr-panel'), net, {
+  beep: () => { game.audio.init(); game.audio.play('beep'); },
+  startTraining: () => enterMode('training'),
+  startOffline: c => { if (!game.assets.ready) return; lobby.quickStart(c.mode, c.map, net.name && net.name !== 'Jogador' ? net.name : null, { bots: c.bots, diff: c.diff, round: c.round, kills: c.kills }); },
+  startOnline: c => { if (!game.assets.ready) return; net.startMatch({ mode: 'deathmatch', map: c.map, kills: c.kills }); }
+});
+
+// GRUPO (canto de baixo à direita): ícone de amigos + 5 vagas; amigos do grupo aparecem em 3D ao lado do seu personagem
+const meInfoNet = () => { const L = getLoadout(); return { skin: L.skin, primary: L.primary, secondary: L.secondary, melee: L.melee, avatar: getProfile().avatar }; };
+const partyBar = new PartyBar($('menu'), net, {
+  beep: () => { game.audio.init(); game.audio.play('beep'); },
+  ensureRoom: () => customRoom.ensureRoom(),
+  meInfo: meInfoNet
+});
+net.on('status', () => { if (net.status === 'on') customRoom.ensureRoom(); });
+// SINO (canto de cima à direita): amizade, convites (aceitar/recusar), grupo e avisos do jogo
+const notify = window.__notify = new NotifyCenter(document.querySelector('#menu .fm-bell'), document.querySelector('#menu .nt-panel'), {
+  beep: () => { game.audio.init(); game.audio.play('beep'); },
+  onAccept: async from => {   // aceitar convite: avisa se isso desfaz o grupo atual; só conta como aceito se entrou
+    if (game.running) return false;
+    const r = net.room;
+    if (r && r.players.length > 1 && !confirm(r.host === net.id ? 'Aceitar desfaz o seu grupo atual (seus amigos saem). Continuar?' : 'Você vai sair do grupo atual. Continuar?')) return false;
+    showMenu(); partyBar.open(); return partyBar._join(from, '');
+  }
+});
+partyBar.hooks.onOpen = () => notify.close(); notify.hooks.onOpen = () => partyBar.close();   // um painel da direita por vez
+net.on('newFriend', f => notify.push({ kind: 'friend', text: `${f.name} te adicionou como amigo.`, from: f.id }));
+net.on('invite', inv => notify.push({ kind: 'invite', text: `${inv.name || inv.from} te convidou para o grupo.`, from: inv.from }));
+net.on('lost', why => notify.push({ kind: 'group', text: why || 'Você saiu do grupo.' }));   // ao ficar online (ou reconectar) já abre a sala/grupo para os amigos entrarem
+net.on('room', r => front?.setSquad(r ? r.players.filter(p => p.id !== net.id) : []));
+
+// CUSTOMIZAR (janela grande): personagem, skins de arma, perfil (nome + avatar) e carreira (KDA)
+const wardrobe = new Wardrobe(document.querySelector('#menu .wr-tabs'), document.querySelector('#menu .wr-panel'), {
+  beep: () => { game.audio.init(); game.audio.play('beep'); },
+  preview: () => front?.preview, net,
+  onSkin: () => pushMe(),
+  onProfile: () => { pushMe(); front?.refresh(); partyBar.render(); customRoom.render?.(); }
+});
+
+// menu principal novo (estilo PUBG): abas, modos, personagem 3D e o botão JOGAR.
+// Ele só escolhe o modo; a sala (mapa, bots, dificuldade) continua no Lobby.
+front = new FrontMenu($('menu'), {
+  assets: game.assets,
+  name: () => net.name,
+  onPlay: m => enterMode(m),
+  onSkin: () => pushMe(),   // trocou o personagem no Customizar: avisa a sala online (se houver)
+  netId: () => net.id,
+  custom: customRoom,
+  wardrobe,
+  onSettings: () => openSettings('menu'),
+  beep: () => { game.audio.init(); game.audio.play('beep'); }
+});
+if (game.assets.ready) front.show();   // já carregou: entra no menu sem esperar
+
+/** escolheu um modo no menu: treino começa na hora; online abre a sala em "Adicionar"; os outros abrem a sala. */
+function enterMode(m) {
+  if (!game.assets.ready) return;
+  if (m === 'custom') { customRoom.start(); return; }
+  if (m === 'training') { startMode('training', { mode: 'training', title: 'TREINO', me: { name: net.name || 'Jogador' }, loadout: getLoadout() }); return; }
+  // competitivo e mata-mata: entra direto no mapa escolhido no menu (sem sala)
+  lobby.quickStart(m, front?.mapId, net.name && net.name !== 'Jogador' ? net.name : null);
+}
+
 async function startMode(mode, cfg) {
   if (!game.assets.ready) return;
   if (mode === 'training' && !game.assets.range) {   // treino: o mapa do stand de tiro carrega na primeira vez
-    show('menu', true); loadInfo.classList.remove('ok'); loadInfo.textContent = 'Carregando o stand de tiro… 0%';
-    try { await game.assets.loadRange(p => { loadInfo.textContent = 'Carregando o stand de tiro… ' + Math.round(p * 100) + '%'; }); }
-    catch (e) { loadInfo.textContent = 'Falha ao carregar o stand de tiro.'; report('Falha ao carregar o stand de tiro: ' + (e?.message || e)); return; }
-    loadInfo.textContent = 'Pronto para jogar.'; loadInfo.classList.add('ok');
+    hideMenu(); boot.show('Carregando o stand de tiro');
+    try { await game.assets.loadRange(p => boot.set(p, 'Carregando o stand de tiro')); }
+    catch (e) {
+      boot.error('Falha ao carregar o stand de tiro: ' + (e?.message || e));
+      report('Falha ao carregar o stand de tiro: ' + (e?.message || e));
+      setTimeout(() => { boot.hide(); showMenu(); }, 3200); return;
+    }
+    boot.done();
   }
-  ['menu', 'lobby', 'pause', 'settings', 'dead'].forEach(id => show(id, false)); show('hud', true);
+  ['menu', 'lobby', 'pause', 'settings', 'dead'].forEach(id => show(id, false)); front?.hide(); show('hud', true);
   killFeed.reset(); wSwitch.reset(); $('hudScore').textContent = '';
   $('hudMode').textContent = cfg?.title || NAMES[mode];
+  $('toLobby').classList.toggle('hidden', !cfg?.online);   // "Voltar à sala" só existe no online
   game.start(mode, cfg);
 }
-document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => {
-  if (!game.assets.ready) { loadInfo.classList.remove('pulse'); void loadInfo.offsetWidth; loadInfo.classList.add('pulse'); return; }   // espera os modelos
-  const m = b.dataset.mode; show('menu', false);
-  if (m === 'training') startMode(m, { mode: m, title: 'TREINO', me: { name: 'Jogador' }, loadout: getLoadout() });  // treino é solo: sem sala
-  else { lobby.open(m); show('lobby', true); }
-}));
 $('resume').onclick = () => game.resume();
 $('restart').onclick = () => startMode(game.mode, game.config);
 $('toLobby').onclick = () => {
   if (game.online) { if (net.isHost()) net.endMatch(); game.stop(); openRoomLobby(); return; }   // online: volta para a tela Online (a sala continua)
   game.stop(); show('pause', false); show('hud', false);
-  if (game.mode === 'training') show('menu', true); else { lobby.open(game.mode); show('lobby', true); }
+  showMenu();   // fora do online tudo volta para o menu iniciar
 };
-$('toMenu').onclick = () => { if (game.online && net.isHost()) net.endMatch(); game.stop(); lobby.close(); show('pause', false); show('hud', false); show('menu', true); };
-$('openSettings').onclick = () => openSettings('menu');
+$('toMenu').onclick = () => { if (game.online && net.isHost()) net.endMatch(); game.stop(); lobby.close(); show('pause', false); show('hud', false); showMenu(); };
 // Lab: só aparece no PC do dono (jogo aberto pelo servidor local); no site publicado ele nem é enviado.
 if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) $('openLab').classList.remove('hidden');
 $('openLab').onclick = () => { location.href = 'lab.html?v=' + Date.now(); };   // ajustar a arma na mão (cena por cena)
-$('closeSettings').onclick = () => { show('settings', false); show(settingsFrom, true); };
+$('closeSettings').onclick = () => { show('settings', false); if (settingsFrom === 'menu') showMenu(); else show(settingsFrom, true); };
 
 // configurações: no menu e na pausa (Esc) — a mira do HUD muda junto
 const onSet = k => { if (k.startsWith('ch')) applyCrosshair($('cross'), game.settings); };

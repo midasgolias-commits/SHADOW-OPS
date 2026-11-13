@@ -1,9 +1,9 @@
 import { buildMapData, MAPS } from '../world/MapData.js';
 import { Minimap } from './Minimap.js';
 import { WEAPONS } from '../weapons/Weapons.js';
-import { SKINS, SLOTS, getLoadout, setLoadout } from './Loadout.js';
+import { SKINS, getLoadout } from './Loadout.js';
 import { CharacterPreview } from './CharacterPreview.js';
-import { weaponPhoto } from './Inventory.js';
+import { weaponPhoto } from './WeaponPhoto.js';
 import { myRankCell, rankIcon, rankName, botRankCell } from './Ranks.js';
 
 const BOT_GUNS = ['rifle', 'smg', 'shotgun', 'sniper', 'aug', 'ak', 'rifle', 'smg'];
@@ -70,7 +70,7 @@ export class Lobby {
       <div class="lb3-stage"><canvas class="lb2-char" aria-label="Seu personagem"></canvas><p class="lb2-wait">Carregando personagem…</p></div>
       <div class="lb2-who"><small>SKIN</small><b class="lb2-skin"></b></div>
       <aside class="lb3-info">
-        <nav class="lb2-tabs"><button data-act="tab" data-tab="info">Informação</button><button data-act="tab" data-tab="bag">Mochila</button><button data-act="tab" data-tab="add">Adicionar</button></nav>
+        <nav class="lb2-tabs"><button data-act="tab" data-tab="info">Informação</button><button data-act="tab" data-tab="add">Adicionar</button></nav>
         <div class="lb2-panel"></div>
       </aside>
       <section class="lb3-win">
@@ -87,8 +87,6 @@ export class Lobby {
       <footer class="lb3-bar">
         <div class="lb3-me"></div>
         <div class="lb3-tools">
-          <button data-act="bag" title="Mochila"><svg viewBox="0 0 24 24"><path d="M8 7V5a4 4 0 0 1 8 0v2h2.5A1.5 1.5 0 0 1 20 8.5V20a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8.5A1.5 1.5 0 0 1 5.5 7Zm2 0h4V5a2 2 0 0 0-4 0Zm-2 6h8v2H8Z"/></svg><span>Mochila</span></button>
-          <button data-act="ranks" title="Patentes"><svg viewBox="0 0 24 24"><path d="M12 2 4 5v6c0 5 3.4 9.3 8 11 4.6-1.7 8-6 8-11V5Zm0 4.2 1.5 3.1 3.4.5-2.5 2.4.6 3.4-3-1.6-3 1.6.6-3.4-2.5-2.4 3.4-.5Z"/></svg><span>Patentes</span></button>
           <button data-act="settings" title="Configurações"><svg viewBox="0 0 24 24"><path d="M13.7 2l.5 2.6 1.6.7 2.2-1.5 2.4 2.4-1.5 2.2.7 1.6 2.6.5v3.4l-2.6.5-.7 1.6 1.5 2.2-2.4 2.4-2.2-1.5-1.6.7-.5 2.6h-3.4l-.5-2.6-1.6-.7-2.2 1.5-2.4-2.4 1.5-2.2-.7-1.6L2 13.7v-3.4l2.6-.5.7-1.6-1.5-2.2 2.4-2.4 2.2 1.5 1.6-.7.5-2.6ZM12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/></svg><span>Configurações</span></button>
           <button data-act="exit" title="Sair da sala"><svg viewBox="0 0 24 24"><path d="M11 2h2v10h-2Zm-4.6 3.2 1.4 1.4A7 7 0 1 0 16.2 6.6l1.4-1.4A9 9 0 1 1 6.4 5.2Z"/></svg><span>Sair</span></button>
         </div>
@@ -119,11 +117,6 @@ export class Lobby {
     this.root.querySelector('.lb2-wait')?.classList.add('hidden');
   }
   _stop() { clearInterval(this.timer); this.timer = null; this.cd = 0; }
-  /** Mochila (inventário em tela cheia, estilo Point Blank). A sala para de desenhar o personagem enquanto ela está aberta. */
-  openBag() { if (this.cd) { this._stop(); this._log('Início cancelado', 'warn'); } this.preview?.stop(); this.hooks.openInventory?.(); }
-  /** Volta da mochila: o personagem da sala mostra o que foi equipado. */
-  afterBag() { this.insp = null; this._showPreview(); this.preview?.start(); this._render(); }
-  logEquip(name) { this._log('Equipado: ' + name, 'ok'); }
 
   _init(mode) {
     const M = MODES[mode], used = new Set();
@@ -168,16 +161,31 @@ export class Lobby {
         const cur = s.teams.att.some(p => p?.me) ? 'att' : 'def', other = cur === 'att' ? 'def' : 'att', i = s.teams[other].findIndex(p => !p);
         if (i < 0) { this._log('O outro time está cheio.', 'warn'); break; }
         s.teams[cur] = s.teams[cur].map(p => p?.me ? null : p); s.teams[other][i] = { me: true }; this._log(`${s.name || 'Jogador'} mudou para ${other === 'att' ? 'ATAQUE' : 'DEFESA'}`); this.hooks.beep?.(); break; }
-      case 'tab': if (d.tab === 'bag') { this.hooks.beep?.(); this.openBag(); return; } this.tab = d.tab; this.hooks.beep?.(); break;
-      case 'bag': this.hooks.beep?.(); this.openBag(); return;
-      case 'equip': {   // mochila: equipa skin/arma (vale para a próxima partida)
-        const L = setLoadout({ [d.slot]: d.id }); this.hooks.beep?.();
-        this.preview?.set(L.skin, d.slot === 'secondary' || d.slot === 'melee' ? d.id : L.primary);
-        this._log(`${d.slot === 'skin' ? 'Skin' : 'Equipado'}: ${d.slot === 'skin' ? SKINS.find(x => x.id === d.id).name : WEAPONS[d.id].name}`, 'ok'); break;
-      }
+      case 'tab': this.tab = d.tab; this.hooks.beep?.(); break;
       case 'go': if (this.cd) { this._stop(); this._log('Início cancelado', 'warn'); } else this._countdown(); break;
     }
     this._render();
+  }
+
+  /** Começa a partida direto do menu iniciar (sem abrir a sala): times com bots e opções padrão, só o mapa escolhido no menu. */
+  quickStart(mode, mapId, name, opts = {}) {
+    this._stop(); this.insp = null; this._init(mode);
+    if (mapId && MAPS.some(m => m.id === mapId)) { this.s.cfg.map = mapId; this.mapId = mapId; this.map = buildMapData(mapId); }
+    if (name) this.s.name = name;
+    for (const k of ['diff', 'round', 'kills']) if (opts[k] != null) this.s.cfg[k] = opts[k];
+    if (Number.isInteger(opts.bots)) {   // CUSTOM: quantidade de bots escolhida (eu no ataque; bots alternando defesa/ataque)
+      const M = MODES[mode], keys = Object.keys(M.teams), used = new Set(), teams = {};
+      for (const k of keys) teams[k] = Array(M.teams[k]).fill(null);
+      teams[keys[0]][0] = { me: true };
+      const order = keys.length > 1 ? [keys[1], keys[0]] : keys;
+      for (let i = 0, put = 0; put < opts.bots && i < 40; i++) {
+        const k = order[i % order.length], j = teams[k].findIndex(p => !p); if (j < 0) continue;
+        const n = BOT_NAMES.find(x => !used.has(x)) || 'Bot' + used.size; used.add(n);
+        teams[k][j] = { bot: true, name: n, agent: used.size % AGENTS.length }; put++;
+      }
+      this.s.teams = teams;
+    }
+    this._start();
   }
 
   _countdown() {
@@ -225,7 +233,7 @@ export class Lobby {
       + (p.me ? '<span class="tag">VOCÊ</span>' : `<span class="tag">BOT</span><button class="mini x" data-act="kick" ${at} aria-label="Remover bot">✕</button>`) + '<span class="ok">PRONTO</span></li>';
   }
 
-  /** Painel da esquerda: classe, nome e o que está equipado (fotos). A aba Mochila abre o inventário em tela cheia (Inventory.js). */
+  /** Painel da esquerda: classe e nome (as armas são escolhidas dentro da partida; o personagem, no Customizar do menu). */
   _left() {
     const s = this.s, ag = AGENTS[s.agent], L = getLoadout();
     const q = this.insp, skin = SKINS.find(x => x.id === (q ? q.skin : L.skin)) || SKINS[0];
@@ -248,9 +256,7 @@ export class Lobby {
         <div class="lb2-agent"><span class="ic">${badge(ag)}</span><div><small>${ag.role}</small><h3>${ag.name}</h3></div>
           <div class="agent-sw"><button data-act="prev" aria-label="Classe anterior">‹</button><button data-act="next" aria-label="Próxima classe">›</button></div></div>
         <p>${ag.desc}</p>
-        <label class="lb2-nm">Seu nome<input id="lbName" maxlength="16" value="${esc(s.name)}" autocomplete="off"></label>
-        <div class="lb2-bagbtn"><h4>Equipado para a partida</h4><div class="eqrow">${SLOTS.map(sl => `<div><img src="${weaponPhoto(L[sl.k])}" alt=""><b>${WEAPONS[L[sl.k]].name}</b><small>${sl.label} · tecla ${sl.key}</small></div>`).join('')}</div>
-          <button data-act="bag">ABRIR MOCHILA</button></div></div>`;
+        <label class="lb2-nm">Seu nome<input id="lbName" maxlength="16" value="${esc(s.name)}" autocomplete="off"></label></div>`;
     }
   }
 

@@ -17,7 +17,7 @@ export class Music {
   want() {
     if (document.hidden) return null;
     if (visible('hud')) return 'partida';
-    if (visible('lobby') || visible('online') || visible('inventory')) return 'sala';
+    if (visible('lobby') || visible('online')) return 'sala';
     return null;
   }
   _tick(gesture) {

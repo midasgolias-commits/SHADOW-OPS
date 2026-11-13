@@ -9,6 +9,7 @@ import { PistolViewmodel } from './PistolViewmodel.js';
 import { ArmRetarget } from './ArmRetarget.js';
 import { WEAPONS } from '../weapons/Weapons.js';
 import { KNIFE_SLASH, applyKnifeSlash, leftDuringSlash, slashValues } from './KnifeSlash.js';
+import { applyWeaponSkin, getWeaponSkin } from '../weapons/WeaponSkins.js';
 
 /**
  * 1ª pessoa dentro da partida (tecla V): braços e arma desenhados POR CIMA do mapa, com a câmera do viewmodel
@@ -23,6 +24,8 @@ const _d = new THREE.Vector3(), _e = new THREE.Euler(), _w = new THREE.Vector3()
 
 // troca de arma: ossos usados e quanto cada um gira (graus) com a arma toda guardada
 const HB = { rArm: /RightArm$/, rFore: /RightForeArm$/, rHand: /RightHand$/, lArm: /LeftArm$/ };
+// acabamento no viewmodel (braços + arma num arquivo só): não pinta braços, mangas, cápsula e bala
+const VM_SKIP = (o, m) => /^Bracos_/.test(o.name) || /^(pele|manga|BF3_|c[aá]psula|bala)/i.test(m.name || '');
 const FADE = .15;   // s: mistura entre cenas (parado/recarga/golpe)
 /**
  * Armas que, na 1ª pessoa, recarregam com a ANIMAÇÃO de recarga (a mesma da cena "1ª pessoa · recarregando" do Lab).
@@ -59,7 +62,7 @@ export class FirstPersonView {
     obj.traverse(n => { if (n.isMesh) { n.castShadow = n.receiveShadow = false; n.frustumCulled = false; } });
     this.scene.add(obj); this.obj = obj; this.clips = clips;
     this.arms = new ArmsOnly(obj); this.arms.on();   // só braços e mãos
-    this.held = new HeldWeapon(obj, assets.weapons, skin, { flashLight: true }); this.held.attachTo(this.scene);
+    this.held = new HeldWeapon(obj, assets.weapons, skin, { flashLight: true, skins: true }); this.held.attachTo(this.scene);   // skins: acabamento salvo de cada arma
     // pegada e ponto dos olhos medidos na pose de mira (igual ao Lab)
     this.eye = new THREE.Vector3(0, 1.62, -.05); let head = null; obj.traverse(n => { if (n.isBone && /Head$/.test(n.name)) head = n; });
     const ca = new CharacterAnimator(obj, clips);
@@ -246,6 +249,7 @@ export class FirstPersonView {
     this._objPos = this.obj.position.clone();   // posição do corpo neste quadro (o render desloca os ombros a partir dela)
     this.izzyVM = vmNow && this.wid === 'pistol' && this.vm.kitName === 'glock' && vmFor('pistol').arms === 'izzy';   // braços da Izzy seguindo a animação do pacote (IK no render)
     if (vmNow) {
+      { const sk = getWeaponSkin(this.wid); if (this.vm._wskin !== sk) { applyWeaponSkin(this.vm.rig, sk, VM_SKIP); this.vm._wskin = sk; } }   // acabamento da arma (faca do jogo presa no osso também)
       this.vm.setGuide(this.izzyVM ? this.scene : null);
       this.vm.update(dt, this.izzyVM ? { ...s, switchK: 0 } : s);   // com a Izzy, a troca de arma é o movimento de sempre da câmera dos braços
       this.held.holder.visible = false;

@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="build" content="12/11 22:47">
+<meta name="build" content="13/11 01:17">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SHADOW OPS — Tático em 3ª pessoa</title>
 <link rel="manifest" href="manifest.webmanifest">
@@ -15,11 +15,11 @@
 <link rel="stylesheet" href="src/styles/hudfx.css">
 <link rel="stylesheet" href="src/styles/lobby2.css">
 <link rel="stylesheet" href="src/styles/range.css">
-<link rel="stylesheet" href="src/styles/inventory.css">
 <link rel="stylesheet" href="src/styles/online.css">
 <link rel="stylesheet" href="src/styles/menu.css">
 <link rel="stylesheet" href="src/styles/lobby3.css">
 <link rel="stylesheet" href="src/styles/ranks.css">
+<link rel="stylesheet" href="src/styles/front.css">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&family=Barlow:wght@500&display=swap">
 <script type="importmap">
 { "imports": {
@@ -31,39 +31,75 @@
 <body>
 <div id="view"></div>
 
-<section id="menu" class="screen mm">
+<!-- tela de carregamento: fica na frente até os modelos carregarem (src/ui/Boot.js) -->
+<section id="boot" class="boot">
+  <div class="boot-bg" aria-hidden="true"></div>
+  <div class="boot-box">
+    <img class="boot-logo" src="assets/ui/menu/logo.png" alt="SHADOW OPS">
+    <p class="boot-state">Carregando…</p>
+    <div class="boot-bar"><i></i></div>
+    <div class="boot-row"><b class="boot-pct">0%</b><p class="boot-tip"></p></div>
+  </div>
+  <p class="boot-foot">SHADOW OPS · tático em 3ª pessoa</p>
+</section>
+
+<section id="menu" class="screen mm front hidden">
   <canvas class="mm-fx" aria-hidden="true"></canvas>
-  <img class="mm-logo" src="assets/ui/menu/logo.png" alt="SHADOW OPS">
-  <div class="mm-title"><i></i><span>ESCOLHA SEU MODO DE JOGO</span><i></i></div>
-  <div class="mm-cards">
-    <article class="mm-card" data-k="comp"><i class="mm-cn"></i>
-      <div class="mm-head"><img class="mm-ic" src="assets/ui/menu/icon1.png" alt=""><h2>COMPETITIVO</h2></div>
-      <p>Ataque contra defesa 5v5, com C4, 13 rodadas e prorrogação.</p>
-      <div class="mm-pic" style="background-image:url(assets/ui/menu/card1.jpg)"></div>
-      <button data-mode="competitive"><span>CRIAR SALA</span><b>→</b></button></article>
-    <article class="mm-card" data-k="dm"><i class="mm-cn"></i>
-      <div class="mm-head"><img class="mm-ic" src="assets/ui/menu/icon2.png" alt=""><h2>MATA-MATA</h2></div>
-      <p>Combate contínuo contra bots, com respawn e placar em tempo real.</p>
-      <div class="mm-pic" style="background-image:url(assets/ui/menu/card2.jpg)"></div>
-      <button data-mode="deathmatch"><span>CRIAR SALA</span><b>→</b></button></article>
-    <article class="mm-card" data-k="train"><i class="mm-cn"></i>
-      <div class="mm-head"><img class="mm-ic" src="assets/ui/menu/icon3.png" alt=""><h2>TREINO</h2></div>
-      <p>Stand de tiro: bots-alvo com vida infinita (parado e andando), todas as armas e munição infinita. Menu no botão da baia (E).</p>
-      <div class="mm-pic" style="background-image:url(assets/ui/menu/card3.jpg)"></div>
-      <button data-mode="training"><span>INICIAR TREINO</span><b>→</b></button></article>
+
+  <header class="fm-top">
+    <img class="fm-logo" src="assets/ui/menu/logo.png" alt="SHADOW OPS">
+    <nav class="fm-nav">
+      <button class="on fm-hover" data-nav="play">Jogar</button>
+      <button class="fm-hover" data-nav="custom">Customizar</button>
+    </nav>
+    <div class="fm-icons">
+      <button type="button" class="fm-ic fm-bell fm-hover" aria-expanded="false" aria-label="Notificações" title="Notificações"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.84V3a1.5 1.5 0 0 0-3 0v1.16A7 7 0 0 0 5 11v5l-2 2v1h18v-1Z"/></svg><b class="nt-badge" hidden></b></button>
+      <button type="button" class="fm-ic fm-hover" data-nav="settings" aria-label="Configurações" title="Configurações"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.7 2l.5 2.6 1.6.7 2.2-1.5 2.4 2.4-1.5 2.2.7 1.6 2.6.5v3.4l-2.6.5-.7 1.6 1.5 2.2-2.4 2.4-2.2-1.5-1.6.7-.5 2.6h-3.4l-.5-2.6-1.6-.7-2.2 1.5-2.4-2.4 1.5-2.2-.7-1.6L2 13.7v-3.4l2.6-.5.7-1.6-1.5-2.2 2.4-2.4 2.2 1.5 1.6-.7.5-2.6ZM12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/></svg></button>
+    </div>
+    <div class="fm-me"><button type="button" class="fm-av fm-hover" data-nav="profile" title="Seu perfil" aria-label="Abrir perfil"></button><div><b class="fm-name">Jogador</b><small class="fm-xptxt"></small></div></div>
+  </header>
+  <aside class="nt-panel" hidden aria-label="Notificações"></aside>
+
+  <nav class="fm-modes">
+    <button class="on fm-hover" data-pick="competitive"><b>COMPETITIVO</b><small>5v5 · ataque e defesa</small></button>
+    <button class="fm-hover" data-pick="deathmatch"><b>MATA-MATA</b><small>todos contra todos</small></button>
+    <button class="fm-hover" data-pick="training"><b>TREINO</b><small>stand de tiro</small></button>
+    <button class="fm-hover" data-pick="custom"><b>CUSTOM</b><small>sala, amigos e bots</small></button>
+  </nav>
+
+  <div class="fm-stage">
+    <div class="fm-id"><b class="fm-pname">Jogador</b><small class="fm-skin">IZZY</small></div>
+    <canvas class="fm-char" aria-label="Seu personagem"></canvas>
+    <p class="fm-wait">Carregando personagem…</p>
   </div>
-  <div class="mm-under">
-    <div class="menu-btns"><button id="openBag" class="ghost hidden">Mochila</button><button id="openSettings" class="ghost hidden">Configurações</button><button id="openLab" class="ghost hidden">Lab de Armas</button><button id="installBtn" class="ghost">Ícone na área de trabalho</button></div>
-    <p id="loadInfo" class="build">Carregando mapa, personagens e animações… 0%</p>
+
+  <!-- CUSTOMIZAR: janela de vidro à esquerda; o personagem continua no mesmo lugar (por enquanto só troca de personagem) -->
+  <!-- CUSTOMIZAR (Wardrobe.js): abas em cima e janela grande de vidro à esquerda -->
+  <nav class="fc-sub wr-tabs" role="tablist" aria-label="Customizar"></nav>
+  <aside class="fc-panel cr-panel" aria-label="Sala custom"></aside>
+  <aside class="fc-panel wr-panel" aria-label="Customizar"></aside>
+
+  <div class="fm-play">
+    <div class="fm-map" aria-label="Escolha do mapa"><small>Mapa</small><div class="fm-maps" role="radiogroup"></div></div>
+    <button id="fmPlay" class="fm-big fm-hover"><span>JOGAR</span><b>→</b></button>
+    <small id="fmHint"></small>
   </div>
-  <p class="mm-ver"></p>
-  <div class="mm-foot"><i></i><span>PREPARE-SE. ENTRE EM AÇÃO.</span></div>
+
+  <footer class="fm-foot">
+    <div class="fm-verwrap">
+      <p class="mm-ver"></p>
+      <p id="loadInfo" class="build"></p>
+    </div>
+    <div class="fm-dev">
+      <button id="openLab" class="ghost hidden">Lab de Armas</button>
+      <button id="installBtn" class="ghost">Ícone na área de trabalho</button>
+    </div>
+  </footer>
 </section>
 
 <section id="lobby" class="screen hidden"></section>
 <section id="online" class="screen hidden"></section>
 <div id="onToast"></div>
-<div id="inventory"></div>
 <div id="ranks" class="hidden"></div>
 <!-- menu do treino (E): fora do #hud, que não recebe cliques -->
 <div id="rangeMenu" class="hidden">

@@ -331,3 +331,88 @@ WASD move · Shift corre · Ctrl/C agacha · Espaço pula · botão esquerdo ati
 - `src/ui/Lobby.js`: novo campo **Mapa** (WAREHOUSE / CELEIRO) nos dois modos; trocar o mapa refaz os dados, o minimapa e o nome na sala.
 - Testado no navegador: partida competitiva no CELEIRO sem erros no console, mapa/minimapa/sites corretos, bots e spawns funcionando.
 - Créditos dos modelos e texturas: `assets/maps/celeiro/CREDITOS.md` (6 modelos CC-BY 4.0 + texturas CC0).
+
+## 13/11 — Menu iniciar com cenário 3D
+- Menu novo (estilo PUBG): `src/ui/FrontMenu.js` + `src/styles/front.css` + `src/ui/Boot.js` (tela de carregamento).
+- Personagem parado de frente na animação idle, sem girar e sem arrastar com o mouse (`CharacterPreview` com `{ yaw: 0, spin: 0, fixed: true }`).
+- Cenário 3D `src/ui/MenuScene.js` (ativado por `set: 'galpao'` no `CharacterPreview`): canto de galpão à noite com chão de concreto
+  (o personagem pisa e faz sombra), parede, pilares, vigas, porta de enrolar, canos, placas SAÍDA/ÁREA RESTRITA, faixa amarela, manchas de óleo,
+  contêiner, caixas, barris e pallet (GLBs e texturas do CELEIRO). O canvas ocupa a tela inteira atrás da interface.
+- Removidos do menu: dicas, controles, cartão do modo e cartão "Equipado". O `MenuFx` não desenha mais feixe de luz, faíscas nem poeira no menu novo
+  (continua só o som ao passar o mouse).
+
+## 13/11 — CUSTOMIZAR no lugar da Mochila
+- Aba **Customizar** no menu iniciar (antes "Mochila"): janela de vidro fosco à esquerda (`.fc-panel` em `front.css`), o personagem 3D não sai do lugar.
+  Por enquanto só troca de personagem (`SKINS` em `Loadout.js`, agora com `role` e `rarity`). Clicar prova no modelo 3D; SALVAR grava;
+  RESTAURAR volta ao salvo; fechar (✕, Esc ou aba Jogar) sem salvar desfaz a prova. Ao salvar chama `hooks.onSkin` → `pushMe()` (sala online).
+- Armas não são mais escolhidas no menu nem na sala: só dentro da partida (por enquanto vale o padrão do `Loadout.js`: rifle, pistola, faca).
+- Mochila antiga removida: `Inventory.js` e `inventory.css` foram para `_to_delete/` (o usuário apaga). A sala (`Lobby.js`) perdeu a aba Mochila,
+  o botão Mochila e o bloco "Equipado para a partida". `weaponPhoto`/`charPhoto` agora ficam em `src/ui/WeaponPhoto.js`.
+
+## 13/11 — Tudo pelo menu iniciar (sem sala no offline)
+- Competitivo e Mata-mata não abrem mais a sala: no menu iniciar escolhe-se o modo e o **Mapa** (WAREHOUSE / CELEIRO, botões em cima do JOGAR)
+  e o JOGAR entra direto na partida. Usa `Lobby.quickStart(mode, mapId, name)`: monta os times com bots e as opções padrão
+  (dificuldade normal; competitivo 1:40 por rodada; mata-mata 30 abates) sem mostrar a tela da sala.
+- O modo e o mapa escolhidos ficam salvos no navegador (`shadowops.menu`).
+- Fim/pausa da partida offline volta para o menu iniciar; o botão "Voltar à sala" só aparece no online. Treino e Online continuam como antes
+  (o Online ainda usa a sala, para convidar amigos).
+- Customizar: ajustes da revisão de interface (janela do tamanho do conteúdo e sem cobrir o personagem em telas médias, setas do teclado
+  trocam o personagem, foco não se perde, Esc não fecha junto com Patentes/Configurações, SALVAR desativado com cara de desativado,
+  som de passar o mouse também nos personagens).
+
+## 13/11 — Aba CUSTOM (no lugar do Online) e Patentes removidas
+- **Patentes** saiu do jogo: aba do menu, botão da sala e o selo/XP no canto (agora mostra só nome e o ID do jogador). O código de XP
+  (`Ranks.js`) continua no projeto, mas sem tela.
+- Modo **CUSTOM** na faixa de modos (antes ONLINE). Janela de vidro `src/ui/CustomRoom.js` + estilos `.cr-*` em `front.css`, com 3 abas:
+  PARTIDA (modo Competitivo/Mata-mata/Treino, mapa, bots −/+, dificuldade, tempo da rodada ou limite de abates),
+  SALA (máximo de pessoas 2–8, fechar a sala, senha, encerrar sala) e AMIGOS (seu ID, adicionar por ID, convidar/entrar, quem está na sala, remover).
+  A configuração fica salva (`shadowops.custom`) e o anfitrião manda para os amigos (`net.setRoomCfg`).
+- `Net.js`: sala com `cfg` (mode, map, bots, diff, max, locked, pass) sincronizada; senha guardada só no anfitrião (`_roomPass`);
+  convidados entram sem senha; recusa "A sala está fechada." / "Sala cheia (N)." / "Esta sala tem senha." / "Senha errada.";
+  `startMatch` leva o mapa para os amigos.
+- Sozinho na sala: partida no PC com a quantidade de bots escolhida (`Lobby.quickStart(..., { bots, diff, round, kills })`).
+  Com amigos: partida online (por enquanto só Mata-mata e sem bots — o motor online ainda não sincroniza bots nem o competitivo).
+- Testado no navegador com dois jogadores (`?perfil=2`): senha errada/sem senha recusadas, senha certa entra, partida online no CELEIRO
+  para os dois e volta dos dois para a aba CUSTOM. Competitivo offline com 1 bot no difícil também testado.
+
+## 13/11 — Claude Code Game Studios (skills e agentes) instalado no projeto
+- Fonte: github.com/Donchitos/Claude-Code-Game-Studios (licença MIT, cópia em `.claude/LICENSE-ccgs.txt`), framework v1.3.0.
+- Instalado: `.claude/agents` (34 agentes; os de Godot/Unity/Unreal foram para `_to_delete/ccgs-agents-outras-engines`), `.claude/skills` (78),
+  `.claude/docs`, `rules`, `scripts`, `engines`, `genres`, `hooks` (arquivos copiados, mas NÃO ligados), `docs/` (guias + referência web) e `project.yaml`
+  (engine Web, código em `src`).
+- De propósito NÃO instalado: `settings.json` (ligaria os 18 hooks automáticos, a barra de status e o modo "pergunta antes de tudo"),
+  `statusline.sh` e o `CLAUDE.md` deles. Se quiser ligar depois, copiar da origem e revisar os hooks antes
+  (`update-check.sh` acessa a internet; `notify.sh` abre notificações do Windows).
+- Para começar: numa conversa nova nesta pasta, `/project-stage-detect` (analisa o jogo existente) ou `/adopt`; depois `/next-step`.
+
+## 13/11 — Grupo de 5, tela de amigos e sino de notificações
+- **Grupo** (canto de baixo à direita, `src/ui/PartyBar.js`): ícone de amigos (com quantos estão online) + 5 vagas (você + 4).
+  Vaga vazia (+) ou o ícone abrem a tela de amigos (vidro): seu ID, adicionar por ID, grupo (tirar/sair), amigos (Convidar / Entrar / remover),
+  senha quando a sala tem. O grupo é a sala online do `Net.js` (a mesma da aba CUSTOM); ao ficar online o jogo já abre a sala.
+- Amigos do grupo aparecem **em 3D ao lado do seu personagem** com o nome em cima (`CharacterPreview.setSquad`, vagas em `SQUAD_SPOTS`).
+- **Sino** (canto de cima à direita, `src/ui/NotifyCenter.js`): pedido de amizade (`net` emite `newFriend` quando alguém te adiciona),
+  convites com ACEITAR / RECUSAR, amigo entrou/saiu do grupo, fim de partida e versão nova. Bolinha de não lidas; guarda 30 no navegador.
+- **Engrenagem** no lugar da aba Configurações.
+- Testado com dois jogadores (`?perfil=2`): convite chegou no sino → Aceitar → entrou no grupo → vaga preenchida, aviso no sino do anfitrião
+  e o amigo em 3D no menu.
+- Revisão do agente **ux-designer** (Game Studios) aplicada: aceitar convite avisa se desfaz o grupo atual e só marca "Aceito" se entrou;
+  sem avisos falsos de "entrou no grupo" ao entrar no grupo de outro; foco do teclado não se perde; vagas com nome embaixo ("VOCÊ"/amigo);
+  vagas travadas para quem não é dono; um painel da direita por vez; sino com fundo opaco e abaixo da barra; convite expira em 10 min;
+  nome dos amigos em 3D sempre visível.
+- Pendente pequeno: num teste com convite real o item ficou sem o rótulo "Aceito" (a entrada no grupo funcionou); nos testes diretos o rótulo aparece.
+
+## 13/11 — Customizar completo (como o Customize do PUBG)
+- Janela grande de vidro à esquerda (`src/ui/Wardrobe.js`, estilos `.wr-*` em `front.css`), personagem 3D no lugar mostrando as provas.
+  Abas em cima: **PERSONAGEM** (skins do operador) · **ARMAS** (categoria à esquerda → arma → grade de skins) · **PERFIL** (nome de jogador
+  e avatar, com cartão de prévia) · **CARREIRA** (KDA, abates, mortes, assistências, partidas, vitórias, headshots, dano, tempo, por modo e últimas 10).
+  Em todas: clicar prova, SALVAR grava, RESTAURAR volta, ALEATÓRIO sorteia; fechar sem salvar desfaz. Setas do teclado andam pela grade.
+- **Skins de arma** (agente technical-artist): `src/weapons/WeaponSkins.js` — 9 acabamentos procedurais (Padrão, Camuflagem Urbana, Deserto,
+  Floresta, Ártico, Fibra de Carbono, Cromo Escuro, Tigre Neon, Ouro), salvos por arma (`shadowops.wskins`). Valem no menu, em 3ª e 1ª pessoa
+  (só o jogador local; bots/online no padrão). `HeldWeapon` ganhou `{ skins: true }` e `applySkin(id)`. Menu tem reflexo suave (mapa de ambiente
+  desenhado) para os metais.
+- **Estatísticas** (agente gameplay-programmer): `src/core/Stats.js` + gravação em `Game.stop()` (uma vez por partida; treino não conta).
+  Abates/mortes do placar; dano e headshots do jogador; assistências só contra bots. Vitória fica "—" até existir fim de partida (Partes 5/6).
+- **Avatares** (`src/ui/Avatars.js`): 12 emblemas em SVG; aparecem no canto de cima (clicar abre o Perfil), nas vagas do grupo e para os amigos online
+  (`Net.js` manda `avatar` junto dos dados públicos).
+- Testado no navegador: trocar skin de arma (Ouro/Tigre na arma do personagem 3D), salvar nome+avatar (topo e grupo atualizam),
+  partida de mata-mata registrada na Carreira. Os dados de teste foram apagados depois.

@@ -31,10 +31,12 @@ export class Net {
     if (!id || normId(id).length !== 8) { id = showId(Array.from({ length: 8 }, () => ABC[Math.floor(Math.random() * ABC.length)]).join('')); save(LS_ID, id); }
     this.id = id; this.name = load(LS_NAME, '') || 'Jogador'; this.friends = load(LS_FRIENDS, []);
     this.status = 'off'; this.peer = null; this.listeners = {};
-    this.room = null;          // { host: id, hostName, players: [{id,name,skin}], mode, open, inGame }
+    this.room = null;          // { host: id, hostName, players: [{id,name,skin}], mode, cfg: {mode,map,bots,diff,max,locked,pass}, inGame }
     this.hostConns = new Map(); // anfitrião: id -> conexão de cada amigo na sala
     this.hostConn = null;       // amigo: conexão com o anfitrião
     this.online = {};           // id -> { online, room, name, t }
+    this._roomPass = '';        // anfitrião: senha da sala (NUNCA vai na rede)
+    this._invited = new Set();  // anfitrião: IDs convidados (entram sem senha)
   }
   on(ev, fn) { (this.listeners[ev] ??= []).push(fn); return () => { this.listeners[ev] = this.listeners[ev].filter(f => f !== fn); }; }
   emit(ev, ...a) { for (const f of this.listeners[ev] || []) try { f(...a); } catch (e) { console.error(e); } }
@@ -93,28 +95,40 @@ export class Net {
   /* ---------- convites ---------- */
   invite(id) {
     if (!this.room || this.room.host !== this.id) return false;
+    const s = showId(id); if (s) this._invited.add(s);   // convidado entra sem senha (mas respeita fechada/limite)
     this._quick(id, { t: 'invite', name: this.name, room: this._roomInfo() }, () => {});
     return true;
   }
 
   /* ---------- sala ---------- */
-  _roomInfo() { const r = this.room; return r ? { host: r.host, hostName: r.hostName, count: r.players.length, mode: r.mode, open: !r.inGame, inGame: !!r.inGame } : null; }
-  createRoom(mode = 'deathmatch', me = {}) {
+  _roomInfo() { const r = this.room; if (!r) return null; const cfg = { ...(r.cfg || {}) }; delete cfg.password; const locked = !!cfg.locked;
+    return { host: r.host, hostName: r.hostName, count: r.players.length, mode: r.mode, cfg, locked, pass: !!cfg.pass, open: !r.inGame && !locked, inGame: !!r.inGame }; }
+  /** Sala CUSTOM do anfitrião: cfg = { mode, map, bots, diff, max, locked, pass } (pass = só "tem senha"; a senha fica em this._roomPass) */
+  createRoom(mode = 'deathmatch', me = {}, cfg = {}) {
     this.leaveRoom(true);
-    this.room = { host: this.id, hostName: this.name, mode, inGame: false, players: [{ id: this.id, name: this.name, ...pub(me) }] };
+    this._roomPass = ''; this._invited = new Set();
+    const c = { mode: 'deathmatch', map: 'warehouse', bots: 0, diff: 'normal', max: 8, locked: false, pass: false };
+    roomCfg(c, { mode, ...(cfg || {}) }, 1, this);
+    this.room = { host: this.id, hostName: this.name, mode: c.mode, cfg: c, inGame: false, players: [{ id: this.id, name: this.name, ...pub(me) }] };
     this.emit('room', this.room); return this.room;
   }
+  /** Anfitrião muda as opções da sala (modo, mapa, bots, dificuldade, limite, fechada, senha). Senha '' = sem senha. */
+  setRoomCfg(patch = {}) {
+    if (!this.isHost()) return false;
+    roomCfg(this.room.cfg ??= { mode: this.room.mode || 'deathmatch', map: 'warehouse', bots: 0, diff: 'normal', max: 8, locked: false, pass: false }, patch || {}, this.room.players.length, this);
+    this.room.mode = this.room.cfg.mode; this._broadcastRoom(); return true;
+  }
   /** Entrar na sala de um amigo (pelo ID dele). */
-  joinRoom(hostId, me = {}) {
+  joinRoom(hostId, me = {}, pass = '') {
     return new Promise(res => {
       if (this.status !== 'on') return res({ ok: false, why: 'Você ainda não está conectado.' });
       this.leaveRoom(true);
       const c = this.peer.connect(peerOf(hostId), { reliable: true, metadata: { game: true } });
       const tm = setTimeout(() => { try { c.close(); } catch {} res({ ok: false, why: 'O anfitrião não respondeu (está offline?).' }); }, 9000);
-      c.on('open', () => c.send({ t: 'join', id: this.id, name: this.name, ...pub(me) }));
+      c.on('open', () => c.send({ t: 'join', id: this.id, name: this.name, pass: String(pass || '').trim().slice(0, 16), ...pub(me) }));
       c.on('data', d => {
         if (d?.t === 'room') { clearTimeout(tm); if (!this.hostConn) { this.hostConn = c; res({ ok: true }); } this.room = d.room; this.emit('room', this.room); return; }
-        if (d?.t === 'full') { clearTimeout(tm); res({ ok: false, why: d.why || 'Sala cheia.' }); try { c.close(); } catch {} return; }
+        if (d?.t === 'full') { clearTimeout(tm); res({ ok: false, why: d.why || 'Sala cheia.', needPass: !!d.needPass }); try { c.close(); } catch {} return; }
         this._gameMsg(d, c);
       });
       c.on('close', () => { if (this.hostConn === c) { this.hostConn = null; const was = this.room; this.room = null; this.emit('room', null); if (was) this.emit('lost', 'O anfitrião saiu ou caiu.'); } });
@@ -124,7 +138,7 @@ export class Net {
   leaveRoom(silent = false) {
     if (this.hostConn) { try { this.hostConn.send({ t: 'leave' }); this.hostConn.close(); } catch {} this.hostConn = null; }
     if (this.room?.host === this.id) for (const c of this.hostConns.values()) { try { c.send({ t: 'closed' }); c.close(); } catch {} }
-    this.hostConns.clear();
+    this.hostConns.clear(); this._roomPass = ''; this._invited = new Set();
     if (this.room) { this.room = null; if (!silent) this.emit('room', null); }
   }
   isHost() { return !!this.room && this.room.host === this.id; }
@@ -133,7 +147,8 @@ export class Net {
   /** Anfitrião começa a partida: todos recebem 'start' com a lista de jogadores. */
   startMatch(cfg = {}) {
     if (!this.isHost()) return null;
-    this.room.inGame = true; const start = { t: 'start', cfg: { ...cfg, roster: this.room.players, seed: Math.floor(Math.random() * 1e9) } };
+    this.room.inGame = true; const rc = { ...(this.room.cfg || {}) }; delete rc.password;
+    const start = { t: 'start', cfg: { ...rc, ...cfg, roster: this.room.players, seed: Math.floor(Math.random() * 1e9) } };
     for (const c of this.hostConns.values()) try { c.send(start); } catch {}
     this._broadcastRoom(); this.emit('start', start.cfg); return start.cfg;
   }
@@ -175,12 +190,21 @@ export class Net {
     c.on('data', d => {
       if (!d || typeof d !== 'object') return;
       const from = idOfPeer(c.peer);
-      if (d.t === 'hello') { c.send({ t: 'ack', name: this.name, room: this._roomInfo() }); if (d.name) this.addFriend(from, d.name); return; }
+      if (d.t === 'hello') {
+        c.send({ t: 'ack', name: this.name, room: this._roomInfo() });
+        const novo = !this.friends.some(f => f.id === from);
+        if (d.name) this.addFriend(from, d.name);
+        if (novo) this.emit('newFriend', { id: from, name: d.name || from });   // alguém te adicionou: vira notificação no sino
+        return;
+      }
       if (d.t === 'invite') { c.send({ t: 'ack', name: this.name }); this.addFriend(from, d.name); this.emit('invite', { from, name: d.name, room: d.room }); return; }
       if (d.t === 'join') {
         if (!this.isHost()) { c.send({ t: 'full', why: 'Essa pessoa não está com sala aberta.' }); return; }
         if (this.room.inGame) { c.send({ t: 'full', why: 'A partida já começou. Espere acabar.' }); return; }
-        if (this.room.players.length >= 8) { c.send({ t: 'full', why: 'Sala cheia (8).' }); return; }
+        const rc = this.room.cfg || {}, max = rc.max || 8;
+        if (rc.locked) { c.send({ t: 'full', why: 'A sala está fechada.' }); return; }
+        if (this.room.players.length >= max && !this.room.players.some(p => p.id === from)) { c.send({ t: 'full', why: `Sala cheia (${max}).` }); return; }
+        if (this._roomPass && !this._invited?.has(from) && d.pass !== this._roomPass) { c.send({ t: 'full', needPass: true, why: d.pass ? 'Senha errada.' : 'Esta sala tem senha.' }); return; }
         this.hostConns.get(from)?.close(); this.hostConns.set(from, c);
         this.room.players = this.room.players.filter(p => p.id !== from).concat({ id: from, name: d.name || 'Amigo', ...pub(d) });
         this.addFriend(from, d.name); this._broadcastRoom(); this.emit('joined', from);
@@ -195,9 +219,23 @@ export class Net {
   }
 }
 
+/** junta no cfg da sala só os campos válidos do patch (a senha vai para net._roomPass, nunca para o cfg) */
+const MODES = ['competitive', 'deathmatch', 'training'], MAPS = ['warehouse', 'celeiro'], DIFFS = ['easy', 'normal', 'hard'];
+function roomCfg(c, p, count, net) {
+  const int = (v, a, b) => { const n = Math.round(Number(v)); return Number.isFinite(n) ? Math.max(a, Math.min(b, n)) : undefined; };
+  if (MODES.includes(p.mode)) c.mode = p.mode;
+  if (MAPS.includes(p.map)) c.map = p.map;
+  if (DIFFS.includes(p.diff)) c.diff = p.diff;
+  if (p.bots != null) { const n = int(p.bots, 0, 9); if (n != null) c.bots = n; }
+  if (p.max != null) { const n = int(p.max, 2, 8); if (n != null) c.max = Math.max(n, Math.min(8, count || 1)); }
+  if (p.locked != null) c.locked = !!p.locked;
+  if (typeof p.password === 'string') { net._roomPass = p.password.trim().slice(0, 16); c.pass = !!net._roomPass; }
+  delete c.password; return c;
+}
+
 /** dados públicos do jogador na sala: skin, armas equipadas e patente (para os outros verem e inspecionarem) */
 function pub(m = {}) {
   const w = v => typeof v === 'string' && /^[a-z0-9_]{1,20}$/.test(v) ? v : undefined;
-  return { skin: w(m.skin) || 'izzy', primary: w(m.primary), secondary: w(m.secondary), melee: w(m.melee), rank: Number.isInteger(m.rank) && m.rank >= 0 && m.rank < 91 ? m.rank : 0 };
+  return { skin: w(m.skin) || 'izzy', avatar: w(m.avatar), primary: w(m.primary), secondary: w(m.secondary), melee: w(m.melee), rank: Number.isInteger(m.rank) && m.rank >= 0 && m.rank < 91 ? m.rank : 0 };
 }
 export const net = new Net();

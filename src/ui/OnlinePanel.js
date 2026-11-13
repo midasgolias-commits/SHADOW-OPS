@@ -87,7 +87,7 @@ export class OnlinePanel {
       case 'create': n.start().then(() => { n.createRoom('deathmatch', meInfo()); this.say('Sala criada. Convide os amigos.', 'ok'); }); return;
       case 'leave': n.leaveRoom(); return;
       case 'kick': n.kick(d.id); return;
-      case 'go': { if (!n.isHost()) return; if (n.room.players.length < 2) { this.say('Espere pelo menos 1 amigo entrar.', 'warn'); return; } n.startMatch({ mode: 'deathmatch' }); return; }
+      case 'go': { if (!n.isHost()) return; if (n.room.players.length < 2) { this.say('Espere pelo menos 1 amigo entrar.', 'warn'); return; } n.startMatch({}); return; }
     }
   }
   render() {

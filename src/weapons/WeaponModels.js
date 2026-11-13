@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { gripFor, leftHandFor, GRIP_BASE } from './Grips.js';
 import { MuzzleFlash } from './MuzzleFlash.js';
+import { applyWeaponSkin, getWeaponSkin } from './WeaponSkins.js';
 
 /**
  * Tranco do tiro (feito em código, por cima da animação): a arma vai para trás e o cano sobe, depois volta.
@@ -189,8 +190,12 @@ const _lt = new THREE.Vector3();
 const BLADE = id => id === 'knife' || id === 'karambit';   // armas brancas (mesma pegada de faca na mão)
 const KNIFE_REL = new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI / 2, 0, Math.PI / 2));
 export class HeldWeapon {
-  /** kind: 'izzy' ou 'bot' (cada personagem tem os próprios ajustes do Lab de Armas). */
-  constructor(charObj, models, kind = 'izzy', { flashLight = false } = {}) {
+  /**
+   * kind: 'izzy' ou 'bot' (cada personagem tem os próprios ajustes do Lab de Armas).
+   * skins: usa o acabamento salvo de cada arma (WeaponSkins) — só no jogador local; bots e online ficam no padrão.
+   */
+  constructor(charObj, models, kind = 'izzy', { flashLight = false, skins = false } = {}) {
+    this.skins = skins; this.wskin = 'padrao';
     this.char = charObj; this.models = models; this.cur = null; this.id = null; this.rel = null; this.kind = kind;
     this.scene = 'idle';   // cena atual (parado, andando, atirando...): escolhe o ajuste salvo no Lab
     this.live = null; this.liveLH = null;   // Lab: ajuste sendo editado (ainda não salvo)
@@ -235,8 +240,15 @@ export class HeldWeapon {
     if (id === this.id) return; this.id = id; this.kickT = 9;
     if (this.cur) this.holder.remove(this.cur);
     const src = this.models[id]; this.cur = src ? src.clone() : null; if (this.cur) this.holder.add(this.cur);
+    if (this.cur && this.skins) this.applySkin(getWeaponSkin(id));   // a cópia divide os materiais do original: applyWeaponSkin troca só nesta cópia
     this.flash.attach(this.cur);
     this.snap = true;   // arma nova: o ajuste entra direto, sem deslizar
+  }
+  /** Põe um acabamento na arma atual (menu: "provar" antes de salvar). Acabamento de metal ganha o reflexo das armas (ensureWeaponEnv). */
+  applySkin(skinId) {
+    this.wskin = skinId; if (!this.cur) return;
+    applyWeaponSkin(this.cur, skinId);
+    this.cur.traverse(n => { if (n.isMesh) for (const m of [].concat(n.material)) if (m.userData.wantsEnv && !m.envMap && !ENV_MATS.includes(m)) ENV_MATS.push(m); });
   }
   // (clone() de Object3D copia userData via JSON: os vetores viram objetos simples, por isso o copy)
   get muzzleWorld() { if (!this.cur) return null; return this.cur.localToWorld(new THREE.Vector3().copy(this.cur.userData.muzzle)); }
